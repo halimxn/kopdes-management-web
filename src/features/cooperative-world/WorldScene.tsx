@@ -2,6 +2,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { Building2, Plus, MapPin, Truck, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { animateCharacter, createCharacter } from './objects/characters';
@@ -159,7 +163,8 @@ export function WorldScene({
     renderer.shadowMap.enabled = settings.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    // Neutral menjaga rona biru-pastel video; ACES memudarkan warna ke abu-abu.
+    renderer.toneMapping = THREE.NeutralToneMapping;
     renderer.toneMappingExposure = 1.25;
     renderer.domElement.setAttribute(
       'aria-label',
@@ -206,7 +211,8 @@ export function WorldScene({
     controls.maxPolarAngle = 1.18;
     controls.enablePan = true;
     controls.maxTargetRadius = location === 'luar' ? 80 : 10;
-    const ambient = new THREE.HemisphereLight('#f5f9ff', '#aeb8cf', 2.8);
+    // Cahaya bawah biru memberi sisi bayangan berona biru seperti video (bukan abu-abu).
+    const ambient = new THREE.HemisphereLight('#f5f9ff', '#8fa3d8', 2.2);
     scene.add(ambient);
     const sun = new THREE.DirectionalLight('#fff7e8', 3.8);
     sun.castShadow = settings.shadows;
@@ -317,10 +323,23 @@ export function WorldScene({
       previous = 0,
       elapsed = 0,
       disposed = false;
+    // Ambient occlusion (GTAO) di kawasan kualitas Tinggi: sudut, celah dan kaki bangunan
+    // menggelap lembut sehingga objek tidak tampak datar. Kualitas lain memakai render biasa.
+    let composer: EffectComposer | null = null;
+    if (settings.ambientOcclusion && location === 'luar') {
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const ao = new GTAOPass(scene, camera, node.clientWidth || 1, node.clientHeight || 1);
+      ao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.6, thickness: 1.2, scale: 1 });
+      ao.blendIntensity = 0.85;
+      composer.addPass(ao);
+      composer.addPass(new OutputPass());
+    }
     const resize = () => {
       const { width, height } = node.getBoundingClientRect();
       if (!width || !height) return;
       renderer.setSize(width, height);
+      composer?.setSize(width, height);
       const aspect = width / height;
       const span = cameraSpan[location][aspect < 1 ? 'portrait' : 'landscape'];
       const cover = covered.current;
@@ -564,7 +583,8 @@ export function WorldScene({
         }
         a.needsUpdate = true;
       }
-      renderer.render(scene, camera);
+      if (composer) composer.render();
+      else renderer.render(scene, camera);
     };
     frame = requestAnimationFrame(draw);
     const lost = (event: Event) => {
@@ -593,6 +613,7 @@ export function WorldScene({
       });
       disposeSharedResources();
       renderer.domElement.removeEventListener('webglcontextlost', lost);
+      composer?.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };

@@ -19,13 +19,13 @@ export const palette = {
   glassDark: '#24324f',
   ground: '#e4ecfc',
   /** Tanah kavling, paving halaman, aspal, trotoar. */
-  lot: '#e8eefc',
-  yard: '#d7dff5',
-  asphalt: '#c6d1ee',
-  sidewalk: '#f3f6fe',
+  lot: '#dfe7fb',
+  yard: '#cfd9f4',
+  asphalt: '#bccaee',
+  sidewalk: '#eef2fd',
   green: '#4cc47f',
   greenLight: '#8fe0ac',
-  grass: '#cdeedd',
+  grass: '#c4ead3',
   /** Atap pastel per unit, senada biru-lavender. */
   pastelLavender: '#b4a8f4',
   pastelPeach: '#f7c39b',

@@ -9,6 +9,8 @@ export type QualitySettings = {
   /** Jeda minimum antarframe (ms); membatasi fps agar baterai ponsel tidak terkuras. */
   frameInterval: number;
   rainCount: number;
+  /** Ambient occlusion layar (GTAO) untuk kedalaman seperti video; hanya kualitas Tinggi. */
+  ambientOcclusion: boolean;
 };
 
 export const qualitySettings: Record<QualityTier, QualitySettings> = {
@@ -19,6 +21,7 @@ export const qualitySettings: Record<QualityTier, QualitySettings> = {
     shadowMapSize: 2048,
     frameInterval: 15,
     rainCount: 350,
+    ambientOcclusion: true,
   },
   sedang: {
     pixelRatio: 1.5,
@@ -27,6 +30,7 @@ export const qualitySettings: Record<QualityTier, QualitySettings> = {
     shadowMapSize: 1024,
     frameInterval: 32,
     rainCount: 220,
+    ambientOcclusion: false,
   },
   hemat: {
     pixelRatio: 1,
@@ -35,6 +39,7 @@ export const qualitySettings: Record<QualityTier, QualitySettings> = {
     shadowMapSize: 0,
     frameInterval: 32,
     rainCount: 120,
+    ambientOcclusion: false,
   },
 };
 

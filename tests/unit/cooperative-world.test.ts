@@ -76,7 +76,8 @@ describe('pemetaan dunia koperasi', () => {
     expect(getWorldHour('otomatis', new Date('2026-10-04T17:00:00Z'))).toBe(0);
     expect(getWorldHour('senja', new Date())).toBe(17);
     expect(worldPreferencesSchema.safeParse({ weather: 'salju' }).success).toBe(false);
-    expect(worldPreferencesSchema.parse({}).time).toBe('otomatis');
+    // Bawaan siang seperti video (keputusan pemilik v4); otomatis WIB tetap pilihan.
+    expect(worldPreferencesSchema.parse({}).time).toBe('siang');
   });
 });
 

@@ -24,7 +24,7 @@ export function getLighting(hour: number, weather: WorldPreferences['weather']):
   if (phase === 'malam')
     return { sky: '#4a5b8f', ambient: 1.9, sun: 1.1, sunColor: '#b4c8ff', exposure: 1.18 };
   const overcast = weather !== 'cerah';
-  const sun = weather === 'hujan' ? 1.8 : overcast ? 2.2 : 3.8;
+  const sun = weather === 'hujan' ? 1.8 : overcast ? 2.2 : 3.5;
   if (phase === 'senja')
     return {
       sky: overcast ? '#ddd6e6' : '#efdfe8',
@@ -41,10 +41,11 @@ export function getLighting(hour: number, weather: WorldPreferences['weather']):
           ? '#d9e2f1'
           : phase === 'pagi'
             ? '#f1f2f8'
-            : '#eef3fc',
-    ambient: 2.8,
+            : '#e4ecfc',
+    // Ambient lebih rendah dari v3 agar sisi bayangan biru terbaca (video tidak pucat).
+    ambient: 2.1,
     sun,
     sunColor: phase === 'pagi' ? '#ffeccc' : '#fff7e8',
-    exposure: 1.25,
+    exposure: 1.12,
   };
 }

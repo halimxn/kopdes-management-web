@@ -7,7 +7,8 @@ import type { Item } from '../records/schemas';
 export const worldPreferencesSchema = z.object({
   version: z.literal(1).default(1),
   weather: z.enum(['cerah', 'berawan', 'hujan']).default('cerah'),
-  time: z.enum(['otomatis', 'pagi', 'siang', 'senja', 'malam']).default('otomatis'),
+  // Bawaan siang seperti video; waktu otomatis WIB tetap dapat dipilih di Suasana.
+  time: z.enum(['otomatis', 'pagi', 'siang', 'senja', 'malam']).default('siang'),
   outfit: z.enum(['biru', 'lavender', 'hijau']).default('biru'),
   quality: z.enum(['otomatis', 'tinggi', 'sedang', 'hemat']).default('otomatis'),
 });

@@ -80,9 +80,11 @@ export const park = {
 export const minWorldZoom = 0.2;
 
 export type WorldZone = 'semua' | 'gudang' | 'kantor' | 'kesehatan' | 'gerai' | 'lahan';
+/** Fokus zona: tengah lebar kavling, di antara deretan bangunan (utara) dan halaman agar bangunan
+ * tidak tertutup kartu KPI di kiri atas. */
 const lotCenter = (id: (typeof lots)[number]['id']) => {
   const f = lots.find((l) => l.id === id)!.fence;
-  return [f.x + f.w / 2, f.z + f.d / 2] as [number, number];
+  return [f.x + f.w / 2, f.z + Math.min(f.d / 2, 13)] as [number, number];
 };
 export const worldZones: Record<
   WorldZone,
