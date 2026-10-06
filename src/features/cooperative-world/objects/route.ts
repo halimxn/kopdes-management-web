@@ -92,7 +92,7 @@ export function createRoute(parent: THREE.Object3D, route: TruckRoute) {
     g.add(disc);
     const pin = new THREE.Group();
     g.add(pin);
-    dropPin(pin, tx, 2.2, tz + 0.4);
+    dropPin(pin, tx, 1.9, tz + 0.4, 1.1);
     mergeStatic(pin);
     g.userData.pin = pin;
   }

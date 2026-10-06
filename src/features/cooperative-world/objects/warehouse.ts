@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { containerSpot, gate, truckBays, warehouse } from '../layout';
-import { badge, box, cylinder, gable, palette, sign } from './primitives';
+import { badge, box, gable, palette, sign } from './primitives';
 import {
   cardboardPallet,
   charger,
@@ -94,10 +94,11 @@ export function createWarehouse(parent: THREE.Object3D) {
   const southRoof = roofSlope(g, 1);
   const northRoof = roofSlope(g, -1);
   box(g, [w + 1, 0.26, 0.55], [0, plinth + h + rise + 0.18, 0], palette.navy, 0.04);
-  // Logo bulat di atap depan dan unit pendingin di atap belakang (seperti video).
-  cylinder(southRoof.slope, 1.05, 0.05, [-4.5, 0.15, 0], '#f4f7ff');
-  cylinder(southRoof.slope, 0.62, 0.06, [-4.5, 0.17, 0], palette.blue);
-  cylinder(southRoof.slope, 0.24, 0.07, [-4.5, 0.19, 0], '#f4f7ff');
+  // Deretan skylight (panel atap terang) di atap depan dan unit pendingin di atap belakang.
+  for (const x of [-8.4, -4.2, 0, 4.2, 8.4]) {
+    box(southRoof.slope, [1.5, 0.05, southRoof.length * 0.62], [x, 0.17, 0.1], '#2f58e6', 0);
+    box(southRoof.slope, [1.3, 0.05, southRoof.length * 0.58], [x, 0.19, 0.1], '#d9e6ff', 0);
+  }
   for (const x of [-9, -7, -1, 1, 6, 8.2]) roofUnit(northRoof.slope, x, 0.11, -0.4);
   doors.forEach((x, index) => dockDoor(g, x, front, index));
   // Papan nama di sisi kanan dinding depan, setelah pintu terakhir.

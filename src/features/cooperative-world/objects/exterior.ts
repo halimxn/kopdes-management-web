@@ -2,10 +2,9 @@ import * as THREE from 'three';
 import type { WorldModel } from '../world-model';
 import { officePosition, officeSize, park, plotSize, roads, site } from '../layout';
 import { box, mergeStatic, mergeTransparent, palette, sign } from './primitives';
-import { bench, dropPin, fence, markingRect, streetLamp, tree } from './props';
+import { bench, fence, markingRect, streetLamp, tree } from './props';
 import { building } from './office';
 import { createLogisticsYard, createWarehouse } from './warehouse';
-import { warehouse } from '../layout';
 
 const asphalt = palette.asphalt;
 const sidewalk = '#f7f9fe';
@@ -124,11 +123,6 @@ export function createExterior(parent: THREE.Group, model: WorldModel) {
   cityBlocks(scenery);
 
   createLogisticsYard(scenery);
-  // Pin biru dari data nyata: barang di bawah minimum menandai area staging gudang.
-  if (model.inventory.low.length) {
-    const [sx, sz] = warehouse.staging;
-    dropPin(scenery, sx - 1.2, 2.2, sz - 2.4);
-  }
 
   // Plaza depan kantor dan taman titik kumpul.
   const [ox, oz] = officePosition;
