@@ -25,7 +25,7 @@ Migrasi diuji dengan PostgreSQL lokal. Konfirmasi pemasangan sebelumnya tidak me
 
 - **Anggota**: nama, nomor anggota unik, tanggal bergabung, kontak, alamat, status, catatan. Tidak menyimpan NIK.
 - **Buku kas**: catat uang masuk/keluar, nominal rupiah bulat, tanggal, kategori, kas/rekening, gerai, nomor bukti dan tautan berkas. Ringkasan mengikuti filter; selisih transaksi bukan saldo rekening, laba, atau laporan akuntansi lengkap. Saldo awal tidak diasumsikan.
-- **Barang**: kode unik, nama, gerai, satuan, stok buku dan batas minimum. Stok berupa unit bulat. Kode unik lintas gerai; gunakan kode berbeda per penempatan jika barang sama berada di beberapa gerai.
+- **Barang**: kode unik, nama, gerai, satuan, rak gudang (A–F, untuk Dunia Koperasi), stok buku dan batas minimum. Stok berupa unit bulat. Kode unik lintas gerai; gunakan kode berbeda per penempatan jika barang sama berada di beberapa gerai.
 - **Stok opname**: dari Barang pilih **Hitung stok**, atau tambah opname dan pilih barang. Stok buku disalin sebagai pembanding; isi hasil hitung fisik dan petugas. Selisih = fisik − buku. Penyimpanan opname tidak memperbarui stok barang otomatis. Koreksi barang dilakukan terpisah agar catatan pemeriksaan tidak berubah.
 - Filter, pencarian, ubah catatan, dan CSV tersedia per buku. Angka ringkasan hanya ditampilkan jika modul aktif dan data berhasil dimuat.
 - Backup JSON dan pemulihan mencakup domain baru. CSV hanya ekspor; tidak ada impor CSV. Anggota dapat dinonaktifkan; tidak ada tombol hapus transaksi/anggota/opname pada halaman pencatatan.

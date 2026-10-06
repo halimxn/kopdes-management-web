@@ -332,7 +332,7 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  max-width: 220px;
+  max-width: 300px;
 }
 .cw-map-pin span {
   overflow: hidden;
@@ -806,13 +806,18 @@
 }
 .cw-tabs {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   padding: 8px 8px 0;
   border-bottom: 1px solid var(--cw-line);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  flex: none;
 }
 .cooperative-world .cw-tabs button {
+  flex: none;
   border-radius: 9px 9px 0 0;
-  padding: 8px 12px;
+  padding: 8px 9px;
   color: var(--cw-muted);
   font-weight: 600;
   border-bottom: 2px solid transparent;
@@ -1335,4 +1340,46 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- Stok gudang ---------- */
+.cooperative-world .cw-map-pin.is-alert:not(.is-selected) {
+  background: var(--cw-amber-soft);
+  border-color: #f0c98c;
+  color: var(--cw-amber);
+}
+.cw-map-pin.is-alert:not(.is-selected) .cw-pin-status {
+  background: #ffffffb3;
+}
+.cw-section-title span {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cw-muted);
+}
+.cw-stock .cw-row {
+  min-height: 48px;
+  gap: 8px;
+}
+.cw-stock-qty {
+  flex: none;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: right;
+}
+.cw-stock-qty small {
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--cw-muted);
+}
+.cw-stock .cw-pill,
+.cw-list-rows .cw-pill {
+  max-width: 96px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+.cw-note a {
+  color: var(--cw-blue);
+  font-weight: 600;
 }

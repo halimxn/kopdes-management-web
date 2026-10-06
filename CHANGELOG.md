@@ -1,5 +1,13 @@
 # Changelog
 
+## Paket 4 — gudang dari data Barang — 6 Oktober 2026
+
+- Dunia memuat Barang; kolom Rak gudang (A–F) pada Barang tanpa SQL. Pencatatan belum aktif ditampilkan sebagai keadaan, bukan stok nol.
+- Interior gudang dengan enam rak berisi kardus sesuai barang tercatat, area staging, forklift; dock Gudang dan tombol Masuk gudang. Pin kuning untuk gudang/rak dengan stok di bawah minimum.
+- Panel Gudang/Rak/Staging dengan daftar barang bergaya kartu inventory video; KPI berganti saat zona/interior gudang; tab Stok di kartu Daftar; memilih rak menerbangkan kamera.
+- Halaman development ?contoh=1 untuk memeriksa tampilan berisi data. Fokus kamera desktop memperhitungkan area KPI.
+- 274 tes/44 berkas, typecheck, lint dan build lulus. Diperiksa di browser dengan contoh: kawasan dan interior gudang 1280 px, interior gudang 375 px. Belum: 360/768/1024/1440 untuk interior gudang, perangkat fisik, data cloud nyata.
+
 ## Paket 3 — UI kartu ala video — 6 Oktober 2026
 
 - CooperativeWorld dipecah ke ui/: WorldHeader (pencarian, pemilih zona, chip Suasana, jam), KpiCards, DetailCard (eyebrow, pill status, meter, kunci–nilai), ListCard (tab Lokasi/Tugas/Rapat), TodayTracker (langkah rapat hari ini pengganti shipment tracker), MobileSheet. world.css ditulis ulang: token kartu 14 px, teks minimal 11 px, pill bertulisan.

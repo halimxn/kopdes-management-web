@@ -32,6 +32,7 @@ export const catalog: Record<Entity, { title: string; description: string; field
       'price',
       'unit_id',
       'measurement',
+      'rack',
       'book_quantity',
       'minimum_quantity',
       'notes',
@@ -208,6 +209,7 @@ export const catalog: Record<Entity, { title: string; description: string; field
 export const labels: Record<string, string> = {
   duration: 'Durasi (menit)',
   slot: 'Lahan di Dunia Koperasi',
+  rack: 'Rak gudang',
   member_number: 'Nomor anggota',
   address: 'Alamat',
   direction: 'Jenis transaksi',
@@ -317,6 +319,7 @@ export const options: Record<string, string[]> = {
   'checklist.status': ['rencana', 'proses', 'selesai'],
   'units.status': ['rencana', 'persiapan', 'siap uji', 'siap buka', 'aktif'],
   'units.slot': ['otomatis', '1', '2', '3', '4', '5', '6', '7'],
+  'inventory-items.rack': ['belum ditentukan', 'A', 'B', 'C', 'D', 'E', 'F'],
   'documents.status': ['belum ada', 'diproses', 'tersedia'],
   'risks.status': ['terbuka', 'ditangani', 'ditutup'],
   'issues.status': ['terbuka', 'ditangani', 'ditutup'],

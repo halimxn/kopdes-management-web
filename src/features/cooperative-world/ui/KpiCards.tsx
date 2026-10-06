@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { CheckCheck, Store, Users } from 'lucide-react';
-import type { MeetingStep, WorldModel } from '../world-model';
+import { AlertTriangle, Boxes, CheckCheck, Store, Users, Warehouse } from 'lucide-react';
+import type { StockState } from './DetailCard';
+import { rackIds, type MeetingStep, type WorldModel } from '../world-model';
 import { landPositions } from '../layout';
 
 type Props = {
@@ -9,14 +10,55 @@ type Props = {
   /** Saat memuat atau galat angka diganti tanda — agar tidak terbaca sebagai nol. */
   unavailable: boolean;
   loading: boolean;
+  /** Zona/interior gudang menampilkan ringkasan stok, bukan ringkasan kantor. */
+  warehouse: boolean;
+  stockState: StockState;
 };
 
-export function KpiCards({ model, timeline, unavailable, loading }: Props) {
+export function KpiCards({ model, timeline, unavailable, loading, warehouse, stockState }: Props) {
   const value = (count: number) => (unavailable ? '—' : count);
   const working = model.tasks.filter((row) => row.data.status === 'proses').length;
   const current = timeline.find((step) => step.state === 'berlangsung');
   const next = timeline.find((step) => step.state === 'nanti');
-  const cards = [
+  const inventory = model.inventory;
+  const stockReady = stockState === 'aktif';
+  const stockNote = (text: string) =>
+    stockState === 'belum-aktif'
+      ? 'Pencatatan belum aktif'
+      : stockState === 'pratinjau'
+        ? 'Tanpa data pratinjau'
+        : stockReady
+          ? text
+          : 'Data belum tersedia';
+  const stockValue = (count: number) => (stockReady ? count : '—');
+  const filledRacks = rackIds.filter((id) => inventory.racks[id].length).length;
+  const stockCards = [
+    {
+      href: '/barang',
+      icon: <Boxes size={20} />,
+      label: 'Barang tercatat',
+      value: stockValue(inventory.items.length),
+      unit: '',
+      note: stockNote(`${inventory.atUnits.length} ditempatkan di gerai`),
+    },
+    {
+      href: '/barang',
+      icon: <AlertTriangle size={20} />,
+      label: 'Di bawah minimum',
+      value: stockValue(inventory.low.length),
+      unit: '',
+      note: stockNote(inventory.low.length ? 'Perlu ditambah' : 'Semua di atas minimum'),
+    },
+    {
+      href: '/barang',
+      icon: <Warehouse size={20} />,
+      label: 'Rak terisi',
+      value: stockValue(filledRacks),
+      unit: `/ ${rackIds.length} rak`,
+      note: stockNote(`${inventory.staging.length} belum punya rak`),
+    },
+  ];
+  const officeCards = [
     {
       href: '/gerai',
       icon: <Store size={20} />,
@@ -48,6 +90,7 @@ export function KpiCards({ model, timeline, unavailable, loading }: Props) {
             : 'Tidak ada jadwal lagi',
     },
   ];
+  const cards = warehouse ? stockCards : officeCards;
   return (
     <div className="cw-kpis">
       {cards.map((card) => (

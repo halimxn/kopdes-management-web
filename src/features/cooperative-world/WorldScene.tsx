@@ -14,6 +14,7 @@ import {
   officePosition,
   officeSize,
   warehouse,
+  warehouseInterior,
   worldStations,
 } from './layout';
 import { getLighting } from './lighting';
@@ -23,7 +24,15 @@ import {
   resolveQuality,
   type QualityChoice,
 } from './render-quality';
-import type { CharacterActivity, WorldLocation, WorldModel, WorldPreferences } from './world-model';
+import {
+  isBelowMinimum,
+  rackIds,
+  type CharacterActivity,
+  type WorldLocation,
+  type WorldModel,
+  type WorldPreferences,
+} from './world-model';
+import { createWarehouseInterior } from './objects/warehouse-interior';
 
 type Props = {
   model: WorldModel;
@@ -111,7 +120,9 @@ export function WorldScene({
       'aria-label',
       location === 'luar'
         ? 'Lingkungan koperasi 3D. Geser untuk memutar, cubit untuk memperbesar.'
-        : 'Interior koperasi 3D. Pilih meja melalui penanda atau panel.',
+        : location === 'gudang'
+          ? 'Interior gudang 3D. Pilih rak melalui penanda atau daftar.'
+          : 'Interior koperasi 3D. Pilih meja melalui penanda atau panel.',
     );
     node.prepend(renderer.domElement);
     // Hanya development: memeriksa anggaran draw call dari konsol (window.__cwRenderInfo).
@@ -175,6 +186,7 @@ export function WorldScene({
     const world = new THREE.Group();
     scene.add(world);
     if (location === 'luar') createExterior(world, model);
+    else if (location === 'gudang') createWarehouseInterior(world, model.inventory);
     else {
       createInterior(world);
       mergeStatic(world);
@@ -284,6 +296,13 @@ export function WorldScene({
           new THREE.Vector3(plot.position[0], plot.unit ? 3.1 : 0.6, plot.position[1]),
         ),
       );
+    } else if (location === 'gudang') {
+      for (const id of rackIds) {
+        const [x, z] = warehouseInterior.racks[id];
+        positions.set(`rak-${id}`, new THREE.Vector3(x, warehouseInterior.rackSize[1] + 0.6, z));
+      }
+      const [sx, sz] = warehouseInterior.staging;
+      positions.set('staging', new THREE.Vector3(sx, 1.6, sz));
     } else
       worldStations.forEach((station) =>
         positions.set(station.id, new THREE.Vector3(station.position[0], 2.2, station.position[2])),
@@ -322,7 +341,7 @@ export function WorldScene({
       renderer.toneMappingExposure = light.exposure;
       characters.forEach((character, index) => {
         const mode =
-          location === 'luar'
+          location !== 'dalam'
             ? 'idle'
             : index === 0
               ? state.activity === 'meeting'
@@ -434,31 +453,63 @@ export function WorldScene({
       floor.material.dispose();
     };
   }, [selected, location, model, tier]);
-  const markers =
-    location === 'luar'
+  const low = model.inventory.low.length;
+  const markers: {
+    id: string;
+    label: string;
+    occupied: boolean;
+    status: string;
+    alert?: boolean;
+  }[] =
+    location === 'gudang'
       ? [
-          { id: 'koperasi', label: 'Kantor koperasi', occupied: true, status: 'Masuk' },
-          {
-            id: 'gudang',
-            label: 'Gudang koperasi',
-            occupied: true,
-            status: `${warehouse.docks.length} dok`,
-          },
-          ...model.plots.map((plot, i) => ({
-            id: plot.id,
-            label: plot.unit
-              ? String(plot.unit.data.title)
-              : `Lahan ${String(i + 1).padStart(2, '0')}`,
-            occupied: Boolean(plot.unit),
-            status: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
-          })),
+          ...rackIds.map((id) => {
+            const items = model.inventory.racks[id];
+            const lowItems = items.filter(isBelowMinimum).length;
+            return {
+              id: `rak-${id}`,
+              label: `Rak ${id}`,
+              occupied: items.length > 0,
+              status: lowItems ? `${lowItems} di bawah minimum` : `${items.length} barang`,
+              alert: lowItems > 0,
+            };
+          }),
+          ...(model.inventory.staging.length
+            ? [
+                {
+                  id: 'staging',
+                  label: 'Area staging',
+                  occupied: true,
+                  status: `${model.inventory.staging.length} belum ber-rak`,
+                },
+              ]
+            : []),
         ]
-      : worldStations.map((station) => ({
-          id: station.id,
-          label: station.title,
-          occupied: true,
-          status: 'Buka',
-        }));
+      : location === 'luar'
+        ? [
+            { id: 'koperasi', label: 'Kantor koperasi', occupied: true, status: 'Masuk' },
+            {
+              id: 'gudang',
+              label: 'Gudang koperasi',
+              occupied: true,
+              status: low ? `${low} di bawah minimum` : `${warehouse.docks.length} dok`,
+              alert: low > 0,
+            },
+            ...model.plots.map((plot, i) => ({
+              id: plot.id,
+              label: plot.unit
+                ? String(plot.unit.data.title)
+                : `Lahan ${String(i + 1).padStart(2, '0')}`,
+              occupied: Boolean(plot.unit),
+              status: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
+            })),
+          ]
+        : worldStations.map((station) => ({
+            id: station.id,
+            label: station.title,
+            occupied: true,
+            status: 'Buka',
+          }));
   return (
     <div className="cw-scene" ref={host}>
       {failed && (
@@ -478,7 +529,7 @@ export function WorldScene({
             }}
           >
             <Button
-              className={`cw-map-pin ${selected === marker.id ? 'is-selected' : ''} ${!marker.occupied ? 'is-empty' : ''}`}
+              className={`cw-map-pin ${selected === marker.id ? 'is-selected' : ''} ${!marker.occupied ? 'is-empty' : ''} ${marker.alert ? 'is-alert' : ''}`}
               onClick={() => onSelect(marker.id)}
               aria-label={marker.id === 'koperasi' ? 'Masuk kantor koperasi' : marker.label}
             >
@@ -492,7 +543,9 @@ export function WorldScene({
                 <Plus size={14} />
               )}
               <span>{marker.label}</span>
-              {selected === marker.id && <em className="cw-pin-status">{marker.status}</em>}
+              {(selected === marker.id || marker.alert) && (
+                <em className="cw-pin-status">{marker.status}</em>
+              )}
             </Button>
           </div>
         ))}

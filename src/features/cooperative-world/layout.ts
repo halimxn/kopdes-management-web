@@ -100,6 +100,22 @@ export const worldStations = [
   },
 ] as const;
 
+/** Interior gudang (koordinat lokal): dinding belakang Z −7, kiri X −10; sisi depan terbuka. */
+export const warehouseInterior = {
+  size: [20, 14] as [number, number],
+  rackSize: [5.2, 3.2, 1.2] as [number, number, number],
+  /** Rak A–C baris belakang, D–F baris depan; X/Z pusat rak. */
+  racks: {
+    A: [-6, -4.6],
+    B: [0, -4.6],
+    C: [6, -4.6],
+    D: [-6, -0.8],
+    E: [0, -0.8],
+    F: [6, -0.8],
+  } as Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F', [number, number]>,
+  staging: [-5, 4.4] as [number, number],
+};
+
 /** Posisi awal maskot: [manajer, karakter 2, karakter 3]. */
 export const characterSpots = {
   luar: [
@@ -112,10 +128,16 @@ export const characterSpots = {
     [2, 0.1, -0.15],
     [5.3, 0.3, 3.5],
   ],
+  gudang: [
+    [-2.6, 0.1, 2.2],
+    [3, 0.1, 1.2],
+    [0.5, 0.1, 4.8],
+  ],
 } as const satisfies Record<string, readonly (readonly [number, number, number])[]>;
 
 /** Setengah tinggi bidang pandang kamera ortografis pada zoom 1. */
 export const cameraSpan = {
   luar: { portrait: 20, landscape: 13.2 },
   dalam: { portrait: 11.5, landscape: 8.5 },
+  gudang: { portrait: 13, landscape: 9.5 },
 };

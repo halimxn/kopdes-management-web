@@ -75,6 +75,16 @@ Koordinat ada di `layout.ts` (X ke timur, Z ke selatan; kamera dari tenggara). K
 
 Belum tersedia drag/editor lahan. Truk dan pengiriman muncul setelah domain Pengiriman tersedia.
 
+## Interior gudang dan data Barang
+
+- Dunia memuat domain `inventory-items`. Bila pemeriksaan kemampuan server menyatakan pencatatan belum aktif, KPI/panel menampilkan tanda — dan "Pencatatan barang belum aktif" dengan tautan ke Pencatatan; tidak pernah angka 0. Pratinjau tanpa data menulis "Pratinjau tanpa data barang".
+- Kolom baru **Rak gudang** (`rack`: belum ditentukan, A–F) pada Barang, disimpan di data JSON tanpa SQL. Barang ber-rak masuk rak itu; tanpa rak tetapi punya gerai dianggap di gerai; sisanya di area staging.
+- Di bawah minimum = stok buku < batas minimum dan batas > 0 (`isBelowMinimum`). Label selalu "stok buku", bukan hitung fisik.
+- Interior gudang (`location = 'gudang'`, dock **Gudang**, tombol "Masuk gudang" di panel Gudang): dinding belakang/kiri bergaris dengan pintu dok, enam rak biru-oranye A–C/D–F tiga tingkat, lorong bermarka kuning, area staging, forklift dan meja kemas. Setiap barang = satu kardus (maks. 12 per rak); kardus pendek = di bawah minimum.
+- Penanda rak menampilkan jumlah barang; rak/gudang dengan barang di bawah minimum memakai pin kuning berstatus walau tidak dipilih. Panel Gudang/Rak/Staging berisi meter, daftar barang (di bawah minimum didahulukan, pill Cukup/Di bawah minimum) dan tautan ke catatan Barang.
+- Zona/interior gudang mengganti KPI menjadi Barang tercatat, Di bawah minimum, Rak terisi. Kartu Daftar mendapat tab **Stok**; di dalam gudang tab Lokasi menjadi **Rak**.
+- Halaman development `/dev/dunia-koperasi?contoh=1` memuat contoh berjudul "Contoh …" untuk memeriksa tampilan berisi data; tidak tersedia di build produksi.
+
 ## Interior dan karakter
 
 Kantor cutaway tanpa atap/dinding depan. Empat area: meja rapat kayu muda dengan enam kursi, workstation komputer, arsip/buku, treadmill kegiatan. Penanda/detail membuka /rapat, /tugas, /dokumen, /pencatatan atau /jurnal.

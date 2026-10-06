@@ -12,7 +12,8 @@ export const worldPreferencesSchema = z.object({
   quality: z.enum(['otomatis', 'tinggi', 'sedang', 'hemat']).default('otomatis'),
 });
 export type WorldPreferences = z.infer<typeof worldPreferencesSchema>;
-export type WorldLocation = 'luar' | 'dalam';
+/** luar: kawasan; dalam: interior kantor; gudang: interior gudang. */
+export type WorldLocation = 'luar' | 'dalam' | 'gudang';
 export type CharacterActivity = 'idle' | 'work' | 'meeting' | 'gym';
 
 export function getWorldModel(data: Workspace, now: Date) {
@@ -46,11 +47,43 @@ export function getWorldModel(data: Workspace, now: Date) {
     currentMeeting,
     activity,
     ...placeUnits(units),
+    inventory: summarizeInventory(data['inventory-items'] || []),
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),
   };
 }
 export type WorldModel = ReturnType<typeof getWorldModel>;
+
+export const rackIds = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
+export type RackId = (typeof rackIds)[number];
+
+/** Stok buku di bawah batas minimum; batas 0 atau kosong berarti tidak dipantau. */
+export function isBelowMinimum(item: Item) {
+  const stock = Number(item.data.book_quantity);
+  const minimum = Number(item.data.minimum_quantity);
+  return Number.isFinite(stock) && Number.isFinite(minimum) && minimum > 0 && stock < minimum;
+}
+
+/**
+ * Kelompokkan barang menurut rak gudang. Barang tanpa rak yang ditempatkan di gerai
+ * dianggap berada di gerai; sisanya menunggu penempatan di area staging.
+ */
+export function summarizeInventory(items: Item[]) {
+  const racks = Object.fromEntries(rackIds.map((id) => [id, [] as Item[]])) as Record<
+    RackId,
+    Item[]
+  >;
+  const staging: Item[] = [];
+  const atUnits: Item[] = [];
+  for (const item of items) {
+    const rack = String(item.data.rack || '') as RackId;
+    if (rackIds.includes(rack)) racks[rack].push(item);
+    else if (item.data.unit_id) atUnits.push(item);
+    else staging.push(item);
+  }
+  return { items, racks, staging, atUnits, low: items.filter(isBelowMinimum) };
+}
+export type InventorySummary = ReturnType<typeof summarizeInventory>;
 
 export type MeetingStep = {
   row: Item;

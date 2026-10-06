@@ -35,3 +35,9 @@ it('preferensi korup tidak mencegah halaman tampil', () => {
   expect(screen.getByRole('heading', { name: 'Suasana & karakter' })).toBeTruthy();
   expect(screen.getByText(/Cuaca adalah simulasi/)).toBeTruthy();
 });
+it('pencatatan barang belum aktif tidak ditampilkan sebagai stok nol', () => {
+  render(<CooperativeWorld data={{}} operations={false} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Gudang' }));
+  expect(screen.getByRole('link', { name: /Barang tercatat/ }).textContent).toContain('—');
+  expect(screen.getAllByText(/Pencatatan barang belum aktif/).length).toBeGreaterThan(0);
+});

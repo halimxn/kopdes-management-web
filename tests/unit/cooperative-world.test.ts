@@ -3,6 +3,8 @@ import {
   getWorldHour,
   getWorldModel,
   meetingTimeline,
+  summarizeInventory,
+  isBelowMinimum,
   worldPreferencesSchema,
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
@@ -149,5 +151,23 @@ describe('jadwal rapat hari ini', () => {
       ['sore', 'nanti'],
     ]);
     expect(steps[1].end).toBe('11:30');
+  });
+});
+
+describe('inventaris gudang', () => {
+  it('mengelompokkan barang per rak, gerai dan staging serta menandai stok minimum', () => {
+    const items = [
+      row('a', { title: 'A', rack: 'A', book_quantity: 2, minimum_quantity: 5 }),
+      row('b', { title: 'B', rack: 'A', book_quantity: 9, minimum_quantity: 5 }),
+      row('c', { title: 'C', rack: 'belum ditentukan', unit_id: 'unit-1', book_quantity: 1 }),
+      row('d', { title: 'D', book_quantity: 0, minimum_quantity: 0 }),
+    ];
+    const inventory = summarizeInventory(items);
+    expect(inventory.racks.A.map((item) => item.id)).toEqual(['a', 'b']);
+    expect(inventory.atUnits.map((item) => item.id)).toEqual(['c']);
+    expect(inventory.staging.map((item) => item.id)).toEqual(['d']);
+    expect(inventory.low.map((item) => item.id)).toEqual(['a']);
+    // Batas minimum 0 berarti tidak dipantau, bukan kekurangan.
+    expect(isBelowMinimum(items[3])).toBe(false);
   });
 });

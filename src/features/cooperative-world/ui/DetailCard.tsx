@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BookOpen,
+  Boxes,
   Building2,
   CheckCheck,
   ChevronRight,
@@ -19,13 +20,75 @@ import { Select } from '@/components/ui/Select';
 import { today } from '@/lib/date';
 import { recordHref } from '../../workspace/workspace-navigation';
 import { landPositions, warehouse, worldStations, worldZones, type WorldZone } from '../layout';
-import type {
-  CharacterActivity,
-  MeetingStep,
-  WorldLocation,
-  WorldModel,
-  WorldPreferences,
+import {
+  isBelowMinimum,
+  type CharacterActivity,
+  type MeetingStep,
+  type RackId,
+  type WorldLocation,
+  type WorldModel,
+  type WorldPreferences,
 } from '../world-model';
+import type { Item } from '../../records/schemas';
+
+/** aktif: data barang dimuat; belum-aktif: migrasi pencatatan belum terpasang di server. */
+export type StockState = 'aktif' | 'belum-aktif' | 'pratinjau' | 'tidak-tersedia';
+
+/** Daftar barang bergaya kartu inventory video: barang di bawah minimum didahulukan. */
+function StockList({ items, state, empty }: { items: Item[]; state: StockState; empty: string }) {
+  if (state === 'belum-aktif')
+    return (
+      <p className="cw-note">
+        Pencatatan barang belum aktif di server, sehingga isi gudang belum dapat ditampilkan.{' '}
+        <Link href="/pencatatan">Buka Pencatatan</Link>
+      </p>
+    );
+  if (state !== 'aktif')
+    return (
+      <p className="cw-note">
+        {state === 'pratinjau' ? 'Pratinjau tanpa data barang.' : 'Data barang belum tersedia.'}
+      </p>
+    );
+  if (!items.length) return <p className="cw-note">{empty}</p>;
+  const sorted = [...items].sort(
+    (a, b) =>
+      Number(isBelowMinimum(b)) - Number(isBelowMinimum(a)) ||
+      String(a.data.title).localeCompare(String(b.data.title)),
+  );
+  return (
+    <div className="cw-stock">
+      <h2 className="cw-section-title">
+        Barang <span>stok buku</span>
+      </h2>
+      {sorted.slice(0, 8).map((item) => {
+        const low = isBelowMinimum(item);
+        return (
+          <Link key={item.id} className="cw-row" href={recordHref('inventory-items', item)}>
+            <span className={`cw-row-icon ${low ? 'is-amber' : ''}`}>
+              <Boxes size={16} />
+            </span>
+            <span className="cw-row-text">
+              <strong>{String(item.data.title)}</strong>
+              <small>
+                Stok {String(item.data.book_quantity ?? '—')}{' '}
+                {String(item.data.measurement || '')} · min{' '}
+                {String(item.data.minimum_quantity ?? '—')}
+              </small>
+            </span>
+            <span className={`cw-pill ${low ? 'is-amber' : 'is-green'}`}>
+              {low ? 'Di bawah minimum' : 'Cukup'}
+            </span>
+          </Link>
+        );
+      })}
+      {sorted.length > 8 && (
+        <Link className="cw-secondary" href="/barang">
+          {sorted.length - 8} barang lainnya <ArrowRight size={14} />
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export const activityNames: Record<CharacterActivity, string> = {
   idle: 'Bersantai',
@@ -49,6 +112,8 @@ type Props = {
   status: { label: string; tone: 'green' | 'muted' | 'red' };
   unavailable: boolean;
   onSelect: (id: string) => void;
+  stockState: StockState;
+  onEnter: (location: WorldLocation) => void;
   onClose?: () => void;
 };
 
@@ -97,6 +162,10 @@ export function DetailCard(props: Props) {
   const station = worldStations.find((item) => item.id === selected);
   const plotNumber = plot ? plot.id.split('-')[1] : '';
   const count = (value: number) => (unavailable ? '—' : value);
+  const inventory = model.inventory;
+  const rackId = selected.startsWith('rak-') ? (selected.slice(4) as RackId) : null;
+  const rackItems = rackId ? inventory.racks[rackId] || [] : [];
+  const stockReady = props.stockState === 'aktif';
   const head =
     selected === 'lingkungan'
       ? {
@@ -114,38 +183,57 @@ export function DetailCard(props: Props) {
           }
         : selected === 'gudang'
           ? {
-              eyebrow: `Gudang · ${warehouse.docks.length} dok`,
+              eyebrow:
+                location === 'gudang'
+                  ? 'Gudang · interior'
+                  : `Gudang · ${warehouse.docks.length} dok`,
               title: worldZones.gudang.title,
               subtitle: 'Bongkar muat dan stok',
               icon: <Warehouse size={22} />,
             }
-          : plot
+          : rackId
             ? {
-                eyebrow: `Lahan ${plotNumber.padStart(2, '0')} · Boulevard gerai`,
-                title: plot.unit ? String(plot.unit.data.title) : `Lahan ${plotNumber}`,
-                subtitle: plot.unit
-                  ? 'Terhubung ke catatan gerai'
-                  : 'Bidang tersedia untuk gerai baru',
-                icon: <Store size={22} />,
+                eyebrow: 'Gudang · rak',
+                title: `Rak ${rackId}`,
+                subtitle: stockReady
+                  ? `${rackItems.length} barang tercatat`
+                  : 'Isi mengikuti daftar Barang',
+                icon: <Boxes size={22} />,
               }
-            : station
+            : selected === 'staging'
               ? {
-                  eyebrow: 'Kantor · interior',
-                  title: station.title,
-                  subtitle: 'Pilih area untuk membuka catatan',
-                  icon: <Building2 size={22} />,
+                  eyebrow: 'Gudang · staging',
+                  title: 'Area staging',
+                  subtitle: 'Barang tanpa rak dan tanpa gerai',
+                  icon: <Boxes size={22} />,
                 }
-              : {
-                  eyebrow:
-                    location === 'dalam'
-                      ? 'Kantor · interior'
-                      : zone === 'semua'
-                        ? 'Dunia koperasi'
-                        : `Zona · ${worldZones[zone].title}`,
-                  title: 'Kawasan koperasi',
-                  subtitle: model.title,
-                  icon: <Map size={22} />,
-                };
+              : plot
+                ? {
+                    eyebrow: `Lahan ${plotNumber.padStart(2, '0')} · Boulevard gerai`,
+                    title: plot.unit ? String(plot.unit.data.title) : `Lahan ${plotNumber}`,
+                    subtitle: plot.unit
+                      ? 'Terhubung ke catatan gerai'
+                      : 'Bidang tersedia untuk gerai baru',
+                    icon: <Store size={22} />,
+                  }
+                : station
+                  ? {
+                      eyebrow: 'Kantor · interior',
+                      title: station.title,
+                      subtitle: 'Pilih area untuk membuka catatan',
+                      icon: <Building2 size={22} />,
+                    }
+                  : {
+                      eyebrow:
+                        location === 'dalam'
+                          ? 'Kantor · interior'
+                          : zone === 'semua'
+                            ? 'Dunia koperasi'
+                            : `Zona · ${worldZones[zone].title}`,
+                      title: 'Kawasan koperasi',
+                      subtitle: model.title,
+                      icon: <Map size={22} />,
+                    };
   const date = today();
   const overdue = model.tasks.filter(
     (row) => row.data.due_date && String(row.data.due_date) < date,
@@ -255,21 +343,64 @@ export function DetailCard(props: Props) {
         ) : selected === 'gudang' ? (
           <>
             <div className="cw-status-line">
-              <span className="cw-pill is-blue">Area logistik</span>
-              <small>{warehouse.docks.length} pintu dok · 1 area staging</small>
+              <span
+                className={`cw-pill ${stockReady && inventory.low.length ? 'is-amber' : 'is-blue'}`}
+              >
+                {stockReady && inventory.low.length
+                  ? `${inventory.low.length} di bawah minimum`
+                  : 'Area logistik'}
+              </span>
+              <small>{warehouse.docks.length} pintu dok · 6 rak</small>
             </div>
-            <Rows
-              items={[
-                ['Pintu dok', warehouse.docks.map((_, i) => `D${i + 1}`).join(', ')],
-                ['Isi rak', 'Mengikuti daftar Barang'],
-                ['Truk di dok', 'Mengikuti catatan Pengiriman'],
-              ]}
+            {stockReady && (
+              <div className="cw-meters">
+                <Meter
+                  label="Barang di rak"
+                  value={
+                    inventory.items.length - inventory.staging.length - inventory.atUnits.length
+                  }
+                  total={inventory.items.length}
+                  tone="green"
+                />
+                <Meter
+                  label="Di bawah minimum"
+                  value={inventory.low.length}
+                  total={inventory.items.length}
+                />
+              </div>
+            )}
+            <StockList
+              items={inventory.items}
+              state={props.stockState}
+              empty="Belum ada barang tercatat."
             />
+            {location === 'gudang' ? (
+              <Button className="cw-secondary" onClick={() => props.onEnter('luar')}>
+                Kembali ke kawasan <ArrowRight size={14} />
+              </Button>
+            ) : (
+              <Button className="cw-primary" onClick={() => props.onEnter('gudang')}>
+                Masuk gudang <ArrowRight size={15} />
+              </Button>
+            )}
+            <Link className="cw-secondary" href="/barang">
+              Buka daftar barang <ArrowRight size={14} />
+            </Link>
+          </>
+        ) : rackId || selected === 'staging' ? (
+          <>
             <p className="cw-note">
-              Kardus dan forklift di halaman gudang saat ini hanya pemandangan, bukan stok tercatat.
+              {rackId
+                ? `Barang dengan kolom Rak gudang = ${rackId}. Setiap kardus mewakili satu jenis barang; kardus pendek berarti stok buku di bawah minimum.`
+                : 'Barang tanpa rak dan tanpa gerai. Isi kolom Rak gudang agar barang tampil di rak.'}
             </p>
+            <StockList
+              items={rackId ? rackItems : inventory.staging}
+              state={props.stockState}
+              empty={rackId ? `Belum ada barang di rak ${rackId}.` : 'Tidak ada barang tanpa rak.'}
+            />
             <Link className="cw-primary" href="/barang">
-              Buka daftar barang <ArrowRight size={15} />
+              Atur barang <ArrowRight size={15} />
             </Link>
           </>
         ) : plot ? (

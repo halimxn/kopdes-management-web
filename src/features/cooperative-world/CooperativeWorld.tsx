@@ -20,6 +20,7 @@ import {
   Sun,
   Sunrise,
   Sunset,
+  Warehouse,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { usePreference } from '@/lib/usePreference';
@@ -30,14 +31,15 @@ import {
   meetingTimeline,
   worldPreferencesSchema,
   type CharacterActivity,
+  type RackId,
   type WorldLocation,
   type WorldPreferences,
 } from './world-model';
-import { worldStations, worldZones, type WorldZone } from './layout';
+import { warehouseInterior, worldStations, worldZones, type WorldZone } from './layout';
 import { dayPhase } from './lighting';
 import { WorldHeader } from './ui/WorldHeader';
 import { KpiCards } from './ui/KpiCards';
-import { DetailCard, activityNames } from './ui/DetailCard';
+import { DetailCard, activityNames, type StockState } from './ui/DetailCard';
 import { ListCard } from './ui/ListCard';
 import { TodayTracker } from './ui/TodayTracker';
 import { MobileSheet, type SheetSnap, type SheetTab } from './ui/MobileSheet';
@@ -68,6 +70,8 @@ type Props = {
   error?: string;
   refresh?: () => Promise<void>;
   partial?: boolean;
+  /** false bila pencatatan barang/kas belum aktif di server; undefined di pratinjau. */
+  operations?: boolean;
 };
 
 export function CooperativeWorld({
@@ -77,6 +81,7 @@ export function CooperativeWorld({
   error = '',
   refresh,
   partial = false,
+  operations,
 }: Props) {
   const wide = useWideLayout();
   const [now, setNow] = useState(() => new Date());
@@ -115,8 +120,18 @@ export function CooperativeWorld({
   const night = dayPhase(hour) === 'malam';
   const activity = rehearsal === 'otomatis' ? model.activity : rehearsal;
   const unavailable = loading || Boolean(error);
+  // Pencatatan belum aktif berbeda dari stok nol; jangan tampilkan angka 0 untuk keadaan itu.
+  // Pratinjau tanpa barang = pratinjau kosong; pratinjau development berisi contoh menampilkan contohnya.
+  const stockState: StockState =
+    preview && !model.inventory.items.length
+      ? 'pratinjau'
+      : unavailable
+        ? 'tidak-tersedia'
+        : operations === false
+          ? 'belum-aktif'
+          : 'aktif';
   const focus: readonly [number, number] =
-    location === 'dalam' ? [0, 0] : spot || worldZones[zone].target;
+    location === 'luar' ? spot || worldZones[zone].target : spot || [0, 0];
   const clock = new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta',
     hour: '2-digit',
@@ -166,9 +181,11 @@ export function CooperativeWorld({
   }
   function enter(next: WorldLocation) {
     setLocation(next);
-    setSelected(next === 'luar' ? 'kawasan' : 'rapat');
+    setSelected(next === 'luar' ? 'kawasan' : next === 'gudang' ? 'gudang' : 'rapat');
+    if (next === 'gudang') setZone('gudang');
     setSpot(null);
-    setZoom(next === 'luar' ? worldZones[zone].zoom : 1);
+    // Interior gudang lebih lebar dari kantor; zoom awal lebih jauh agar enam rak terlihat.
+    setZoom(next === 'luar' ? worldZones[zone].zoom : next === 'gudang' ? 0.8 : 1);
     setRotation(0);
     setRecenter((value) => value + 1);
     setPanelOpen(true);
@@ -188,7 +205,8 @@ export function CooperativeWorld({
     setSelected(id);
     showDetail();
     // Pilihan dari daftar menggerakkan kamera; klik di scene tidak memindahkan kamera.
-    const target = model.plots.find((item) => item.id === id)?.position;
+    const rack = id.startsWith('rak-') ? warehouseInterior.racks[id.slice(4) as RackId] : undefined;
+    const target = model.plots.find((item) => item.id === id)?.position || rack;
     if (fly && target) {
       setSpot(target);
       setZoom(1.15);
@@ -221,6 +239,8 @@ export function CooperativeWorld({
       weatherIcon={weatherIcon}
       status={status}
       unavailable={unavailable}
+      stockState={stockState}
+      onEnter={enter}
       onSelect={(id) => select(id)}
       onClose={wide ? () => setPanelOpen(false) : undefined}
     />
@@ -231,6 +251,8 @@ export function CooperativeWorld({
       timeline={timeline}
       query={query}
       unavailable={unavailable}
+      location={location}
+      stockState={stockState}
       onSelect={(id) => select(id, true)}
     />
   );
@@ -248,19 +270,23 @@ export function CooperativeWorld({
       ? location === 'dalam'
         ? 'Kantor koperasi'
         : worldZones[zone].title
-      : selectedPlot
-        ? String(selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`)
-        : selected === 'gudang'
-          ? worldZones.gudang.title
-          : selected === 'lingkungan'
-            ? 'Suasana'
-            : selected === 'karakter'
-              ? 'Maskot koperasi'
-              : worldStations.find((item) => item.id === selected)?.title || 'Kantor koperasi';
+      : selected.startsWith('rak-')
+        ? `Rak ${selected.slice(4)}`
+        : selected === 'staging'
+          ? 'Area staging'
+          : selectedPlot
+            ? String(selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`)
+            : selected === 'gudang'
+              ? worldZones.gudang.title
+              : selected === 'lingkungan'
+                ? 'Suasana'
+                : selected === 'karakter'
+                  ? 'Maskot koperasi'
+                  : worldStations.find((item) => item.id === selected)?.title || 'Kantor koperasi';
   // Kartu kanan desktop (320 px + jarak) atau lembar bawah ponsel menutupi sebagian scene.
   const occlusion = useMemo(
     () =>
-      wide ? { right: panelOpen ? 352 : 0, top: 0, sheet: null } : { right: 0, top: 130, sheet },
+      wide ? { right: panelOpen ? 352 : 0, top: 110, sheet: null } : { right: 0, top: 130, sheet },
     [wide, panelOpen, sheet],
   );
 
@@ -301,16 +327,23 @@ export function CooperativeWorld({
           bubble={bubble}
           onSelect={select}
         />
-        <KpiCards model={model} timeline={timeline} unavailable={unavailable} loading={loading} />
+        <KpiCards
+          model={model}
+          timeline={timeline}
+          unavailable={unavailable}
+          loading={loading}
+          warehouse={location === 'gudang' || (location === 'luar' && zone === 'gudang')}
+          stockState={stockState}
+        />
         <div className="cw-crumbs">
           <Button onClick={() => enter('luar')} aria-label="Lihat kawasan">
             <House size={14} />
             Kawasan
           </Button>
-          {location === 'dalam' && (
+          {location !== 'luar' && (
             <>
               <ChevronRight size={13} />
-              <span>Kantor koperasi</span>
+              <span>{location === 'gudang' ? 'Gudang koperasi' : 'Kantor koperasi'}</span>
             </>
           )}
           {(preview || partial || error || loading) && (
@@ -352,7 +385,7 @@ export function CooperativeWorld({
             aria-label="Atur ulang kamera"
             onClick={() => {
               setSpot(null);
-              setZoom(location === 'luar' ? worldZones[zone].zoom : 1);
+              setZoom(location === 'luar' ? worldZones[zone].zoom : location === 'gudang' ? 0.8 : 1);
               setRotation(0);
               setRecenter((value) => value + 1);
             }}
@@ -414,6 +447,10 @@ export function CooperativeWorld({
         <Button aria-pressed={location === 'dalam'} onClick={() => enter('dalam')}>
           <Building2 size={19} />
           <span>Kantor</span>
+        </Button>
+        <Button aria-pressed={location === 'gudang'} onClick={() => enter('gudang')}>
+          <Warehouse size={19} />
+          <span>Gudang</span>
         </Button>
         <Button aria-pressed={selected === 'karakter'} onClick={() => select('karakter')}>
           <MessageCircle size={19} />

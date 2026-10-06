@@ -282,6 +282,7 @@ export const schemas = {
         z.number().int().min(0).max(1_000_000_000).default(0),
       ),
       measurement: title,
+      rack: z.enum(['belum ditentukan', 'A', 'B', 'C', 'D', 'E', 'F']).default('belum ditentukan'),
       book_quantity: quantity,
       minimum_quantity: quantity,
       notes: text,

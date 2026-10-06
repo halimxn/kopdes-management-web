@@ -75,7 +75,7 @@ export function WorkspacePage({ slug }: { slug: string }) {
   }, []);
   const sectionIndex = pages[slug]?.findIndex((entity) => entity === requestedSection) ?? -1;
   const tab = tabChoice?.section === requestedSection ? tabChoice.index : Math.max(0, sectionIndex);
-  if (slug === 'dunia-koperasi') return <CooperativeWorld data={error ? {} : data} loading={loading} error={error} refresh={refresh} partial={Object.keys(more).length > 0} />;
+  if (slug === 'dunia-koperasi') return <CooperativeWorld data={error ? {} : data} loading={loading} error={error} refresh={refresh} partial={Object.keys(more).length > 0} operations={operations} />;
   if (loading) return <SkeletonLoading slug={slug} />;
   if (error)
     return (
