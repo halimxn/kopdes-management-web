@@ -65,7 +65,8 @@ export function truck(
     box(g, [0.38, 0.2, 0.05], [side * 0.78, 1.45, 3.09], '#fff6d8', 0);
   }
   box(g, [1.3, 0.5, 0.05], [0, 1.45, 3.085], '#3a4458', 0);
-  for (const dy of [-0.12, 0.04, 0.2]) box(g, [1.2, 0.04, 0.05], [0, 1.45 + dy, 3.11], '#8793a8', 0);
+  for (const dy of [-0.12, 0.04, 0.2])
+    box(g, [1.2, 0.04, 0.05], [0, 1.45 + dy, 3.11], '#8793a8', 0);
   box(g, [2.36, 0.32, 0.22], [0, 0.98, 3.13], '#c7cfdc', 0.04);
   wheels(g, [-0.98, 0.98], [-2.55, -1.6, 2.25], 0.46, 0.34);
   return g;
@@ -88,9 +89,10 @@ export function createAmbientCars(parent: THREE.Object3D): AmbientCar[] {
     { z: roads.main.z + 1.2, speed: 3.2, start: -24, kind: 'truk' as const },
     { z: roads.main.z - 1.2, speed: -4, start: 12, kind: 'mobil' as const },
   ];
-  return lanes.map((lane) => {
+  return lanes.map((lane, index) => {
     const g = new THREE.Group();
-    g.userData.selection = 'kendaraan-suasana';
+    // ID per kendaraan agar penunjuk mengikuti kendaraan yang diklik, bukan yang pertama.
+    g.userData.selection = `kendaraan-suasana-${index}`;
     parent.add(g);
     const body = new THREE.Group();
     body.rotation.y = lane.speed > 0 ? Math.PI / 2 : -Math.PI / 2;

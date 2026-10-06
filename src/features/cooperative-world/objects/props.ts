@@ -36,7 +36,8 @@ export function chair(parent: THREE.Object3D, x: number, z: number, rotation = 0
 
 /** Palet kayu bersilang: dek atas bergaris dan tiga balok kaki. */
 export function pallet(parent: THREE.Object3D, x: number, y: number, z: number) {
-  for (const dx of [-0.42, 0, 0.42]) box(parent, [0.16, 0.1, 1.15], [x + dx, y + 0.05, z], '#c9a676', 0);
+  for (const dx of [-0.42, 0, 0.42])
+    box(parent, [0.16, 0.1, 1.15], [x + dx, y + 0.05, z], '#c9a676', 0);
   for (const dz of [-0.45, -0.15, 0.15, 0.45])
     box(parent, [1.15, 0.05, 0.22], [x, y + 0.125, z + dz], palette.wood, 0);
 }
@@ -53,7 +54,9 @@ export function cardboardPallet(
   wrapped = false,
 ) {
   pallet(parent, x, 0, z);
-  const [light, dark] = wrapped ? [palette.wrap, palette.wrapDark] : [palette.cardboard, palette.cardboardDark];
+  const [light, dark] = wrapped
+    ? [palette.wrap, palette.wrapDark]
+    : [palette.cardboard, palette.cardboardDark];
   for (let layer = 0; layer < layers; layer++)
     for (const dx of [-0.27, 0.27])
       for (const dz of [-0.27, 0.27]) {
@@ -193,7 +196,8 @@ export function palletRack(parent: THREE.Object3D, x: number, z: number, bays = 
     for (const dz of [-0.55, 0.55])
       box(parent, [0.1, 3.3, 0.1], [x - width / 2 + i * 1.4, 1.65, z + dz], palette.blue, 0);
   for (const y of [0.25, 1.35, 2.45])
-    for (const dz of [-0.55, 0.55]) box(parent, [width, 0.12, 0.08], [x, y, z + dz], palette.orange, 0);
+    for (const dz of [-0.55, 0.55])
+      box(parent, [width, 0.12, 0.08], [x, y, z + dz], palette.orange, 0);
   for (let i = 0; i < bays; i++)
     for (const [level, y] of [0.31, 1.41, 2.51].entries()) {
       if ((i + level) % 3 === 2) continue;

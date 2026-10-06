@@ -160,7 +160,9 @@ export function ListCard({
           spot,
         };
       }),
-  ].filter((row) => !query || matches(`${row.label} ${row.spot?.delivery.data.title || ''}`, query));
+  ].filter(
+    (row) => !query || matches(`${row.label} ${row.spot?.delivery.data.title || ''}`, query),
+  );
   const tasks = model.tasks.filter((row) => !query || matches(String(row.data.title), query));
   const meetings = timeline.filter((step) => !query || matches(String(step.row.data.title), query));
   const tabs: { id: ListTab; label: string; count: number }[] = [
@@ -227,11 +229,16 @@ export function ListCard({
                     <small>Belum ada truk</small>
                   )}
                 </span>
-                <span className={`cw-pill ${row.spot ? (row.spot.place === 'dok' ? 'is-green' : 'is-blue') : 'is-muted'}`}>
+                <span
+                  className={`cw-pill ${row.spot ? (row.spot.place === 'dok' ? 'is-green' : 'is-blue') : 'is-muted'}`}
+                >
                   {row.spot ? (row.spot.place === 'dok' ? 'Bongkar' : 'Antre') : 'Kosong'}
                 </span>
                 {row.spot ? (
-                  <span className="cw-mini-progress" aria-label={`Tahap ${step} dari ${deliverySteps.length}`}>
+                  <span
+                    className="cw-mini-progress"
+                    aria-label={`Tahap ${step} dari ${deliverySteps.length}`}
+                  >
                     <i>
                       <b style={{ width: `${(step / deliverySteps.length) * 100}%` }} />
                     </i>

@@ -38,7 +38,13 @@ function roofSlope(parent: THREE.Object3D, side: 1 | -1) {
 function dockDoor(parent: THREE.Object3D, x: number, front: number, index: number) {
   const top = plinth + 3.55;
   for (const side of [-1, 1])
-    box(parent, [0.32, 3.55, 0.32], [x + side * 1.56, plinth + 1.775, front + 0.16], palette.blue, 0.03);
+    box(
+      parent,
+      [0.32, 3.55, 0.32],
+      [x + side * 1.56, plinth + 1.775, front + 0.16],
+      palette.blue,
+      0.03,
+    );
   box(parent, [3.44, 0.36, 0.32], [x, top + 0.18, front + 0.16], palette.blue, 0.03);
   // Ambang pintu: bagian dalam gudang yang terang (bukan lubang gelap) seperti video.
   box(parent, [2.8, 3.5, 0.06], [x, plinth + 1.75, front + 0.04], '#cdd5e3', 0);
@@ -114,9 +120,16 @@ export function createLogisticsYard(parent: THREE.Object3D) {
   const front = cz + d / 2;
   const apronZ = front + warehouse.apronDepth / 2 + 0.7;
   box(parent, [w + 4, 0.04, warehouse.apronDepth + 1.4], [cx, 0.012, apronZ - 0.7], '#e2e8f4', 0);
-  for (const x of warehouse.docks) markingRect(parent, x, apronZ + 0.3, 3.1, warehouse.apronDepth - 1.4);
+  for (const x of warehouse.docks)
+    markingRect(parent, x, apronZ + 0.3, 3.1, warehouse.apronDepth - 1.4);
   dashedLineX(parent, cx - w / 2 - 1.5, cx + w / 2 + 1.5, front + 1.75);
-  box(parent, [w + 4, 0.02, 0.1], [cx, 0.035, front + warehouse.apronDepth + 0.6], palette.marking, 0);
+  box(
+    parent,
+    [w + 4, 0.02, 0.1],
+    [cx, 0.035, front + warehouse.apronDepth + 0.6],
+    palette.marking,
+    0,
+  );
   // Staging: bantalan bergaris kuning berisi palet kardus dan kemasan biru.
   const [sx, sz] = warehouse.staging;
   markingRect(parent, sx, sz, 5, 7.5);

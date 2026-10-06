@@ -248,7 +248,9 @@ export function CooperativeWorld({
     // kecuali truk: seperti video, kamera terbang agar truk dan rutenya ke dok terlihat.
     const rack = id.startsWith('rak-') ? warehouseInterior.racks[id.slice(4) as RackId] : undefined;
     const truckSpot =
-      location === 'luar' ? model.trucks.find((row) => `kirim-${row.delivery.id}` === id) : undefined;
+      location === 'luar'
+        ? model.trucks.find((row) => `kirim-${row.delivery.id}` === id)
+        : undefined;
     const target = model.plots.find((item) => item.id === id)?.position || rack;
     if (truckSpot) {
       setSpot(truckFocus(truckSpot, model.trucks));
@@ -405,7 +407,7 @@ export function CooperativeWorld({
               model.deliveries.find((row) => row.id === selected.slice(6))?.data.title ||
                 'Pengiriman',
             )
-          : selected === 'kendaraan-suasana'
+          : selected.startsWith('kendaraan-suasana')
             ? 'Mobil di jalan utama'
             : selected.startsWith('rak-')
               ? `Rak ${selected.slice(4)}`
@@ -517,7 +519,9 @@ export function CooperativeWorld({
           <Button
             aria-label="Perkecil"
             disabled={zoom <= 0.35}
-            onClick={() => setZoom((value) => Math.max(location === 'luar' ? minWorldZoom : 0.35, value - 0.2))}
+            onClick={() =>
+              setZoom((value) => Math.max(location === 'luar' ? minWorldZoom : 0.35, value - 0.2))
+            }
           >
             <Minus size={18} />
           </Button>

@@ -26,11 +26,18 @@ function windowBand(
   const size = (along: number, depth: number): [number, number, number] =>
     axis === 'x' ? [along, height, depth] : [depth, height, along];
   box(parent, size(length, 0.06), at(mid, 0.03), windowBlue, 0);
-  for (let s = from; s <= to + 0.01; s += 0.9) box(parent, size(0.06, 0.1), at(s, 0.05), palette.white, 0);
+  for (let s = from; s <= to + 0.01; s += 0.9)
+    box(parent, size(0.06, 0.1), at(s, 0.05), palette.white, 0);
   // Ambang bawah jendela.
   const sill = at(mid, 0.07);
   sill[1] = y - height / 2 - 0.02;
-  box(parent, axis === 'x' ? [length + 0.1, 0.07, 0.14] : [0.14, 0.07, length + 0.1], sill, '#dfe6f3', 0);
+  box(
+    parent,
+    axis === 'x' ? [length + 0.1, 0.07, 0.14] : [0.14, 0.07, length + 0.1],
+    sill,
+    '#dfe6f3',
+    0,
+  );
 }
 
 /**
@@ -72,7 +79,8 @@ export function building(
     box(g, [1.2, 1.6, 0.06], [0, 0.95, front + 0.07], palette.glass, 0);
     box(g, [0.04, 1.6, 0.1], [0, 0.95, front + 0.1], palette.white, 0);
     box(g, [2.6, 0.14, 1.2], [0, 2.02, front + 0.6], palette.blue, 0.03);
-    for (const side of [-1, 1]) box(g, [0.08, 1.9, 0.08], [side * 1.2, 1.05, front + 1.12], palette.navy, 0);
+    for (const side of [-1, 1])
+      box(g, [0.08, 1.9, 0.08], [side * 1.2, 1.05, front + 1.12], palette.navy, 0);
     sign(g, 'KOPERASI', [0, h - 0.45, front + 0.08], 3.2);
     for (const [ux, uz] of [
       [-1.8, -0.8],
@@ -86,7 +94,8 @@ export function building(
   } else {
     // Etalase kaca, pintu, tenda bergaris dan papan nama gerai.
     box(g, [w - 0.5, 1.15, 0.06], [0, 0.85, front + 0.03], windowBlue, 0);
-    for (const s of [-1.2, -0.4, 0.4, 1.2]) box(g, [0.06, 1.15, 0.1], [s, 0.85, front + 0.05], palette.white, 0);
+    for (const s of [-1.2, -0.4, 0.4, 1.2])
+      box(g, [0.06, 1.15, 0.1], [s, 0.85, front + 0.05], palette.white, 0);
     box(g, [0.8, 1.3, 0.08], [0, 0.82, front + 0.07], palette.glassDark, 0);
     const awning = new THREE.Group();
     awning.position.set(0, h * 0.74, front + 0.42);

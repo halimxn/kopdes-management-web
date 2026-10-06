@@ -32,14 +32,22 @@ export function createSelectionBox(bounds: THREE.Box3) {
   const blue = palette.blue;
   const faces = new THREE.Mesh(
     new THREE.BoxGeometry(size.x, size.y, size.z),
-    new THREE.MeshBasicMaterial({ color: blue, transparent: true, opacity: 0.07, depthWrite: false }),
+    new THREE.MeshBasicMaterial({
+      color: blue,
+      transparent: true,
+      opacity: 0.09,
+      depthWrite: false,
+    }),
   );
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x, size.y, size.z)),
-    new THREE.LineBasicMaterial({ color: blue, transparent: true, opacity: 0.55 }),
+    new THREE.LineBasicMaterial({ color: blue, transparent: true, opacity: 0.5 }),
   );
-  const arm = Math.min(1, Math.min(size.x, size.y, size.z) * 0.28);
-  const t = 0.07;
+  // Siku tebal ±25 % panjang tiap sisi (maks. 1,6) seperti kotak seleksi video.
+  const armX = Math.min(1.6, size.x * 0.25),
+    armY = Math.min(1.6, size.y * 0.25),
+    armZ = Math.min(1.6, size.z * 0.25);
+  const t = 0.1;
   const parts: THREE.BufferGeometry[] = [];
   for (const sx of [-1, 1])
     for (const sy of [-1, 1])
@@ -48,12 +56,15 @@ export function createSelectionBox(bounds: THREE.Box3) {
           cy = (sy * size.y) / 2,
           cz = (sz * size.z) / 2;
         parts.push(
-          new THREE.BoxGeometry(arm, t, t).translate(cx - (sx * arm) / 2, cy, cz),
-          new THREE.BoxGeometry(t, arm, t).translate(cx, cy - (sy * arm) / 2, cz),
-          new THREE.BoxGeometry(t, t, arm).translate(cx, cy, cz - (sz * arm) / 2),
+          new THREE.BoxGeometry(armX, t, t).translate(cx - (sx * armX) / 2, cy, cz),
+          new THREE.BoxGeometry(t, armY, t).translate(cx, cy - (sy * armY) / 2, cz),
+          new THREE.BoxGeometry(t, t, armZ).translate(cx, cy, cz - (sz * armZ) / 2),
         );
       }
-  const brackets = new THREE.Mesh(mergeGeometries(parts), new THREE.MeshBasicMaterial({ color: blue }));
+  const brackets = new THREE.Mesh(
+    mergeGeometries(parts),
+    new THREE.MeshBasicMaterial({ color: blue }),
+  );
   parts.forEach((part) => part.dispose());
   const glow = new THREE.Mesh(
     new THREE.PlaneGeometry(size.x + 2.4, size.z + 2.4),

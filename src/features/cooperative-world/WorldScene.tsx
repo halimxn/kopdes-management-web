@@ -104,6 +104,13 @@ export function WorldScene({
   const markerRefs = useRef(new Map<string, HTMLDivElement>());
   /** Pin tujuan rute truk terpilih; dianimasikan naik-turun di loop gambar. */
   const routePin = useRef<THREE.Object3D | null>(null);
+  /** Penunjuk terpilih dan objek yang diikutinya (lihat efek kotak sorot). */
+  const followed = useRef<{
+    box: THREE.Object3D;
+    target: THREE.Object3D;
+    anchor: THREE.Vector3;
+    turn: number;
+  } | null>(null);
   const covered = useRef(occlusion);
   const runtime = useRef<{
     camera: THREE.OrthographicCamera;
@@ -294,6 +301,7 @@ export function WorldScene({
     );
     scene.add(rain);
     const projected = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame = 0,
       previous = 0,
@@ -484,6 +492,15 @@ export function WorldScene({
         yardForklift.position.set(pose.x, 0, pose.z);
         yardForklift.rotation.y = pose.angle;
       }
+      const follow = followed.current;
+      if (follow) {
+        follow.target.updateWorldMatrix(true, false);
+        follow.box.position.copy(follow.target.localToWorld(follow.anchor.clone()));
+        follow.box.rotation.y =
+          new THREE.Euler().setFromQuaternion(follow.target.getWorldQuaternion(quaternion), 'YXZ')
+            .y - follow.turn;
+        follow.box.visible = follow.target.visible;
+      }
       const pin = routePin.current;
       if (pin) pin.position.y = reduced.matches ? 0 : Math.sin(elapsed * 2.4) * 0.15;
       rain.visible = state.weather === 'hujan' && location === 'luar';
@@ -546,14 +563,28 @@ export function WorldScene({
     if (!target) return;
     const highlight = createSelectionBox(new THREE.Box3().setFromObject(target));
     world.add(highlight);
+    // Penunjuk diikat ke objek: posisi relatif disimpan di ruang lokal objek lalu diperbarui
+    // tiap frame, sehingga ikut forklift, kendaraan, karakter yang berjalan, dan peta yang digeser.
+    const turn = new THREE.Euler().setFromQuaternion(
+      target.getWorldQuaternion(new THREE.Quaternion()),
+      'YXZ',
+    ).y;
+    followed.current = {
+      box: highlight,
+      target,
+      anchor: target.worldToLocal(highlight.position.clone()),
+      turn,
+    };
     // Truk terpilih menampilkan rute seperti video: jalur dilalui, sisa jalur dan dok tujuan.
-    const spot = location === 'luar'
-      ? model.trucks.find((row) => `kirim-${row.delivery.id}` === selected)
-      : undefined;
+    const spot =
+      location === 'luar'
+        ? model.trucks.find((row) => `kirim-${row.delivery.id}` === selected)
+        : undefined;
     const route = spot ? createRoute(world, truckRoute(spot, model.trucks)) : null;
     routePin.current = (route?.userData.pin as THREE.Object3D | undefined) || null;
     return () => {
       disposeGroup(highlight);
+      followed.current = null;
       if (route) disposeGroup(route);
       routePin.current = null;
     };

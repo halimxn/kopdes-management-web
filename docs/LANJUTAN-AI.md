@@ -28,7 +28,7 @@ Kerjakan berurutan; satu commit lokal per langkah (tanpa push). Centang di sini 
 
 - [x] 1. Tanah tak berujung + kabut yang memudar ke warna langit (pink senja dipertahankan); batasi zoom keluar sampai kawasan + sedikit kota (1280 px).
 - [x] 2. Gudang: logo bulat atap diganti deretan skylight. Pin biru di atas peti staging dihapus (peringatan cukup label kuning gudang). Pin dok tujuan rute dipertahankan, lebih kecil.
-- [ ] 3. Penunjuk kotak 3D ala video: siku tebal 0,1 dan ±25 % sisi di 8 sudut, garis tepi 50 %, isi 8–10 %, cahaya lantai; diperbarui tiap frame agar ikut objek bergerak (forklift, kendaraan jalan, karakter Tim, maskot). Semua objek bergerak dapat dipilih, tanpa label tambahan.
+- [x] 3. Penunjuk kotak 3D ala video: siku tebal 0,1 dan ±25 % sisi di 8 sudut, garis tepi 50 %, isi 8–10 %, cahaya lantai; diperbarui tiap frame agar ikut objek bergerak (forklift, kendaraan jalan, karakter Tim, maskot). Semua objek bergerak dapat dipilih, tanpa label tambahan.
 - [ ] 4. Kamera mengikuti objek bergerak terpilih; berhenti bila pengguna geser/putar/zoom, memilih objek lain, menutup kartu, atau kendaraan melompat ke ujung jalan. Klik lagi untuk mengikuti.
 - [ ] 5. Manajer: hapus tombol balon biru di atas kepala dan bubble otomatis; maskot dipilih dengan klik badan; alasan rencana tampil di kartu detail maskot. Bubble "…" hanya untuk percakapan: Tim berpapasan (sudah ada) dan manajer saat berhenti di meja staf/dok (3–5 detik, di atas manajer dan lawan bicara).
 - [ ] 6. Perbarui Blueprint v3 di DUNIA-KOPERASI, lembar aset, STATUS, CHANGELOG; tes/typecheck/lint/build; tag checkpoint/v3-1 sebelum langkah 1.

@@ -1,14 +1,6 @@
 'use client';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BookOpen,
-  CheckCheck,
-  ChevronRight,
-  Dumbbell,
-  Users,
-  X,
-} from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCheck, ChevronRight, Dumbbell, Users, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { today } from '@/lib/date';
@@ -228,7 +220,7 @@ export function DetailCard(props: Props) {
                     subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
                     icon: <WorldIcon kind="truk" size={40} />,
                   }
-                : selected === 'kendaraan-suasana' || selected === 'forklift-suasana'
+                : selected.startsWith('kendaraan-suasana') || selected === 'forklift-suasana'
                   ? {
                       eyebrow: selected === 'forklift-suasana' ? 'Halaman gudang' : 'Jalan utama',
                       title: selected === 'forklift-suasana' ? 'Forklift' : 'Kendaraan lewat',
@@ -525,7 +517,10 @@ export function DetailCard(props: Props) {
               </span>
               <small>{routeNote}</small>
             </div>
-            <div className="cw-progress" aria-label={`Tahap ${step + 1} dari ${deliverySteps.length}`}>
+            <div
+              className="cw-progress"
+              aria-label={`Tahap ${step + 1} dari ${deliverySteps.length}`}
+            >
               <i>
                 <b style={{ width: `${((step + 1) / deliverySteps.length) * 100}%` }} />
               </i>
@@ -558,7 +553,7 @@ export function DetailCard(props: Props) {
               Catat mutasi stok <ArrowRight size={14} />
             </Link>
           </>
-        ) : selected === 'kendaraan-suasana' || selected === 'forklift-suasana' ? (
+        ) : selected.startsWith('kendaraan-suasana') || selected === 'forklift-suasana' ? (
           <>
             <div className="cw-status-line">
               <span className="cw-pill">Simulasi lingkungan</span>

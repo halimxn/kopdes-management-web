@@ -17,8 +17,10 @@ export const cityGround = '#e2e8f5';
  */
 function cityBlocks(parent: THREE.Object3D) {
   const blocks: [number, number, number, number, number][] = [];
-  for (let x = -44, i = 0; x <= 44; x += 9.5, i++) blocks.push([x, -31.5, 7, 5.5, 3 + ((i * 5) % 5)]);
-  for (let z = -20, i = 0; z <= 26; z += 9.2, i++) blocks.push([-38.5, z, 5.5, 7, 2.5 + ((i * 3) % 4)]);
+  for (let x = -44, i = 0; x <= 44; x += 9.5, i++)
+    blocks.push([x, -31.5, 7, 5.5, 3 + ((i * 5) % 5)]);
+  for (let z = -20, i = 0; z <= 26; z += 9.2, i++)
+    blocks.push([-38.5, z, 5.5, 7, 2.5 + ((i * 3) % 4)]);
   for (let z = -18, i = 0; z <= 26; z += 11, i++) blocks.push([38, z, 5, 7.5, 1.2 + (i % 2) * 0.6]);
   for (let x = -26, i = 0; x <= 30; x += 14, i++) blocks.push([x, 31, 9, 4.5, 1 + (i % 2) * 0.5]);
   // Tanah kota sedikit di bawah tanah kawasan agar tepi kawasan tetap terbaca.
@@ -119,7 +121,13 @@ export function createExterior(parent: THREE.Group, model: WorldModel) {
   box(scenery, [width - 2, 0.04, 1.1], [0, 0.012, fenceZ + 0.75], palette.grass, 0);
   box(scenery, [width - 2, 0.04, 1.1], [0, 0.012, south - 0.75], palette.grass, 0);
   for (const x of [site.minX + 1.35, site.maxX - 1.35])
-    box(scenery, [1.1, 0.04, south - fenceZ - 3], [x, 0.012, (south + fenceZ) / 2], palette.grass, 0);
+    box(
+      scenery,
+      [1.1, 0.04, south - fenceZ - 3],
+      [x, 0.012, (south + fenceZ) / 2],
+      palette.grass,
+      0,
+    );
   cityBlocks(scenery);
 
   createLogisticsYard(scenery);

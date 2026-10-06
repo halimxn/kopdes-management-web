@@ -10,7 +10,9 @@ const lift = 0.075;
 class GeometryBatch {
   private parts: THREE.BufferGeometry[] = [];
   add(geometry: THREE.BufferGeometry, x: number, y: number, z: number, angle = 0) {
-    const part = (geometry.index ? geometry.toNonIndexed() : geometry.clone()) as THREE.BufferGeometry;
+    const part = (
+      geometry.index ? geometry.toNonIndexed() : geometry.clone()
+    ) as THREE.BufferGeometry;
     for (const name of Object.keys(part.attributes))
       if (!['position', 'normal'].includes(name)) part.deleteAttribute(name);
     part.applyMatrix4(
@@ -46,7 +48,13 @@ export function createRoute(parent: THREE.Object3D, route: TruckRoute) {
     const length = Math.hypot(bx - ax, bz - az);
     if (!length) return;
     const angle = Math.atan2(bx - ax, bz - az);
-    ribbon.add(new THREE.BoxGeometry(0.78, 0.03, length), (ax + bx) / 2, lift, (az + bz) / 2, angle);
+    ribbon.add(
+      new THREE.BoxGeometry(0.78, 0.03, length),
+      (ax + bx) / 2,
+      lift,
+      (az + bz) / 2,
+      angle,
+    );
     ribbon.add(new THREE.CylinderGeometry(0.39, 0.39, 0.03, 18), bx, lift, bz);
     // Panah "›" putih setiap 2,4 unit menunjukkan arah perjalanan.
     for (let d = 1.4; d < length - 0.6; d += 2.4) {

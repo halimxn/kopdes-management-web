@@ -86,7 +86,9 @@ export function truckFocus(spot: TruckSpot, spots: TruckSpot[]): Point {
  * di kedua ujung. Fungsi murni agar gerak forklift teruji dan tidak bergantung frame.
  */
 export function pathPose(path: Point[], time: number, speed: number, pause: number) {
-  const lengths = path.slice(1).map((point, i) => Math.hypot(point[0] - path[i][0], point[1] - path[i][1]));
+  const lengths = path
+    .slice(1)
+    .map((point, i) => Math.hypot(point[0] - path[i][0], point[1] - path[i][1]));
   const total = lengths.reduce((sum, value) => sum + value, 0);
   const travel = total / speed;
   const cycle = 2 * (travel + pause);
@@ -107,4 +109,3 @@ export function pathPose(path: Point[], time: number, speed: number, pause: numb
   }
   return { x: path[0][0], z: path[0][1], angle: 0 };
 }
-
