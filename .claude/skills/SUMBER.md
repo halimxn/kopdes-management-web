@@ -7,6 +7,7 @@ Disalin apa adanya (tanpa perubahan isi) pada 6 Oktober 2026 setelah ditinjau: t
 | caveman | github.com/JuliusBrussee/caveman — `skills/caveman/SKILL.md` | Apache-2.0 |
 | grill-me, grilling | github.com/mattpocock/skills — `skills/productivity/` | MIT |
 | 3d-graphics (+ references/) | github.com/samhvw8/dot-claude — `skills/3d-graphics/` | MIT (dinyatakan di SKILL.md) |
+| threejs-geometry, threejs-lighting, threejs-materials, threejs-postprocessing, threejs-interaction | github.com/cloudai-x/threejs-skills commit b1c6230 (20 Jan 2026), hanya SKILL.md; lima dari sepuluh dipilih karena relevan (Three.js vanilla) | MIT (README) |
 
 Tidak dipasang: **rtk** (github.com/rtk-ai/rtk), **token-savior** (github.com/Mibayy/token-savior) dan **graphify** (github.com/Graphify-Labs/graphify; skill-nya hanya menjalankan CLI Python dan dapat mengirim isi dokumen ke model AI untuk ekstraksi). Ketiganya bukan skill teks mandiri, melainkan program/biner CLI dan server MCP/paket Python yang harus diunduh lalu dijalankan dan mencegat perintah shell. Pemasangan program semacam itu diputuskan dan dilakukan sendiri oleh pemilik.
 
