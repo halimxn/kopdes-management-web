@@ -22,6 +22,17 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 3. Sebelum tiap paket buat tag checkpoint; commit kecil per paket; PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 4. Akhir paket: perbarui bagian "Paket terakhir" di bawah, STATUS dan CHANGELOG.
 
+## Paket berjalan: perbaikan kecil v3.1 (keputusan pemilik 6 Oktober, hasil wawancara)
+
+Kerjakan berurutan; satu commit lokal per langkah (tanpa push). Centang di sini saat selesai.
+
+- [ ] 1. Tanah tak berujung + kabut yang memudar ke warna langit (pink senja dipertahankan); batasi zoom keluar sampai kawasan + sedikit kota (1280 px).
+- [ ] 2. Gudang: logo bulat atap diganti deretan skylight. Pin biru di atas peti staging dihapus (peringatan cukup label kuning gudang). Pin dok tujuan rute dipertahankan, lebih kecil.
+- [ ] 3. Penunjuk kotak 3D ala video: siku tebal 0,1 dan ±25 % sisi di 8 sudut, garis tepi 50 %, isi 8–10 %, cahaya lantai; diperbarui tiap frame agar ikut objek bergerak (forklift, kendaraan jalan, karakter Tim, maskot). Semua objek bergerak dapat dipilih, tanpa label tambahan.
+- [ ] 4. Kamera mengikuti objek bergerak terpilih; berhenti bila pengguna geser/putar/zoom, memilih objek lain, menutup kartu, atau kendaraan melompat ke ujung jalan. Klik lagi untuk mengikuti.
+- [ ] 5. Manajer: hapus tombol balon biru di atas kepala dan bubble otomatis; maskot dipilih dengan klik badan; alasan rencana tampil di kartu detail maskot. Bubble "…" hanya untuk percakapan: Tim berpapasan (sudah ada) dan manajer saat berhenti di meja staf/dok (3–5 detik, di atas manajer dan lawan bicara).
+- [ ] 6. Perbarui Blueprint v3 di DUNIA-KOPERASI, lembar aset, STATUS, CHANGELOG; tes/typecheck/lint/build; tag checkpoint/v3-1 sebelum langkah 1.
+
 ## Paket terakhir
 
 - 6 Oktober, **Blueprint visual v3** (arahan pemilik: semirip mungkin video, fokus tampilan): aset baru, rute truk, kartu ilustrasi; panduan di DUNIA-KOPERASI bagian Blueprint visual v3 dan docs/referensi-dunia/blueprint. Berikutnya menunggu penilaian pemilik, lalu menu web tambahan. Cara membuat ulang bahan blueprint: (1) lembar aset = buka /dev/dunia-koperasi/aset dan potret 1400 × 1380; (2) denah = transpile layout.ts + truck-routes.ts dengan typescript lalu gambar SVG (skrip satu kali di sesi 6 Oktober; tulis ulang sebagai scripts/ bila sering dipakai); (3) kartu-contoh.html memakai WorldIcon yang dirender renderToStaticMarkup. Tangkapan WebGL: pane browser berhenti menggambar saat tersembunyi; pakai Chromium headless (ms-playwright) via CDP dengan --use-angle=swiftshader. Jangan menyunting berkas UTF-8 dengan Set-Content PowerShell 5.1.
