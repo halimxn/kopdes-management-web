@@ -283,9 +283,23 @@ export function ListCard({
                 </span>
                 <span className="cw-row-text">
                   {row.spot ? (
-                    <strong>
-                      <i className="cw-dot" /> {String(row.spot.delivery.data.title)}
-                    </strong>
+                    <>
+                      <strong>
+                        <i className="cw-dot" /> {String(row.spot.delivery.data.title)}
+                      </strong>
+                      <small>
+                        {[
+                          row.spot.delivery.data.license_plate,
+                          row.spot.delivery.data.driver_name,
+                        ]
+                          .filter(Boolean)
+                          .map(String)
+                          .join(' · ') ||
+                          (row.spot.delivery.data.vehicle
+                            ? String(row.spot.delivery.data.vehicle)
+                            : row.note)}
+                      </small>
+                    </>
                   ) : (
                     <small>Belum ada truk</small>
                   )}

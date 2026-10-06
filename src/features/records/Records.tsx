@@ -1222,6 +1222,56 @@ export function Records({
           )}
         </div>
         <div className="record-meta">
+          {entity === 'deliveries' && (
+            <>
+              <span className={`delivery-dir-tag is-${row.data.direction === 'keluar' ? 'out' : 'in'}`}>
+                {row.data.direction === 'keluar' ? 'Barang Keluar' : 'Barang Masuk'}
+              </span>
+              {Boolean(row.data.dock && row.data.dock !== 'belum ditentukan') && (
+                <span className="delivery-dock-tag">Dok {String(row.data.dock)}</span>
+              )}
+              {Boolean(row.data.arrival_time) && (
+                <span className="delivery-time-tag">
+                  <Clock size={12} /> {String(row.data.arrival_time)} WIB
+                </span>
+              )}
+              {Boolean(row.data.planned_date) && (
+                <span>Rencana: {formatDate(String(row.data.planned_date))}</span>
+              )}
+              {Boolean(row.data.arrived_date) && (
+                <span>Tiba: {formatDate(String(row.data.arrived_date))}</span>
+              )}
+              {Boolean(row.data.vehicle || row.data.license_plate) && (
+                <span>
+                  {[row.data.vehicle, row.data.license_plate]
+                    .filter(Boolean)
+                    .map(String)
+                    .join(' · ')}
+                </span>
+              )}
+              {Boolean(row.data.driver_name) && (
+                <span>Sopir: {String(row.data.driver_name)}</span>
+              )}
+              {Boolean(row.data.stakeholder_id) && (
+                <span>
+                  Mitra:{' '}
+                  {String(
+                    workspace.stakeholders?.find((s) => s.id === row.data.stakeholder_id)?.data
+                      .title || 'tidak ditemukan',
+                  )}
+                </span>
+              )}
+              {Boolean(row.data.unit_id) && (
+                <span>
+                  Gerai:{' '}
+                  {String(
+                    workspace.units?.find((u) => u.id === row.data.unit_id)?.data.title ||
+                      'tidak ditemukan',
+                  )}
+                </span>
+              )}
+            </>
+          )}
           {entity === 'meetings' && (
             <>
               <span className="meeting-time-tag">
@@ -1482,7 +1532,7 @@ export function Records({
               </div>
             );
           })()}
-        {['description', 'notes', 'minutes', 'reason', 'follow_up']
+        {['description', 'notes', 'minutes', 'reason', 'follow_up', 'items']
           .filter((key) => (entity !== 'stakeholders' || key !== 'follow_up') && (entity !== 'meetings' || key !== 'minutes'))
           .map((key) =>
             row.data[key] ? (

@@ -1,5 +1,12 @@
 # Changelog
 
+## Field Pengiriman Lengkap (Sopir, Plat Nomor, Jam Tiba) — 6 Oktober 2026
+
+- Skema `deliveries`: kolom nama sopir (`driver_name`), nomor plat kendaraan (`license_plate`), dan estimasi jam tiba (`arrival_time` dengan format JJ:MM). Kompatibilitas mundur penuh (default '').
+- Formulir & web: Editor input time untuk field jam tiba, placeholder dan field-helper; kartu `/pengiriman` di Records menampilkan badge arah, dok, jam tiba WIB, plat nomor, nama sopir, dan rincian barang (`items`).
+- Dunia Koperasi: kartu detail pengiriman (`DetailCard`), pelacak hari ini (`TodayTracker`), dan baris dok (`ListCard`) menampilkan informasi plat nomor, nama pengemudi, serta estimasi jam tiba WIB.
+- 304 tes / 45 berkas lulus, typecheck dan build Next.js lulus.
+
 ## Distrik ala video v4 — 6 Oktober 2026
 
 - Denah distrik dari data teruji (district.ts, scripts/denah-dunia.mjs): jalan kota, lima kavling berpagar, unit KDMP per Jenis Gerai, lahan pertanian, kota bervariasi.

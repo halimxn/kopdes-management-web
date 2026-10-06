@@ -56,6 +56,43 @@ it('menolak nominal kosong, desimal, negatif, dan jumlah di luar batas', () => {
     }).success,
   ).toBe(false);
 });
+it('pengiriman memvalidasi kolom baru (sopir, plat, jam tiba) dan mempertahankan data lama', () => {
+  const legacy = schemas.deliveries.parse({
+    title: 'Kiriman lama',
+    direction: 'masuk',
+    status: 'dipesan',
+  });
+  expect(legacy.driver_name).toBe('');
+  expect(legacy.license_plate).toBe('');
+  expect(legacy.arrival_time).toBe('');
+
+  const complete = schemas.deliveries.parse({
+    title: 'Kiriman baru',
+    direction: 'masuk',
+    status: 'tiba',
+    dock: 'D2',
+    vehicle: 'Truk boks',
+    driver_name: 'Budi Santoso',
+    license_plate: 'AD 8123 KP',
+    arrival_time: '08:30',
+  });
+  expect(complete.driver_name).toBe('Budi Santoso');
+  expect(complete.license_plate).toBe('AD 8123 KP');
+  expect(complete.arrival_time).toBe('08:30');
+
+  expect(
+    schemas.deliveries.safeParse({
+      title: 'Jam salah',
+      arrival_time: '25:00',
+    }).success,
+  ).toBe(false);
+  expect(
+    schemas.deliveries.safeParse({
+      title: 'Format jam salah',
+      arrival_time: 'pagi',
+    }).success,
+  ).toBe(false);
+});
 it('menghitung kas masuk dan keluar tanpa menganggapnya laba', () => {
   expect(
     cashSummary([

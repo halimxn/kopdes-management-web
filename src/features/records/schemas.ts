@@ -9,6 +9,13 @@ export const date = z
       !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value,
     'Tanggal tidak sah',
   );
+export const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+export const optionalTime = z
+  .preprocess(
+    (value) => (typeof value === 'string' ? value.trim() : value),
+    z.union([z.string().regex(timeRegex, 'Format jam JJ:MM (contoh 09:30)'), z.literal('')]),
+  )
+  .default('');
 const optionalDate = z.union([date, z.literal('')]).default('');
 const link = z
   .union([
@@ -266,9 +273,12 @@ export const schemas = {
       stakeholder_id: ref,
       unit_id: ref,
       planned_date: optionalDate,
+      arrival_time: optionalTime,
       arrived_date: optionalDate,
       dock: z.enum(['belum ditentukan', 'D1', 'D2', 'D3', 'D4']).default('belum ditentukan'),
       vehicle: text,
+      driver_name: text,
+      license_plate: text,
       items: text,
       link,
       notes: text,

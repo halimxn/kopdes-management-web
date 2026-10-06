@@ -462,3 +462,37 @@ textarea.ui-input.ui-input { height: auto; min-height: 104px; padding: 14px 16px
 }
 
 .journal-table .journal-title-interactive:hover .journal-title-text { color: var(--ink-heading); }
+
+.delivery-dir-tag,
+.delivery-dock-tag,
+.delivery-time-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  padding: 2px var(--space-2);
+  border-radius: var(--r-full);
+  border: var(--border-width) solid var(--line);
+  background: var(--surface-subtle);
+  color: var(--ink);
+}
+
+.delivery-dir-tag.is-in {
+  background: var(--tone-success-bg);
+  border-color: var(--tone-success-border);
+  color: var(--tone-success-text);
+}
+
+.delivery-dir-tag.is-out {
+  background: var(--tone-warn-bg);
+  border-color: var(--tone-warn-border);
+  color: var(--tone-warn-text);
+}
+
+.delivery-dock-tag,
+.delivery-time-tag {
+  background: var(--tone-info-bg);
+  border-color: var(--tone-info-border);
+  color: var(--tone-info-text);
+}

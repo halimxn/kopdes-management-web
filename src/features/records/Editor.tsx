@@ -1146,14 +1146,20 @@ export function Editor({
                                 ? 'Contoh: Kepala Desa, Seluruh Pengurus, Babinsa'
                                 : entity === 'work-items' && field === 'link'
                                   ? 'https://... (tautan Google Drive, dokumen hasil, portal pengumpulan)'
-                                  : entity === 'journal' && field === 'title'
-                                    ? 'Contoh: Koordinasi Pengadaan Pupuk Bersama Gapoktan'
+                                  : entity === 'deliveries' && field === 'driver_name'
+                                    ? 'Contoh: Budi Santoso'
+                                    : entity === 'deliveries' && field === 'license_plate'
+                                      ? 'Contoh: AD 8123 KP'
+                                      : entity === 'deliveries' && field === 'vehicle'
+                                        ? 'Contoh: Truk boks / Pickup L300'
+                                        : entity === 'journal' && field === 'title'
+                                          ? 'Contoh: Koordinasi Pengadaan Pupuk Bersama Gapoktan'
                                     : undefined
                   }
                   type={
                     field.endsWith('_date') || field === 'date' || field === 'last_contact'
                       ? 'date'
-                      : field === 'time' || field === 'recurrence_time'
+                      : field.endsWith('_time') || field === 'time' || field === 'recurrence_time'
                         ? 'time'
                         : field === 'link' || field === 'meeting_url'
                           ? 'url'
@@ -1229,6 +1235,16 @@ export function Editor({
                 {entity === 'stakeholders' && field === 'follow_up' && (
                   <small className="field-helper">
                     Rencana koordinasi berikutnya atau catatan penting.
+                  </small>
+                )}
+                {entity === 'deliveries' && field === 'arrival_time' && (
+                  <small className="field-helper">
+                    Estimasi jam tiba armada di dok gudang (WIB).
+                  </small>
+                )}
+                {entity === 'deliveries' && field === 'license_plate' && (
+                  <small className="field-helper">
+                    Nomor plat polisi kendaraan, misalnya AD 8123 KP.
                   </small>
                 )}
                 {entity === 'work-items' && field === 'document_id' && (

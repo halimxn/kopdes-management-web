@@ -14,6 +14,10 @@ Implementasi lokal, belum dinilai pemilik. Aset baru dari kode: gudang dok ala v
 
 Bukti: 296 tes/45 berkas, typecheck, lint dan build lulus. Tangkapan headless Chromium (SwiftShader) data contoh pada 375, 768, 1024, 1280 dan 1440 px; 58–89 draw call. Belum: perangkat fisik, rekaman gerak, data cloud, penilaian pemilik. Di 1024–1279 px dock masih menutupi baris bawah kartu Daftar (keadaan lama).
 
+## Field Pengiriman Lengkap (6 Oktober, menu web pendukung)
+
+Selesai lokal (belum di-push): skema `deliveries` kini menerima nama sopir (`driver_name`), nomor plat (`license_plate`), dan estimasi jam tiba (`arrival_time` WIB). Data lama kompatibel otomatis dengan default ''. Form Editor menyediakan input time untuk jam tiba serta placeholder & helper untuk pengemudi dan plat nomor; halaman `/pengiriman` di Records menampilkan badge arah, dok, jam tiba WIB, plat nomor, nama sopir, dan rincian barang. Di Dunia Koperasi, DetailCard, TodayTracker, dan ListCard (tab Dok) menampilkan informasi plat nomor, nama pengemudi, serta estimasi jam tiba. Bukti: 304 tes / 45 berkas lulus, typecheck, lint dan build Next.js lulus.
+
 ## Distrik ala video v4 (6 Oktober, denah disetujui pemilik)
 
 Selesai lokal (belum di-push): denah distrik kota grid dari `district.ts`, bangunan unit KDMP per Jenis Gerai, gudang WH-04 + cold storage WH-03 berlantai dok tinggi, kota bervariasi, warna sampel video + pastel, AO, bawaan siang; kartu transparan, pemilih zona berdata, bar chart, klik pergi ke tempat; kendaraan berbelok halus dan truk mundur ke dok; interior cold storage dan empat jenis gerai. Bukti: tes Vitest lulus, typecheck/lint/build, tangkapan headless 375–1440 px (render headless ±2–3 fps sehingga animasi hanya diperiksa lewat tangkapan berjeda dan tes fungsi murni). Belum: perangkat fisik, rekaman gerak di GPU asli, data cloud, penilaian pemilik. Kolom Rak barang kini menerima C1–C3 (Zod/katalog, tanpa migrasi).

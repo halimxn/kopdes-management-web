@@ -52,7 +52,9 @@ Kerjakan berurutan; satu commit lokal per langkah (tanpa push). Centang di sini 
 
 ## Paket terakhir
 
-- 6 Oktober, **Distrik v4** selesai lokal (commit per langkah, tag checkpoint/v4). Berikutnya: penilaian pemilik, lalu menu web tambahan (mis. kolom sopir/plat/jam tiba di Pengiriman, data lahan pertanian). Port 3000 dipakai dev server pemilik; tangkapan headless memakai Chromium ms-playwright via CDP (lihat paket v3).
+- 6 Oktober, **Field Pengiriman Lengkap** (kolom sopir, nomor plat, estimasi jam tiba WIB) selesai lokal (tag checkpoint/pengiriman-detail). Skema Zod `deliveries`, form Editor input time/helper, kartu `/pengiriman` di Records, serta kartu `DetailCard`, `TodayTracker`, dan `ListCard` (dok) di Dunia Koperasi. 304 tes lulus, typecheck, lint, build lulus.
+
+- 6 Oktober, **Distrik v4** selesai lokal (commit per langkah, tag checkpoint/v4). Berikutnya: penilaian pemilik, lalu menu web tambahan (mis. data lahan pertanian). Port 3000 dipakai dev server pemilik; tangkapan headless memakai Chromium ms-playwright via CDP (lihat paket v3).
 
 - 6 Oktober, **Blueprint visual v3** (arahan pemilik: semirip mungkin video, fokus tampilan): aset baru, rute truk, kartu ilustrasi; panduan di DUNIA-KOPERASI bagian Blueprint visual v3 dan docs/referensi-dunia/blueprint. Berikutnya menunggu penilaian pemilik, lalu menu web tambahan. Cara membuat ulang bahan blueprint: (1) lembar aset = buka /dev/dunia-koperasi/aset dan potret 1400 × 1380; (2) denah = transpile layout.ts + truck-routes.ts dengan typescript lalu gambar SVG (skrip satu kali di sesi 6 Oktober; tulis ulang sebagai scripts/ bila sering dipakai); (3) kartu-contoh.html memakai WorldIcon yang dirender renderToStaticMarkup. Tangkapan WebGL: pane browser berhenti menggambar saat tersembunyi; pakai Chromium headless (ms-playwright) via CDP dengan --use-angle=swiftshader. Jangan menyunting berkas UTF-8 dengan Set-Content PowerShell 5.1.
 

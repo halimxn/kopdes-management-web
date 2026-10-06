@@ -82,7 +82,13 @@ export function TodayTracker({ model, timeline, dateLabel, unavailable }: Props)
               {delivery.data.dock && delivery.data.dock !== 'belum ditentukan'
                 ? `Dok ${delivery.data.dock}`
                 : 'Dok belum ditentukan'}
-              {delivery.data.vehicle ? ` · ${delivery.data.vehicle}` : ''}
+              {delivery.data.arrival_time ? ` · ${delivery.data.arrival_time} WIB` : ''}
+              {delivery.data.license_plate
+                ? ` · ${delivery.data.license_plate}`
+                : delivery.data.vehicle
+                  ? ` · ${delivery.data.vehicle}`
+                  : ''}
+              {delivery.data.driver_name ? ` · ${delivery.data.driver_name}` : ''}
             </span>
             <span className="cw-pill is-blue">{deliveryLabel[String(delivery.data.status)]}</span>
             <ChevronRight size={16} className="cw-next-arrow" />

@@ -273,7 +273,15 @@ export function DetailCard(props: Props) {
                       ? {
                           eyebrow: `Pengiriman · ${delivery.data.direction === 'keluar' ? 'keluar' : 'masuk'}`,
                           title: String(delivery.data.title),
-                          subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
+                          subtitle:
+                            [
+                              delivery.data.vehicle,
+                              delivery.data.license_plate,
+                              delivery.data.driver_name,
+                            ]
+                              .filter(Boolean)
+                              .map(String)
+                              .join(' · ') || 'Kendaraan belum dicatat',
                           icon: <WorldIcon kind="truk" size={40} />,
                         }
                       : selected.startsWith('kendaraan-suasana') || selected === 'forklift-suasana'
@@ -704,13 +712,21 @@ export function DetailCard(props: Props) {
               </span>
             </div>
             <Rows
-              items={[
-                ['Pintu dok', String(delivery.data.dock || '')],
-                ['Tanggal rencana', String(delivery.data.planned_date || '')],
-                ['Tanggal tiba', String(delivery.data.arrived_date || '')],
-                ['Kendaraan', String(delivery.data.vehicle || '')],
-                ['Rincian barang', String(delivery.data.items || '')],
-              ]}
+              items={(
+                [
+                  ['Pintu dok', String(delivery.data.dock || '')],
+                  ['Tanggal rencana', String(delivery.data.planned_date || '')],
+                  [
+                    'Estimasi jam tiba',
+                    delivery.data.arrival_time ? `${delivery.data.arrival_time} WIB` : '',
+                  ],
+                  ['Tanggal tiba', String(delivery.data.arrived_date || '')],
+                  ['Jenis kendaraan', String(delivery.data.vehicle || '')],
+                  ['Nomor plat', String(delivery.data.license_plate || '')],
+                  ['Sopir / pengemudi', String(delivery.data.driver_name || '')],
+                  ['Rincian barang', String(delivery.data.items || '')],
+                ] as [string, React.ReactNode][]
+              ).filter(([, v]) => Boolean(v))}
             />
             {truckSpot && (
               <p className="cw-note">
