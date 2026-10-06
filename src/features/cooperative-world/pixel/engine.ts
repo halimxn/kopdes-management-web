@@ -27,6 +27,7 @@ import {
   riverCenter,
   roads,
   trees,
+  villageLanes,
   type Box,
   type MapBuilding,
 } from './map';
@@ -117,6 +118,7 @@ function drawGround(layer: Container) {
     }
   }
   layer.addChild(g);
+  for (const lane of villageLanes) layer.addChild(tiled(pave, lane));
   for (const road of roads) layer.addChild(tiled(asphalt, road));
   const marks = new Graphics();
   for (const road of roads) {

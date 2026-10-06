@@ -164,24 +164,70 @@ export const areas: MapArea[] = [
   { kind: 'rencana', box: { x: 2160, y: 1510, w: 340, h: 70 }, label: 'RENCANA SUPLIER' },
 ];
 
-/** Rumah warga (hiasan, tidak dapat dipilih) disusun rapi dengan celah jalan setapak. */
-export const houses: MapBuilding[] = Array.from({ length: 4 }, (_, row) =>
-  Array.from({ length: 9 }, (_, col) => ({ row, col })),
-)
-  .flat()
-  .filter(({ row, col }) => (row + col) % 5 !== 3)
-  .map(({ row, col }) => ({
-    id: `rumah-${row}-${col}`,
-    select: 'kawasan',
-    title: 'Rumah warga',
-    style: 'rumah' as const,
-    foot: { x: 1330 + col * 130 + (row % 2) * 30, y: 110 + row * 110, w: 92, h: 40 },
-    height: 52,
-    wall: ['#d9c9a3', '#b5a685', '#a8b08a', '#c99a6a'][(row * 3 + col) % 4],
-    roof: ['#a8563c', '#7d7468', '#4e7f7a'][(row + col) % 3],
-  }));
+/** Gang kampung (paving) di permukiman: tiga gang mendatar dan tiga gang tegak. */
+export const villageLanes: Box[] = [
+  { x: 1300, y: 176, w: 1220, h: 24 },
+  { x: 1300, y: 300, w: 1220, h: 24 },
+  { x: 1300, y: 430, w: 1220, h: 24 },
+  ...[1596, 1900, 2204].map((x) => ({ x, y: 60, w: 24, h: 470 })),
+];
+
+/**
+ * Rumah warga (hiasan, tidak dapat dipilih) berderet menghadap gang dengan lebar, tinggi,
+ * jarak dan warna atap bervariasi; sebagian petak dibiarkan menjadi halaman berpohon.
+ * Acak berbiji tetap agar susunan sama di setiap kunjungan.
+ */
+function layVillage() {
+  let seed = 20261007;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const walls = ['#d9c9a3', '#b5a685', '#a8b08a', '#c99a6a', '#c9b58a', '#9fae86'];
+  const roofs = ['#a8563c', '#7d7468', '#4e7f7a', '#8a5a3c', '#a8563c'];
+  const rows = [
+    { front: 166, depth: 44 },
+    { front: 290, depth: 46 },
+    { front: 420, depth: 46 },
+    { front: 520, depth: 42 },
+  ];
+  const segments: [number, number][] = [
+    [1312, 1590],
+    [1626, 1894],
+    [1930, 2198],
+    [2234, 2510],
+  ];
+  const built: MapBuilding[] = [];
+  const yards: [number, number, number][] = [];
+  rows.forEach((row, r) =>
+    segments.forEach(([from, to], s) => {
+      let x = from + Math.round(rnd() * 16);
+      let n = 0;
+      while (x + 84 <= to) {
+        const w = 84 + Math.round(rnd() * 36);
+        if (x + w > to) break;
+        if (rnd() < 0.18) {
+          yards.push([x + w / 2, row.front - 4, 14 + Math.round(rnd() * 8)]);
+        } else {
+          built.push({
+            id: `rumah-${r}-${s}-${n++}`,
+            select: 'kawasan',
+            title: 'Rumah warga',
+            style: 'rumah',
+            foot: { x, y: row.front - row.depth, w, h: row.depth },
+            height: 50 + Math.round(rnd() * 18),
+            wall: walls[Math.floor(rnd() * walls.length)],
+            roof: roofs[Math.floor(rnd() * roofs.length)],
+          });
+        }
+        x += w + 16 + Math.round(rnd() * 22);
+      }
+    }),
+  );
+  return { built, yards };
+}
+const village = layVillage();
+export const houses: MapBuilding[] = village.built;
 
 export const trees: [number, number, number][] = [
+  ...village.yards,
   [340, 640, 26],
   [540, 650, 20],
   [1180, 640, 22],
