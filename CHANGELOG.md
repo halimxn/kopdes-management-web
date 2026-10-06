@@ -1,5 +1,12 @@
 # Changelog
 
+## Dunia Koperasi pixel: P1 preview dan P0 hapus 3D — 7 Oktober 2026
+
+- Arah baru disetujui pemilik: 2D pixel top-down ala Eastward (PixiJS), palet nada tanah + grading Eastward; kontrak DUNIA-KOPERASI ditulis ulang, acuan gambar di docs/dunia-pixel/.
+- Generator preview `scripts/dunia-pixel/preview.mjs` (Node murni): kota, orang berpose, kendaraan, dok, denah.
+- Dihapus: WorldScene, objects/, npc/movement, render-quality, dev/AssetSheet, /dev/dunia-koperasi/aset, scripts/denah-dunia.mjs, docs/referensi-dunia, dependensi three/@types/three, skill 3d-graphics dan threejs-*. Arsip di tag `arsip/dunia-3d-20261007`.
+- Halaman dunia sementara menampilkan status sampai mesin PixiJS (P2).
+
 ## Aset Nyata & Diorama Komplek Terpadu (Cozy Village Co-op Compound) — 6 Oktober 2026
 
 - Grafik Bersih & Halus: pixelated downsampling dinonaktifkan total (`downsampleScale: 1`), canvas di-render pada resolusi native dengan anti-aliasing (`antialias: true`) dan PCFSoftShadowMap halus, menghapus jagged pixel edges sesuai instruksi langsung pemilik.

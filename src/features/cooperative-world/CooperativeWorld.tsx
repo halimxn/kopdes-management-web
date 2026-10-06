@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import './world.css';
 import {
@@ -55,10 +54,6 @@ import { ListCard } from './ui/ListCard';
 import { TodayTracker } from './ui/TodayTracker';
 import { MobileSheet, type SheetSnap, type SheetTab } from './ui/MobileSheet';
 
-const WorldScene = dynamic(() => import('./WorldScene').then((module) => module.WorldScene), {
-  ssr: false,
-  loading: () => <div className="cw-loading">Menyiapkan lingkungan 3D…</div>,
-});
 
 const wideQuery = '(min-width: 1024px)';
 /** Desktop memakai kartu mengambang; layar lebih kecil memakai lembar bawah. */
@@ -489,25 +484,8 @@ export function CooperativeWorld({
       />
 
       <section className="cw-viewport" aria-label="Dunia koperasi interaktif">
-        <WorldScene
-          preview={preview}
-          model={sceneModel}
-          location={location}
-          weather={preferences.weather}
-          hour={hour}
-          outfit={preferences.outfit}
-          quality={preferences.quality}
-          focus={focus}
-          recenter={recenter}
-          occlusion={occlusion}
-          activity={activity}
-          zoom={zoom}
-          rotation={rotation}
-          selected={selected}
-          plans={plans}
-          managerPlan={managerPlan}
-          onSelect={select}
-        />
+        {/* Mesin dunia pixel (PixiJS) dipasang di paket P2; sementara tampilkan status. */}
+        <div className="cw-loading">Dunia pixel sedang dibangun.</div>
         <KpiCards
           model={model}
           timeline={timeline}

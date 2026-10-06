@@ -15,11 +15,6 @@ import type { Item } from '@/features/records/schemas';
 import { dayPhase, getLighting } from '@/features/cooperative-world/lighting';
 import { planManager, planStaff } from '@/features/cooperative-world/npc/schedule';
 import {
-  detectQualityTier,
-  qualitySettings,
-  resolveQuality,
-} from '@/features/cooperative-world/render-quality';
-import {
   truckArrival,
   pathPose,
   truckFocus,
@@ -85,15 +80,6 @@ describe('pemetaan dunia koperasi', () => {
 });
 
 describe('fondasi render dunia', () => {
-  it('memilih kualitas sesuai petunjuk perangkat dan menghormati pilihan manual', () => {
-    expect(detectQualityTier({ width: 1440, cores: 8, memory: 8 })).toBe('tinggi');
-    expect(detectQualityTier({ width: 390, cores: 8, memory: 8 })).toBe('sedang');
-    expect(detectQualityTier({ width: 1440, cores: 2, memory: 8 })).toBe('hemat');
-    expect(detectQualityTier({ width: 1440, cores: 8, memory: 8, saveData: true })).toBe('hemat');
-    expect(resolveQuality('tinggi', { width: 360, cores: 2 })).toBe('tinggi');
-    expect(qualitySettings.hemat.shadows).toBe(false);
-    expect(qualitySettings.sedang.pixelRatio).toBeLessThanOrEqual(1.5);
-  });
   it('siang cerah lebih terang dari malam, dan malam tidak hitam', () => {
     const day = getLighting(12, 'cerah');
     const night = getLighting(22, 'cerah');

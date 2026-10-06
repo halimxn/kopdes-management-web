@@ -1,38 +1,25 @@
 ---
 name: dunia-koperasi
-description: Membangun dan mengubah Dunia Koperasi 3D (Three.js) — tata letak, mesh, karakter/NPC, kendaraan, kamera, performa. Pakai saat menyentuh src/features/cooperative-world.
+description: Membangun dan mengubah Dunia Koperasi 2D pixel (PixiJS) ala Eastward — aset generator, denah, karakter/NPC, kendaraan, kamera, interaksi, performa. Pakai saat menyentuh src/features/cooperative-world atau scripts/dunia-pixel.
 ---
 
-# Dunia Koperasi 3D
+# Dunia Koperasi pixel
 
-Kontrak gaya dan rencana: `docs/DUNIA-KOPERASI.md` (satu-satunya). Video acuan: `docs/referensi-dunia/referensi_desain_video/`.
-
-## Mulai dari Blueprint v3 (wajib)
-Baca bagian "Blueprint visual v3" di DUNIA-KOPERASI lalu buka, sesuai pekerjaan:
-- `docs/referensi-dunia/blueprint/lembar-aset.png` (hidup: `/dev/dunia-koperasi/aset`) — bentuk/warna aset dari kode.
-- `docs/referensi-dunia/blueprint/denah-kawasan.svg` — denah tampak atas dari `layout.ts`.
-- `docs/referensi-dunia/blueprint/kartu-contoh.html` — kartu stok, truk, Dok, pelacak, label.
-- Frame interaksi video `09_22s-rute-truk.jpg`, `10_53s-rute-dok.jpg`.
-Bandingkan tangkapan 1280 × 740 dengan frame video sejenis sebelum melapor; ikuti "Daftar periksa anti-meleset".
+Kontrak gaya dan rencana: `docs/DUNIA-KOPERASI.md` (satu-satunya). Acuan gambar: `docs/dunia-pixel/`.
 
 ## Peta berkas
-- `layout.ts` semua koordinat (kawasan, gudang + `roofRise`, rak luar, kontainer, jalur forklift, interior kantor/gudang, kursi, zona kamera).
-- `truck-routes.ts` fungsi murni tanpa Three.js: `truckPose`, `truckRoute`, `truckFocus`, `pathPose` (teruji).
-- `objects/` mesh: `primitives` (palet, `box/sphere/cylinder/cone/gable/sign/badge`, `mergeStatic`, `mergeTransparent`), `props` (pohon, palet, forklift, pagar kaca, rak luar, kontainer, pin), `office` (kantor/gerai), `exterior` (kawasan + kota), `warehouse`, `warehouse-interior`, `vehicles` (truk, kendaraan suasana, forklift halaman), `route` (garis rute), `highlight` (kotak seleksi), `characters`.
-- Objek sementara (seleksi, rute) dibuang dengan `disposeGroup`, yang tidak membuang sumber daya bersama.
-- `npc/schedule.ts` jadwal murni (teruji); `npc/movement.ts` gerak per frame.
-- `world-model.ts` adapter data (slot lahan, inventaris, truk, rapat). `lighting.ts`, `render-quality.ts`.
-- `WorldScene.tsx` WebGL/kamera/raycast/penanda; `CooperativeWorld.tsx` state + tata letak; `ui/` kartu.
+- `scripts/dunia-pixel/preview.mjs` generator aset/adegan (Node murni, tanpa dependensi): palet `K`, `person()` (pose, hijab/peci/caping/helm), kendaraan serong, bangunan (`win`, `roofTiles`, `pastelWall`, `awning`), `grade()` per suasana (bawaan `eastward`).
+- `world-model.ts` adapter data (unit, barang, pengiriman, tim, rapat); `npc/schedule.ts` jadwal murni; `lighting.ts` fase hari; `district.ts`/`layout.ts`/`truck-routes.ts` lama dipakai sampai denah tile P3.
+- `CooperativeWorld.tsx` state + tata letak; `ui/` kartu; mesin PixiJS menyusul (P2).
 
 ## Aturan
-- Data asli saja: gerai, barang, pengiriman, tim, rapat, tugas. Simulasi (mobil suasana, kardus pemandangan) diberi label; jangan mengarang nama/angka. Loading/galat/pencatatan belum aktif ≠ nol.
-- Objek statis: bangun lalu `mergeStatic(group)` (satu mesh berwarna per titik per objek). Objek dapat diklik: `group.userData.selection = id`, merge di grup itu sendiri.
-- Hindari permukaan sebidang (z-fighting): beri selisih kedalaman ≥ 0,02.
-- Animasi berbasis `delta`, tanpa rebuild scene per tick; data per menit lewat ref (`plans`, `motion`). Reduced-motion: taruh di tujuan, hentikan gerak.
-- Anggaran: desktop < 150 draw call (cek `window.__cwRenderInfo` di dev), ponsel < 80; kualitas Tinggi/Sedang/Hemat.
-- Kamera: fokus lewat `focus/zoom/recenter`; area tertutup kartu lewat `occlusion`.
+- Data asli saja; simulasi berlabel; belum aktif/galat ≠ nol; tanpa nama atau angka karangan.
+- Skala piksel bilangan bulat; garis tepi gelap berwarna; palet nada tanah + grading Eastward; merah-putih KDMP aksen.
+- Orang ±30×56, pintu ±70 px; kendaraan sebanding orang.
+- Animasi berbasis delta; reduced-motion menghentikan gerak; render berhenti saat tersembunyi.
+- Anggaran: desktop 60 fps, Android kelas bawah ≥ 30 fps, aset awal < 1 MB.
 
 ## Verifikasi
-- Tes unit untuk fungsi murni baru di `tests/unit/cooperative-world.test.ts`.
-- Lihat hasil di `/dev/dunia-koperasi?contoh=1` (data contoh development) pada 1280 dan 375 px.
-- Perbarui bagian terkait DUNIA-KOPERASI, CHANGELOG, STATUS, LANJUTAN-AI.
+- Render ulang acuan: `node scripts/dunia-pixel/preview.mjs`, salin yang berubah ke `docs/dunia-pixel/`.
+- Tes unit fungsi murni di `tests/unit/cooperative-world.test.ts`; lihat `/dev/dunia-koperasi?contoh=1` pada 1280 dan 375 px.
+- Perbarui DUNIA-KOPERASI, STATUS, LANJUTAN-AI, CHANGELOG.

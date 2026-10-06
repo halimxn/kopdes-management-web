@@ -1,6 +1,11 @@
 # Serah terima AI — 6 Oktober 2026
 
-## Arahan aktif
+## Arahan aktif (7 Oktober 2026)
+
+Dunia Koperasi diganti menjadi **2D pixel ala Eastward (PixiJS)**. Baca DUNIA-KOPERASI (kontrak dan paket P0–P8) dan docs/dunia-pixel/. P1 preview dan P0 bersih selesai; berikutnya **P2 mesin PixiJS** (tilemap, kamera, avatar manajer, penanda + kamera ikut). P3–P5 (aset) perlu reasoning tinggi: beri tahu pemilik sebelum mulai. Commit lokal per paket; push setelah semua tahap selesai. Bagian di bawah tentang 3D adalah riwayat.
+
+## Arahan lama (riwayat 3D)
+
 
 Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUNIA-KOPERASI.md). Rencana ini disetujui pemilik 6 Oktober 2026: tetap 3D low-poly yang ringan, kawasan ± 4× lebih luas dengan gudang besar, NPC karyawan per seksi dan manajer, UI kartu mengikuti delapan frame video dan rapi di ponsel, serta fitur web Pengiriman dan Mutasi stok.
 

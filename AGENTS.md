@@ -16,7 +16,7 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jangan membuat kontrak style 
 - Pengalaman produk berupa task/project manager terinspirasi Notion: proyek, catatan, tugas terhubung, daftar/papan/kalender/Gantt, dan catatan terformat. Jangan mengklaim editor blok drag-and-drop, baseline, jalur kritis otomatis, atau kolaborasi real-time sudah tersedia.
 - Domain `workstreams` juga menjadi proyek; pertahankan kompatibilitas bidang kerja template dan cadangan lama.
 - Bahasa Indonesia sederhana, zona waktu Asia/Jakarta.
-- Prioritas desain terbaru: halaman Dunia Koperasi 3D isometrik mengikuti video, kantor membuka interior, tujuh lahan gerai, maskot/bubble, cuaca/waktu. Suplier/ekspedisi masih rencana. Fitur operasional tetap sumber data.
+- Prioritas desain terbaru (7 Okt 2026): Dunia Koperasi 2D pixel top-down ala Eastward (PixiJS), desa modern Indonesia, unit KDMP + interior, avatar manajer, kendaraan, cuaca/waktu. Tanpa Three.js. Suplier/ekspedisi masih rencana. Fitur operasional tetap sumber data.
 
 ## Kode yang mudah dirawat
 - Next.js App Router, React, TypeScript strict, Tailwind, Zod, Supabase.
@@ -38,7 +38,7 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jangan membuat kontrak style 
 - Area sentuh minimal 44 px, fokus keyboard, label form, status memakai teks selain warna.
 - Tabel/Gantt bergulir dalam kontainer; hormati reduced-motion dan safe area.
 - Halaman operasional memakai arang, hijau lembut, lavender, kartu membulat, navigasi HP dan sidebar/rel tablet/desktop; tema gelap tersedia. Style operasional: globals.css/personal.css/tokens.css/ui.css.
-- Dunia Koperasi memakai biru-putih, kartu mengambang, layar penuh dan dock khusus sesuai video; style dibatasi `src/features/cooperative-world/world.css`. Maskot adalah visualisasi, bukan pegawai/kehadiran nyata. Cuaca simulasi; waktu Asia/Jakarta. Hindari angka operasional palsu, tombol dekoratif dan slogan.
+- Dunia Koperasi memakai pixel art nada tanah dengan grading Eastward, kartu krem bergaris gelap, layar penuh dan dock khusus; style dibatasi `src/features/cooperative-world/world.css`. Maskot adalah visualisasi, bukan pegawai/kehadiran nyata. Cuaca simulasi; waktu Asia/Jakarta. Hindari angka operasional palsu, tombol dekoratif dan slogan.
 
 ## Proses
 1. Periksa Git dan pertahankan perubahan pengguna.
@@ -53,7 +53,7 @@ Commit/push per paket kerja, pesan ringkas dengan judul dan isi dipisahkan baris
 
 ## Skill dan peta kode untuk semua AI
 - Skill proyek: `.claude/skills/` (Claude Code) dan salinannya `.agents/skills/` (Codex, Antigravity, agen lain). Ubah di `.claude/skills`, lalu jalankan `node scripts/sync-skills.mjs`; `clean-code` bersumber di `.agents/skills`. Sumber/lisensi pihak ketiga: `SUMBER.md`.
-- Skill utama: hemat-token (setiap sesi panjang), dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code, 3d-graphics; opsional caveman, grill-me/grilling. AI tanpa dukungan skill cukup membaca SKILL.md yang relevan.
+- Skill utama: hemat-token (setiap sesi panjang), dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code; opsional caveman, grill-me/grilling. AI tanpa dukungan skill cukup membaca SKILL.md yang relevan.
 - Ubah aturan hanya di AGENTS.md. CLAUDE.md dan GEMINI.md mengimpor berkas ini (@AGENTS.md) dan hanya menambah bagian Graphify; jangan menyalin aturan ke sana.
 - Aturan per AI menunjuk ke berkas ini: `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.agents/rules/`. Hook Graphify lokal (`.claude/settings.json`, `.codex/`, `.gemini/settings.json`) berisi path komputer pemilik dan tidak di-commit.
 - rtk (dipasang global oleh pemilik) meringkas keluaran perintah shell lewat hook. Bila pesan galat tes/build terpotong, jalankan perintah dengan `rtk proxy <perintah>` atau matikan dengan `rtk init -g --uninstall`.
