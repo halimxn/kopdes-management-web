@@ -1,17 +1,23 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Building2, ChevronDown, Layers3, Map, Search, Store, Warehouse } from 'lucide-react';
+import { ChevronDown, Layers3, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { worldZones, type WorldZone } from '../layout';
-import type { WorldLocation } from '../world-model';
+import type { WorldLocation, ZoneSummary } from '../world-model';
+import { WorldIcon, type WorldIconKind } from './WorldIcon';
 
-export function zoneIcon(zone: WorldZone, size = 18) {
-  if (zone === 'kantor') return <Building2 size={size} />;
-  if (zone === 'gudang') return <Warehouse size={size} />;
-  if (zone === 'gerai') return <Store size={size} />;
-  return <Map size={size} />;
+const zoneArt: Record<WorldZone, WorldIconKind> = {
+  semua: 'kawasan',
+  gudang: 'gudang',
+  kantor: 'kantor',
+  kesehatan: 'klinik',
+  gerai: 'gerai',
+  lahan: 'lahan',
+};
+export function zoneIcon(zone: WorldZone, size = 26) {
+  return <WorldIcon kind={zoneArt[zone]} size={size} />;
 }
 
 type Props = {
@@ -20,6 +26,8 @@ type Props = {
   location: WorldLocation;
   zone: WorldZone;
   onZone: (zone: WorldZone) => void;
+  /** Ringkasan data per zona untuk daftar pilihan (pola dropdown situs video). */
+  summaries: Record<WorldZone, ZoneSummary>;
   query: string;
   onQuery: (value: string) => void;
   /** Enter di kolom cari: pilih lokasi/barang/karakter pertama yang cocok. */
@@ -36,6 +44,7 @@ export function WorldHeader({
   location,
   zone,
   onZone,
+  summaries,
   query,
   onQuery,
   onSearchGo,
@@ -93,11 +102,25 @@ export function WorldHeader({
                 }}
                 onKeyDown={close}
               >
-                <span className="cw-zone-badge">{zoneIcon(key)}</span>
+                <span className="cw-zone-badge">{zoneIcon(key, 30)}</span>
                 <span className="cw-zone-text">
                   <strong>{worldZones[key].title}</strong>
-                  <small>{worldZones[key].subtitle}</small>
+                  {summaries[key].total ? (
+                    <i className="cw-zone-bar" aria-hidden="true">
+                      <b
+                        style={{
+                          width: `${Math.min(1, (summaries[key].value || 0) / summaries[key].total!) * 100}%`,
+                        }}
+                      />
+                    </i>
+                  ) : null}
+                  <small>{summaries[key].note}</small>
                 </span>
+                {summaries[key].total ? (
+                  <em className="cw-zone-ratio">
+                    {summaries[key].value}/{summaries[key].total}
+                  </em>
+                ) : null}
               </Button>
             ))}
           </div>

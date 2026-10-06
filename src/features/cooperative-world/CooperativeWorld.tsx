@@ -30,6 +30,7 @@ import {
   getWorldModel,
   meetingTimeline,
   worldPreferencesSchema,
+  zoneSummaries,
   type CharacterActivity,
   type RackId,
   rackIds,
@@ -334,6 +335,7 @@ export function CooperativeWorld({
   }
   const detail = (
     <DetailCard
+      key={selected}
       mascotNote={mascotNote}
       selected={selected}
       location={location}
@@ -417,8 +419,11 @@ export function CooperativeWorld({
   );
 
   return (
-    <main className={`cooperative-world ${night ? 'cw-night' : ''}`}>
+    <main
+      className={`cooperative-world ${night ? 'cw-night' : ''} ${preferences.quality === 'hemat' ? 'cw-solid' : ''}`}
+    >
       <WorldHeader
+        summaries={zoneSummaries(model)}
         title={model.title}
         manager={model.manager}
         location={location}

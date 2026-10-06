@@ -1666,3 +1666,107 @@
   color: var(--cw-blue);
   animation: cw-appear 0.2s ease-out;
 }
+
+/* ---------- v4: kartu dan tombol transparan ala video ---------- */
+/* Desktop: putih 86 % + blur latar; ponsel dan kualitas Hemat: putih 95 % tanpa blur (ringan). */
+.cooperative-world {
+  --cw-glass: rgba(255, 255, 255, 0.86);
+}
+@media (min-width: 1024px) {
+  .cooperative-world:not(.cw-solid) .cw-card,
+  .cooperative-world:not(.cw-solid) .cw-dock,
+  .cooperative-world:not(.cw-solid) .cw-topbar {
+    background: var(--cw-glass);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+  }
+  .cooperative-world:not(.cw-solid) .cw-card {
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+}
+@media (max-width: 1023px) {
+  .cooperative-world .cw-card,
+  .cooperative-world .cw-sheet {
+    background: rgba(255, 255, 255, 0.95);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .cooperative-world .cw-card,
+  .cooperative-world .cw-dock,
+  .cooperative-world .cw-topbar {
+    background: #ffffff;
+    backdrop-filter: none;
+  }
+}
+/* Kartu detail berganti dengan meluncur halus; menu zona terbuka dengan memudar. */
+.cw-detail-card {
+  animation: cw-slide-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cw-zone-menu {
+  animation: cw-appear 0.18s ease-out;
+  transform-origin: top right;
+}
+.cooperative-world .ui-btn,
+.cw-row,
+.cw-stock-row {
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+.cooperative-world .cw-row:active,
+.cw-stock-row:active {
+  transform: scale(0.985);
+}
+@keyframes cw-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Pemilih zona ala dropdown situs video: lencana ilustrasi, bar, rasio. */
+.cw-zone-menu {
+  width: 330px;
+}
+.cooperative-world .cw-zone-menu .cw-zone-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(160deg, #f3f6ff, #e2eaff);
+}
+.cooperative-world .cw-zone-button .cw-zone-badge {
+  background: linear-gradient(160deg, #f3f6ff, #e2eaff);
+}
+.cw-zone-menu .cw-zone-text {
+  flex: 1;
+  display: grid;
+  gap: 3px;
+}
+.cw-zone-menu .cw-zone-text small {
+  max-width: 210px;
+}
+.cw-zone-bar {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f5;
+  overflow: hidden;
+}
+.cw-zone-bar b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cw-blue);
+}
+.cw-zone-ratio {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cw-ink);
+}

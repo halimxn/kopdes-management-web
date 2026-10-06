@@ -231,3 +231,49 @@ export function getWorldHour(time: WorldPreferences['time'], now: Date) {
     }).format(now),
   );
 }
+
+export type ZoneSummary = { note: string; value?: number; total?: number };
+
+/**
+ * Ringkasan per zona untuk pemilih zona (pola dropdown situs pada video): angka hanya dari
+ * data — gerai tercatat per kavling, dok terisi dari pengiriman, tugas dan rapat hari ini.
+ */
+export function zoneSummaries(model: WorldModel): Record<
+  'semua' | 'gudang' | 'kantor' | 'kesehatan' | 'gerai' | 'lahan',
+  ZoneSummary
+> {
+  const recorded = (ids: string[]) =>
+    model.plots.filter((plot) => ids.includes(plot.id) && plot.unit).length;
+  const atDock = model.trucks.filter((spot) => spot.place === 'dok').length;
+  const queued = model.trucks.length - atDock;
+  const working = model.tasks.filter((row) => row.data.status === 'proses').length;
+  const niaga = model.plots.filter((plot) => plot.id === 'sembako' || plot.id.startsWith('gerai-'));
+  return {
+    semua: {
+      note: `${model.plots.filter((plot) => plot.unit).length}/${model.plots.length} gerai tercatat · ${model.trucks.length} truk`,
+      value: model.plots.filter((plot) => plot.unit).length,
+      total: model.plots.length,
+    },
+    gudang: {
+      note: `${atDock}/4 dok terisi · ${queued} antre · ${recorded(['cold-storage']) ? 'cold storage tercatat' : 'cold storage rencana'}`,
+      value: atDock,
+      total: 4,
+    },
+    kantor: {
+      note: `${model.meetings.length} rapat hari ini · ${model.tasks.length} tugas terbuka`,
+      value: working,
+      total: model.tasks.length,
+    },
+    kesehatan: {
+      note: `${recorded(['klinik', 'apotek'])}/2 unit tercatat`,
+      value: recorded(['klinik', 'apotek']),
+      total: 2,
+    },
+    gerai: {
+      note: `${niaga.filter((plot) => plot.unit).length}/${niaga.length} gerai tercatat`,
+      value: niaga.filter((plot) => plot.unit).length,
+      total: niaga.length,
+    },
+    lahan: { note: 'Enam petak · data lahan belum dicatat' },
+  };
+}

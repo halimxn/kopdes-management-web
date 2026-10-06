@@ -8,6 +8,7 @@ import {
   noticeBoard,
   isBelowMinimum,
   worldPreferencesSchema,
+  zoneSummaries,
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
 import { dayPhase, getLighting } from '@/features/cooperative-world/lighting';
@@ -380,5 +381,22 @@ describe('denah distrik v4', () => {
     ])
       expect(ids).toContain(id);
     expect(allBuildings().find((b) => b.id === 'kantor')?.kinds).toEqual([]);
+  });
+});
+
+describe('ringkasan zona', () => {
+  it('menghitung dok terisi, gerai tercatat dan tanpa angka lahan karangan', () => {
+    const model = getWorldModel(
+      {
+        units: [row('k', { title: 'K', kind: 'klinik' })],
+        deliveries: [row('d', { title: 'D', status: 'tiba' }), row('e', { title: 'E', status: 'dikirim' })],
+      },
+      new Date(),
+    );
+    const summary = zoneSummaries(model);
+    expect(summary.gudang).toMatchObject({ value: 1, total: 4 });
+    expect(summary.gudang.note).toContain('1 antre');
+    expect(summary.kesehatan).toMatchObject({ value: 1, total: 2 });
+    expect(summary.lahan.value).toBeUndefined();
   });
 });
