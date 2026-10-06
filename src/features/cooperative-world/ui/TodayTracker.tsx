@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CalendarClock, Check, ChevronRight, Truck, Users } from 'lucide-react';
 import { recordHref } from '../../workspace/workspace-navigation';
 import { deliverySteps, type MeetingStep, type WorldModel } from '../world-model';
+import { WorldIcon } from './WorldIcon';
 
 type Props = {
   model: WorldModel;
@@ -71,7 +72,10 @@ export function TodayTracker({ model, timeline, dateLabel, unavailable }: Props)
           </ol>
         </div>
         <div className="cw-tracker-side">
-          <Link className="cw-next" href={recordHref('deliveries', delivery)}>
+          <Link className="cw-next cw-next-art" href={recordHref('deliveries', delivery)}>
+            <span className="cw-next-icon">
+              <WorldIcon kind="truk" size={38} />
+            </span>
             <small>{delivery.data.direction === 'keluar' ? 'Barang keluar' : 'Barang masuk'}</small>
             <strong>{String(delivery.data.title)}</strong>
             <span>

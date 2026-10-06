@@ -1,13 +1,39 @@
 import * as THREE from 'three';
 import type { WorldModel } from '../world-model';
 import { officePosition, officeSize, park, plotSize, roads, site } from '../layout';
-import { box, mergeStatic, palette, sign } from './primitives';
-import { bench, fence, markingRect, streetLamp, tree } from './props';
+import { box, mergeStatic, mergeTransparent, palette, sign } from './primitives';
+import { bench, dropPin, fence, markingRect, streetLamp, tree } from './props';
 import { building } from './office';
 import { createLogisticsYard, createWarehouse } from './warehouse';
+import { warehouse } from '../layout';
 
-const asphalt = '#c6d2e8';
-const sidewalk = '#f4f7fd';
+const asphalt = palette.asphalt;
+const sidewalk = '#f7f9fe';
+
+/**
+ * Blok kota di luar pagar (utara dan barat, di belakang kawasan dari sudut kamera) memberi
+ * kedalaman seperti video. Rendah di timur/selatan agar tidak menutupi kawasan.
+ */
+function cityBlocks(parent: THREE.Object3D) {
+  const blocks: [number, number, number, number, number][] = [];
+  for (let x = -44, i = 0; x <= 44; x += 9.5, i++) blocks.push([x, -31.5, 7, 5.5, 3 + ((i * 5) % 5)]);
+  for (let z = -20, i = 0; z <= 26; z += 9.2, i++) blocks.push([-38.5, z, 5.5, 7, 2.5 + ((i * 3) % 4)]);
+  for (let z = -18, i = 0; z <= 26; z += 11, i++) blocks.push([38, z, 5, 7.5, 1.2 + (i % 2) * 0.6]);
+  for (let x = -26, i = 0; x <= 30; x += 14, i++) blocks.push([x, 31, 9, 4.5, 1 + (i % 2) * 0.5]);
+  // Tanah kota sedikit di bawah tanah kawasan agar tepi kawasan tetap terbaca.
+  box(parent, [130, 0.1, 120], [0, -0.13, 0], '#e2e8f5', 0);
+  for (const [x, z, w, d, h] of blocks) {
+    box(parent, [w, h, d], [x, h / 2, z], '#edf1fa', 0.05);
+    box(parent, [w + 0.12, 0.2, d + 0.12], [x, h + 0.1, z], '#dbe3f3', 0.03);
+    for (let y = 1; y < h - 0.4; y += 1.3) {
+      box(parent, [w - 0.8, 0.55, 0.05], [x, y, z + d / 2 + 0.03], '#a9c4f2', 0);
+      box(parent, [0.05, 0.55, d - 0.8], [x + w / 2 + 0.03, y, z], '#a9c4f2', 0);
+    }
+  }
+  // Jalan kota di luar pagar barat dan utara.
+  box(parent, [5, 0.03, 70], [-33.5, -0.06, 0], asphalt, 0);
+  box(parent, [100, 0.03, 4], [0, -0.06, -27.5], asphalt, 0);
+}
 
 function emptyPlot(parent: THREE.Object3D, id: string, x: number, z: number) {
   const g = new THREE.Group();
@@ -78,12 +104,29 @@ export function createExterior(parent: THREE.Group, model: WorldModel) {
     roads.inner.z + roads.inner.width / 2,
     roads.boulevard.z - roads.boulevard.width / 2,
   );
-  // Pagar batas utara dengan bukaan gerbang.
+  // Pagar kaca keliling dengan bukaan gerbang, dan jalur rumput di kaki pagar (seperti video).
+  const panels = new THREE.Group();
   const fenceZ = roads.main.z + roads.main.width / 2 + 0.9;
-  fence(scenery, [site.minX + 1, fenceZ], [roads.gate.x - 2.6, fenceZ]);
-  fence(scenery, [roads.gate.x + 2.6, fenceZ], [site.maxX - 1, fenceZ]);
+  const south = site.maxZ - 0.6;
+  fence(scenery, [site.minX + 1, fenceZ], [roads.gate.x - 2.6, fenceZ], panels);
+  fence(scenery, [roads.gate.x + 2.6, fenceZ], [site.maxX - 1, fenceZ], panels);
+  for (const x of [site.minX + 0.6, site.maxX - 0.6]) {
+    fence(scenery, [x, fenceZ], [x, roads.boulevard.z - 2.6], panels);
+    fence(scenery, [x, roads.boulevard.z + 2.6], [x, south], panels);
+  }
+  fence(scenery, [site.minX + 0.6, south], [site.maxX - 0.6, south], panels);
+  box(scenery, [width - 2, 0.04, 1.1], [0, 0.012, fenceZ + 0.75], palette.grass, 0);
+  box(scenery, [width - 2, 0.04, 1.1], [0, 0.012, south - 0.75], palette.grass, 0);
+  for (const x of [site.minX + 1.35, site.maxX - 1.35])
+    box(scenery, [1.1, 0.04, south - fenceZ - 3], [x, 0.012, (south + fenceZ) / 2], palette.grass, 0);
+  cityBlocks(scenery);
 
   createLogisticsYard(scenery);
+  // Pin biru dari data nyata: barang di bawah minimum menandai area staging gudang.
+  if (model.inventory.low.length) {
+    const [sx, sz] = warehouse.staging;
+    dropPin(scenery, sx - 1.2, 2.2, sz - 2.4);
+  }
 
   // Plaza depan kantor dan taman titik kumpul.
   const [ox, oz] = officePosition;
@@ -112,18 +155,20 @@ export function createExterior(parent: THREE.Group, model: WorldModel) {
   // Parkir mobil kecil di timur taman: hanya marka.
   for (let i = 0; i < 4; i++) markingRect(scenery, 22 + i * 2.2, 7.2, 2, 4.4, palette.white, 0.07);
 
-  // Pohon dan lampu sepanjang jalan; dilewati di dekat persimpangan dan gerbang.
+  // Pohon ditanam berbaris teratur: tepi boulevard, kaki pagar barat/timur dan utara.
   const busy = (x: number) => Math.abs(x - roads.gate.x) < 3.5 || Math.abs(x + 3) < 3;
-  for (let x = site.minX + 2; x <= site.maxX - 2; x += 4) {
+  for (let x = site.minX + 2; x <= site.maxX - 2; x += 4)
     if (!busy(x)) tree(scenery, x, roads.boulevard.z - roads.boulevard.width / 2 - 1.1, 0.85);
-    if (Math.abs(x - roads.gate.x) > 3) tree(scenery, x + 2, site.minZ + 0.8, 0.9);
-  }
-  for (const z of [-6, 4, 9]) {
-    tree(scenery, site.minX + 1, z);
-    tree(scenery, site.maxX - 1, z);
+  for (let x = site.minX + 3; x <= site.maxX - 3; x += 5)
+    if (Math.abs(x - roads.gate.x) > 4) tree(scenery, x, site.minZ + 0.9, 0.9);
+  for (const z of [-6, -1, 4, 9]) {
+    tree(scenery, site.minX + 1.4, z, 0.95);
+    tree(scenery, site.maxX - 1.4, z, 0.95);
   }
   for (const [x, , z] of lampHeads()) streetLamp(scenery, x - 0.22, z);
   mergeStatic(scenery);
+  mergeTransparent(panels, '#dfe8f8', 0.38);
+  scenery.add(panels);
   noticeBoard(parent);
 
   // Objek yang dapat diklik digabung per objek agar raycast tetap mengenali pilihannya.
@@ -224,12 +269,17 @@ export function createNightLights(parent: THREE.Object3D) {
     g.add(mesh);
   }
   const [ox, oz] = officePosition;
-  const pane = new THREE.PlaneGeometry(0.9, 0.95);
-  for (const side of [-1, 1])
-    for (const offset of [officeSize.width / 2 - 0.9, officeSize.width / 2 - 2.2]) {
-      const mesh = new THREE.Mesh(pane, glow);
-      mesh.position.set(ox + side * offset, 1.35, oz + officeSize.depth / 2 + 0.11);
-      g.add(mesh);
-    }
+  // Pita jendela kantor dua lantai (lihat building di office.ts).
+  const half = officeSize.width / 2;
+  const panes: [number, number, number][] = [
+    [0, 2.75, officeSize.width - 0.9],
+    [-(half + 0.5) / 2, 1.25, half - 1.4],
+    [(half + 0.5) / 2, 1.25, half - 1.4],
+  ];
+  for (const [x, y, width] of panes) {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, 0.85), glow);
+    mesh.position.set(ox + x, y, oz + officeSize.depth / 2 + 0.12);
+    g.add(mesh);
+  }
   return g;
 }

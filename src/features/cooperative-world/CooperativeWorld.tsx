@@ -38,6 +38,7 @@ import {
 } from './world-model';
 import { warehouseInterior, worldStations, worldZones, type WorldZone } from './layout';
 import { dayPhase } from './lighting';
+import { truckFocus } from './truck-routes';
 import { WorldHeader } from './ui/WorldHeader';
 import { planManager, planStaff } from './npc/schedule';
 import { today } from '@/lib/date';
@@ -237,10 +238,18 @@ export function CooperativeWorld({
     if (id === 'koperasi') return enter('dalam');
     setSelected(id);
     showDetail();
-    // Pilihan dari daftar menggerakkan kamera; klik di scene tidak memindahkan kamera.
+    // Pilihan dari daftar menggerakkan kamera; klik di scene tidak memindahkan kamera,
+    // kecuali truk: seperti video, kamera terbang agar truk dan rutenya ke dok terlihat.
     const rack = id.startsWith('rak-') ? warehouseInterior.racks[id.slice(4) as RackId] : undefined;
+    const truckSpot =
+      location === 'luar' ? model.trucks.find((row) => `kirim-${row.delivery.id}` === id) : undefined;
     const target = model.plots.find((item) => item.id === id)?.position || rack;
-    if (fly && target) {
+    if (truckSpot) {
+      setSpot(truckFocus(truckSpot, model.trucks));
+      // Truk antre: rute ke dok panjang, jadi kamera lebih jauh agar truk dan dok sama-sama terlihat.
+      setZoom(truckSpot.place === 'antre' ? 0.68 : 1.05);
+      setRecenter((value) => value + 1);
+    } else if (fly && target) {
       setSpot(target);
       setZoom(1.15);
       setRecenter((value) => value + 1);

@@ -17,6 +17,12 @@ import {
   qualitySettings,
   resolveQuality,
 } from '@/features/cooperative-world/render-quality';
+import {
+  pathPose,
+  truckFocus,
+  truckPose,
+  truckRoute,
+} from '@/features/cooperative-world/truck-routes';
 const row = (
   id: string,
   data: Record<string, unknown>,
@@ -285,5 +291,61 @@ describe('papan pengumuman', () => {
     const board = noticeBoard(decisions, documents, '2026-10-06');
     expect(board.decisions.map((item) => item.id)).toEqual(['k1', 'k3', 'k0']);
     expect(board.documents.map((item) => item.id)).toEqual(['lama', 'dekat']);
+  });
+});
+
+describe('rute truk dan forklift suasana', () => {
+  const trucks = placeTrucks([
+    row('a', { title: 'A', status: 'tiba', dock: 'D2' }, '2026-10-01T01:00:00Z'),
+    row('b', { title: 'B', status: 'dikirim', dock: 'D2' }, '2026-10-01T02:00:00Z'),
+    row('c', { title: 'C', status: 'dikirim' }, '2026-10-01T03:00:00Z'),
+  ]);
+  const atDock = trucks.find((spot) => spot.delivery.id === 'a')!;
+  const queued = trucks.find((spot) => spot.delivery.id === 'b')!;
+
+  it('truk di dok hanya punya jalur dilalui yang berakhir di posisinya', () => {
+    const route = truckRoute(atDock, trucks);
+    expect(route.ahead).toEqual([]);
+    expect(route.dock).toBe(1);
+    expect(route.done.at(-1)).toEqual(truckPose(atDock));
+  });
+
+  it('truk antre menuju dok kosong bila dok pilihannya sudah terisi', () => {
+    const route = truckRoute(queued, trucks);
+    expect(route.done.at(-1)).toEqual(truckPose(queued));
+    expect(route.ahead[0]).toEqual(truckPose(queued));
+    expect(route.dock).toBe(0);
+    expect(route.target?.[0]).toBe(route.ahead.at(-1)?.[0]);
+  });
+
+  it('tanpa dok kosong rute antre tidak mengarang tujuan', () => {
+    const full = placeTrucks([
+      ...[1, 2, 3, 4].map((n) => row(`d${n}`, { status: 'tiba' }, `2026-10-01T0${n}:00:00Z`)),
+      row('q', { status: 'dikirim' }, '2026-10-01T09:00:00Z'),
+    ]);
+    const route = truckRoute(full.find((spot) => spot.place === 'antre')!, full);
+    expect(route.target).toBeNull();
+    expect(route.ahead).toEqual([]);
+  });
+
+  it('fokus kamera truk antre berada di antara truk dan dok tujuan', () => {
+    const [x] = truckFocus(queued, trucks);
+    const [tx] = truckRoute(queued, trucks).target!;
+    expect(x).toBeGreaterThan(Math.min(truckPose(queued)[0], tx));
+    expect(x).toBeLessThan(Math.max(truckPose(queued)[0], tx));
+  });
+
+  it('forklift bolak-balik: berangkat di awal, berhenti di ujung, kembali ke awal', () => {
+    const path: [number, number][] = [
+      [0, 0],
+      [4, 0],
+      [4, 2],
+    ];
+    expect(pathPose(path, 0, 2, 1)).toMatchObject({ x: 0, z: 0 });
+    expect(pathPose(path, 3.5, 2, 1)).toMatchObject({ x: 4, z: 2 });
+    const back = pathPose(path, 3 + 1 + 1, 2, 1);
+    expect(back.x).toBeCloseTo(4);
+    expect(back.z).toBeCloseTo(0);
+    expect(pathPose(path, 2 * (3 + 1), 2, 1)).toMatchObject({ x: 0, z: 0 });
   });
 });

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle, Boxes, CheckCheck, Store, Users, Warehouse } from 'lucide-react';
+import { WorldIcon } from './WorldIcon';
 import type { StockState } from './DetailCard';
 import { rackIds, type MeetingStep, type WorldModel } from '../world-model';
 import { landPositions } from '../layout';
@@ -35,7 +35,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
   const stockCards = [
     {
       href: '/barang',
-      icon: <Boxes size={20} />,
+      icon: <WorldIcon kind="kardus" size={34} />,
       label: 'Barang tercatat',
       value: stockValue(inventory.items.length),
       unit: '',
@@ -43,7 +43,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
     },
     {
       href: '/barang',
-      icon: <AlertTriangle size={20} />,
+      icon: <WorldIcon kind="kardus-minimum" size={34} />,
       label: 'Di bawah minimum',
       value: stockValue(inventory.low.length),
       unit: '',
@@ -51,7 +51,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
     },
     {
       href: '/barang',
-      icon: <Warehouse size={20} />,
+      icon: <WorldIcon kind="rak" size={34} />,
       label: 'Rak terisi',
       value: stockValue(filledRacks),
       unit: `/ ${rackIds.length} rak`,
@@ -61,7 +61,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
   const officeCards = [
     {
       href: '/gerai',
-      icon: <Store size={20} />,
+      icon: <WorldIcon kind="gerai" size={34} />,
       label: 'Gerai tercatat',
       value: value(model.units.length),
       unit: `/ ${landPositions.length} lahan`,
@@ -69,7 +69,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
     },
     {
       href: '/tugas',
-      icon: <CheckCheck size={20} />,
+      icon: <WorldIcon kind="tugas" size={34} />,
       label: 'Tugas terbuka',
       value: value(model.tasks.length),
       unit: '',
@@ -77,7 +77,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
     },
     {
       href: '/rapat',
-      icon: <Users size={20} />,
+      icon: <WorldIcon kind="rapat" size={34} />,
       label: 'Rapat hari ini',
       value: value(model.meetings.length),
       unit: '',

@@ -21,6 +21,71 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jika gaya berubah atas permin
 
 ![Komposisi UI dan lingkungan video](referensi-dunia/video-contact-sheet.jpg)
 
+## Blueprint visual v3 — mengikuti video (6 Oktober 2026, berlaku)
+
+Arahan pemilik 6 Oktober: tampilan, aset dan aktivitas dibuat **semirip mungkin dengan video**, lalu diperbaiki. Bagian ini mengalahkan uraian gaya lama di bawahnya bila bertentangan. Fokus paket ini tampilan; menu web tambahan menyusul.
+
+### Urutan acuan (jangan dilompati)
+
+1. **Video** — frame di [referensi_desain_video](referensi-dunia/referensi_desain_video/), termasuk frame interaksi baru: [rute truk 22 dtk](referensi-dunia/referensi_desain_video/09_22s-rute-truk.jpg), [rute ke dok 53 dtk](referensi-dunia/referensi_desain_video/10_53s-rute-dok.jpg), [truk di dok 15 dtk](referensi-dunia/referensi_desain_video/11_15s-truk-dok.jpg), [lembar kontak 18–23 dtk](referensi-dunia/referensi_desain_video/kontak-18-23s-rute.jpg), [forklift 6–11 dtk](referensi-dunia/referensi_desain_video/kontak-06-11s-forklift.jpg).
+2. **Blueprint** (folder [blueprint](referensi-dunia/blueprint/)):
+   - [denah-kawasan.svg](referensi-dunia/blueprint/denah-kawasan.svg) — tampak atas, dibuat dari `layout.ts` + `truck-routes.ts`.
+   - [lembar-aset.png](referensi-dunia/blueprint/lembar-aset.png) — render setiap aset dari kode. Halaman hidupnya: `/dev/dunia-koperasi/aset` (development).
+   - [kartu-contoh.html](referensi-dunia/blueprint/kartu-contoh.html) / [png](referensi-dunia/blueprint/kartu-contoh.png) — contoh kartu stok, truk, rak belum aktif, lahan, daftar Dok/Lokasi, pelacak, KPI, label peta, wajib/dilarang.
+   - Bukti implementasi: [kawasan 1440](referensi-dunia/blueprint/implementasi-v3-kawasan-1440.png), [truk + rute](referensi-dunia/blueprint/implementasi-v3-truk-rute.png), [gudang + stok](referensi-dunia/blueprint/implementasi-v3-gudang-stok.png), [gerai](referensi-dunia/blueprint/implementasi-v3-gerai.png), [ponsel 375](referensi-dunia/blueprint/implementasi-v3-ponsel-375.png).
+3. **Kode** — mengikuti blueprint. Bila kode diubah, perbarui lembar aset/denah/kartu contoh pada paket yang sama (cara membuat ulang ada di bawah).
+
+Arsip `PANDUAN_AGENT_DUNIA_KOPERASI.md` dan `dunia-koperasi-referensi-luas.html` dari pemilik (6 Oktober) memakai denah SVG 180 × 180 dengan klinik, apotek, cold storage dan angka contoh. Itu **bukan** acuan aktif: dunia tetap 3D Three.js dengan denah `layout.ts` (keputusan v2), tanpa angka karangan. Gagasan yang diambil: label ringkas, pohon berbaris teratur, slot lahan dari data.
+
+### Kosakata video → implementasi
+
+| Unsur video | Perilaku di video | Implementasi | Sumber data |
+|---|---|---|---|
+| Gudang dok (WH-04) | Dinding bergelombang terang, atap pelana biru bergaris, kolom sudut dan kusen dok biru, nomor dok, palet di ambang pintu, unit AC dan logo bulat di atap | `objects/warehouse.ts` `createWarehouse` | Statis; klik = `gudang` |
+| Truk boks cab-over | Kabin biru atau putih bergaris teal/oranye/navy, kaca gelap, gril, boks putih berlogo | `objects/vehicles.ts` `truck`, skema dari ID | Pengiriman dikirim/tiba/diperiksa |
+| Klik truk | Kotak seleksi biru bersiku, label biru "nama · status", kamera terbang, **garis rute**: pita biru (dilalui) + titik-titik (sisa) + cakram dan pin di dok | `objects/highlight.ts`, `objects/route.ts`, `truck-routes.ts` `truckRoute/truckFocus` | Rute skematis kawasan, bukan GPS |
+| Forklift kuning | Atap pelindung hitam, tiang, garpu membawa palet, bergerak | `props.ts` `forklift`; satu forklift suasana bolak-balik staging → rak luar (`pathPose`) | Simulasi lingkungan berlabel |
+| Palet kardus / kemasan biru | Kardus oranye berlakban, kemasan biru berbalut | `props.ts` `cardboardPallet`, `palletRack` | Pemandangan; rak interior dari Barang |
+| Pin biru | Tetes biru di atas barang | `props.ts` `dropPin` | Hanya data: stok di bawah minimum, dok tujuan rute |
+| Pagar kaca, rumput, pohon bulat | Panel transparan, jalur rumput, pohon berbaris | `exterior.ts` (`mergeTransparent`) | Statis |
+| Kota di latar | Blok putih berjendela biru | `exterior.ts` `cityBlocks` (utara/barat tinggi, timur/selatan rendah) | Statis |
+| Kartu detail | Ilustrasi + eyebrow + judul + pill + progres + baris kunci–nilai + daftar inventaris | `ui/DetailCard.tsx`, `ui/WorldIcon.tsx` | Catatan asli |
+| Tab Docks/Forklifts/Trucks | Tab bersegmen, baris kode dok + truk + pill + progres mini | `ui/ListCard.tsx` tab **Dok** | `model.trucks` |
+| Shipment Tracking | Lima langkah berikon + kartu truk | `ui/TodayTracker.tsx` | Pengiriman aktif / rapat |
+
+### Spesifikasi aset (satuan scene, X timur, Z selatan)
+
+- **Gudang**: 24 × 10, dinding 5,4 di atas plinth 0,25, atap pelana naik 1,8 (`warehouse.roofRise`). Dinding `palette.wall` #eef1f8, gelombang #d2dae8 tiap 0,42 di sisi selatan/timur (dilewati di pintu). Atap #3866f6 + garis #2f58e6 tiap 0,7, bubungan/lis #2443a6. Pintu dok x = −6/−1/4/9: kusen biru 3,44 × 3,9, ambang terang #cdd5e3, pintu gulung terangkat, perata 2,7 × 0,6, bantalan karet, palet di ambang, lencana nomor 0,78. Papan nama di kanan dinding depan.
+- **Truk**: panjang ±6,55, lebar 2,35, tinggi 3,45; kabin di +Z. Boks #f7f9fd 4,6 × 2,55, garis warna 0,42 + 0,12, pelat logo samping 0,9 (bentuk saja, tanpa merek). Berhenti dengan belakang boks 0,85 dari dinding (di perata dok). Skema: biru polos / putih+navy / putih+teal / putih+oranye.
+- **Forklift**: ±1,1 × 2,4 × 2,2, badan #f5b82e, atap hitam, garpu ke +Z, opsi muatan kardus/kemasan.
+- **Kantor**: 8 × 4 × 5,4 putih, dua pita kaca #9fc0f5 dengan tiang putih, parapet biru, kanopi pintu biru, papan KOPERASI. **Gerai**: 3,8 × 2,2 × 2,6 putih, tenda bergaris biru-putih 7 lajur, etalase, papan nama dari judul Gerai.
+- **Lingkungan**: tanah #e9eefb, aspal #d3dbee bermarka putih, rumput #d3efdd di kaki pagar, pagar tiang #b9c4d8 + panel transparan #dfe8f8 (opasitas 0,38), pohon batang #8a7a66 tajuk #4cc47f/#8fe0ac, kontainer teal di utara petak antre.
+- **Seleksi**: sisi biru 7 %, garis tepi 55 %, siku 0,07 tebal di delapan sudut, cahaya lantai gradien. **Rute**: pita 0,78 lebar + panah putih tiap 2,4, titik r 0,2 tiap 0,95, cakram r 0,85 + pin bergoyang di dok tujuan; material dasar (tidak terpengaruh cahaya).
+- Anggaran terukur 1280–1440 px kualitas Tinggi, data contoh: 58–89 draw call (batas 150).
+
+### Spesifikasi kartu (lihat kartu-contoh.html)
+
+- Ilustrasi isometrik `WorldIcon` (bukan ikon garis) untuk objek: kepala detail 40 px di kotak gradien 50 px, KPI 34 px di kotak 44 px, baris daftar 30 px di kotak 38 px, pelacak 38 px. Ikon garis lucide hanya untuk aksi/navigasi.
+- Kartu: putih, radius 14, garis #e9eef7, bayangan `0 10px 30px rgba(40,60,120,.09)`. Pill: hijau #dff6e8/#23774f, kuning #fff0d9/#b86e0e, biru #eaf0ff/#2b55d6, abu #eef2f8, merah #fbe9e7.
+- **Kartu stok**: judul "Inventaris · stok buku", baris grid `32px 1fr auto 82px` = ilustrasi kardus · nama · jumlah tebal + satuan · pill Cukup/Minimum. Di bawah minimum didahulukan, ilustrasi `kardus-minimum`.
+- **Kartu truk**: pill tahap + posisi ("Antre · menuju dok D3" / "Di dok D2"), batang progres hijau tahap n/5, baris Pintu dok, Tanggal rencana/tiba, Kendaraan, Rincian barang, catatan "rute skematis, bukan GPS". Tanpa ETA/kecepatan/muatan karangan.
+- **Tab bersegmen**: wadah #f1f4fa radius 11, tab aktif putih berbayang, hitungan biru. Tab **Dok**: D1–D4 + truk antre.
+- **Label peta**: pill putih + ekor; terpilih biru + chip status; peringatan kuning; lahan kosong lingkaran "+" 44 px tanpa teks; ponsel < 600 px ikon saja kecuali terpilih.
+
+### Interaksi
+
+- Klik truk (scene, label, daftar, tab Dok) → kotak seleksi, label biru, rute, kamera terbang ke tengah truk–dok (zoom 0,68 antre / 1,05 dok). Objek lain: klik di scene tidak memindahkan kamera; pilihan dari daftar menerbangkan kamera.
+- Forklift suasana bergerak bolak-balik; kendaraan jalan utama (truk boks + mobil) melaju; semuanya berhenti saat reduced-motion dan kartunya berlabel **Simulasi lingkungan**.
+
+### Daftar periksa anti-meleset (wajib sebelum melapor selesai)
+
+1. Bandingkan tangkapan 1280 × 740 dengan frame video yang sama jenisnya (kawasan, gudang dekat, truk + rute) — bentuk, warna, ketebalan garis, susunan kartu.
+2. Lembar aset `/dev/dunia-koperasi/aset` masih benar setelah mengubah mesh; potret ulang ke `blueprint/lembar-aset.png`.
+3. Denah: bila `layout.ts` berubah, buat ulang `denah-kawasan.svg` (skrip pembuat dicatat di LANJUTAN-AI).
+4. Tidak ada angka/merek karangan; status bertulisan; target sentuh ≥ 44 px; 360/768/1024/1440 px.
+5. Draw call < 150 desktop (`window.__cwRenderInfo`), tidak ada galat konsol, reduced-motion menghentikan gerak.
+6. Edit berkas dengan alat yang menjaga UTF-8 (bukan `Set-Content` PowerShell 5.1 tanpa `-Encoding utf8`).
+
 ## Gaya dan palet
 
 Diorama 3D bersih, objek membulat ringan, cahaya lembut, bayangan kontak, detail terbaca. Kamera ortografis menampilkan sisi atas dan dua sisi objek. Hindari pixel art, outline komik, neon, gradien pelangi, foto stok sebagai dunia dan angka dekoratif. Target mengikuti video belum berarti identik piksel atau sudah diterima pemilik.
@@ -57,7 +122,7 @@ Desktop ≥ 1024 px memakai kartu mengambang seperti video; layar lebih kecil me
 8. **Dock** Beranda, Kawasan, Kantor, Karakter, Suasana; ≥ 1280 px berada di kanan pelacak.
 9. **Lembar bawah** (< 1024 px): pegangan seret/klik untuk posisi ringkas → setengah → penuh, baris ringkasan (objek terpilih + rapat berikutnya/tugas terbuka), tab Detail / Daftar / Hari ini. Memilih zona menciutkan lembar agar scene terlihat; memilih objek membukanya setengah.
 
-Token di `world.css`: kartu putih radius 14 px, border `#e6ebf5`, bayangan `0 8px 24px rgba(30,50,100,.08)`, Inter, angka tabular, teks minimal 11 px. Pill: hijau aktif/berlangsung, biru info/proses, kuning persiapan, abu kosong/selesai, merah galat. Tanpa backdrop blur.
+Token di `world.css`: kartu putih radius 14 px, border `#e9eef7`, bayangan `0 10px 30px rgba(40,60,120,.09)`, Inter, angka tabular, teks minimal 11 px (rincian Blueprint v3 di atas). Pill: hijau aktif/berlangsung, biru info/proses, kuning persiapan, abu kosong/selesai, merah galat. Tanpa backdrop blur.
 
 ## Exterior
 
@@ -65,16 +130,16 @@ Koordinat ada di `layout.ts` (X ke timur, Z ke selatan; kamera dari tenggara). K
 
 - Jalan utama di utara (Z −21,5) dengan pagar, gerbang berpalang dan pos jaga; jalan gerbang ke selatan sampai jalan dalam (Z 0,5); boulevard gerai (Z 13,5) dan jalan penghubung X −3.
 - Parkir antre truk tiga petak di barat laut (marka putih saja).
-- Gudang 24 × 10 di pusat [3, −13] dengan empat pintu dok D1–D4 di sisi selatan, halaman dok bermarka kuning, area staging berpalet kardus/kemasan biru di timur dan area pengisian forklift di barat. Kardus, forklift dan marka adalah pemandangan, bukan stok/pengiriman tercatat. Klik membuka panel Gudang dengan tautan ke daftar Barang.
+- Gudang 24 × 10 (atap pelana, lihat Blueprint v3) di pusat [3, −13] dengan empat pintu dok D1–D4 di sisi selatan, halaman dok bermarka kuning, area staging berpalet kardus/kemasan biru di timur dan area pengisian forklift di barat. Kardus, forklift dan marka adalah pemandangan, bukan stok/pengiriman tercatat. Klik membuka panel Gudang dengan tautan ke daftar Barang.
 - Kantor koperasi 8 × 5,4 di [−12, 7,2], dapat diklik langsung atau lewat penanda untuk masuk interior. Taman/titik kumpul di [10, 7,2], parkir mobil kecil bermarka di timurnya.
 - Tujuh lahan 6,4 × 5,4 di Z 19,6, X −24 sampai 24 berjarak 8. Bidang kosong hijau pucat dengan garis batas dan tanda tambah.
 - Gerai dari domain units: kolom **Lahan di Dunia Koperasi** (`slot`: otomatis atau 1–7) menempatkan gerai di lahan pilihannya sehingga tidak bergeser saat gerai lain dihapus. Pilihan ganda dimenangkan gerai yang dibuat lebih dulu; sisanya, termasuk otomatis, mengisi lahan kosong sesuai created_at lalu ID. Gerai di luar tujuh lahan tetap ada di daftar Gerai; jumlahnya diberitahukan.
 - Nama/status bangunan dari catatan asli. Detail membuka catatan yang sama melalui recordHref.
-- Pemilih zona di header (Semua kawasan / Kantor / Gudang / Boulevard gerai) dan pilihan lahan/gudang dari daftar menggerakkan kamera mulus ke tujuannya; klik di scene tidak memindahkan kamera.
+- Pemilih zona di header (Semua kawasan / Kantor / Gudang / Boulevard gerai) dan pilihan lahan/gudang dari daftar menggerakkan kamera mulus ke tujuannya; klik di scene tidak memindahkan kamera, kecuali truk (Blueprint v3: kamera terbang dan rute tampil).
 - Objek statis digabung menjadi satu mesh berwarna per titik per objek (`mergeStatic`); objek yang dapat diklik digabung per objek agar raycast tetap mengenali pilihan. Ukuran pratinjau 1280 px kualitas Sedang: 129 draw call termasuk bayangan.
 
 - Truk dari Pengiriman masuk: status tiba/diperiksa di depan pintu dok (kolom Pintu dok, atau dok kosong pertama; maks. 4), dikirim di petak antre dekat gerbang (maks. 3). Warna kabin dipilih dari ID, bukan merek pemasok. Klik truk membuka kartu pengiriman. Pelacak kiri bawah menampilkan tahap Dipesan → Dikirim → Tiba → Diperiksa → Selesai untuk pengiriman aktif; tanpa pengiriman aktif kembali ke jadwal rapat.
-- Dua mobil suasana melaju di jalan utama dan berlabel **Simulasi lingkungan**; berhenti saat reduced-motion.
+- Truk boks dan mobil suasana melaju di jalan utama, forklift suasana bolak-balik staging → rak luar; semuanya berlabel **Simulasi lingkungan** dan berhenti saat reduced-motion.
 
 Belum tersedia drag/editor lahan.
 

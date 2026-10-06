@@ -1,5 +1,13 @@
 # Changelog
 
+## Blueprint visual v3 — mengikuti video — 6 Oktober 2026
+
+- Aset 3D baru: gudang dok ala video, truk cab-over empat skema, forklift, palet, rak luar, kontainer, kantor dan gerai baru, pagar kaca, pohon, blok kota; primitif gable/badge/cone/mergeTransparent.
+- Klik truk: kotak seleksi bersiku, rute skematis (pita + titik + pin dok) dan kamera terbang; forklift suasana bergerak (fungsi murni truck-routes.ts teruji).
+- Kartu: ilustrasi isometrik WorldIcon, inventaris ala video, kartu truk berprogres, tab bersegmen + tab Dok, label peta ringkas di lahan kosong dan ponsel.
+- Panduan: Blueprint visual v3 di DUNIA-KOPERASI, docs/referensi-dunia/blueprint (denah dari layout.ts, lembar aset dari kode, contoh kartu, bukti), frame interaksi video baru, halaman /dev/dunia-koperasi/aset, skill diperbarui.
+- 296 tes/45 berkas, typecheck, lint dan build lulus; tangkapan 375/768/1024/1280/1440 px.
+
 ## Paket 10 — penutup (tanpa personal.css) — 6 Oktober 2026
 
 - QA contoh development di 360/768/1024/1440: tanpa luapan horizontal; 74 draw call/122 ribu segitiga di 1440. Perbaiki tombol Tur yang tak terlihat (spesifisitas CSS).

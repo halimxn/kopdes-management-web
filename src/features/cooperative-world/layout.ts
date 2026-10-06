@@ -24,12 +24,29 @@ export const truckBays: readonly [number, number][] = [
 /** Gudang: dinding depan menghadap selatan; dok bongkar muat di depan dinding itu. */
 export const warehouse = {
   center: [3, -13] as [number, number],
-  size: [24, 6.2, 10] as [number, number, number],
+  /** Lebar, tinggi dinding, kedalaman. Atap pelana menambah `roofRise` di bubungan. */
+  size: [24, 5.4, 10] as [number, number, number],
+  roofRise: 1.8,
   /** Pusat X empat pintu dok. */
   docks: [-6, -1, 4, 9],
   apronDepth: 6,
   staging: [17.5, -12.5] as [number, number],
+  /** Rak palet luar di timur staging (pemandangan). */
+  outdoorRack: [23.5, -13.4] as [number, number],
 };
+
+/** Kontainer peti kemas di utara petak antre truk (pemandangan, aksen warna video). */
+export const containerSpot: [number, number] = [-27, -16.75];
+
+/**
+ * Jalur forklift suasana: staging → rak luar, bolak-balik. Tidak melintasi dok
+ * sehingga tidak bertabrakan dengan truk dari data Pengiriman.
+ */
+export const yardForkliftPath: [number, number][] = [
+  [17.5, -7.6],
+  [23.5, -7.6],
+  [23.5, -11.4],
+];
 
 export const officePosition: [number, number] = [-12, 7.2];
 export const officeSize = { width: 8, height: 4, depth: 5.4 };

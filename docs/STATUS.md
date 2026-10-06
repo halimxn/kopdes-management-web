@@ -8,6 +8,12 @@ Rencana Dunia Koperasi v2 disetujui pemilik 6 Oktober 2026 dan disimpan di DUNIA
 
 Dunia Koperasi mengikuti video pengguna: 3D isometrik biru-putih, kartu mengambang, kantor/interior, tujuh lahan gerai, maskot animatif/bubble, cuaca dan waktu. Panduan telah diringkas, konflik lingkup tema diperjelas, referensi video/interior disimpan di docs/referensi-dunia agar dapat dibaca AI berikutnya.
 
+## Blueprint visual v3 (6 Oktober, arahan pemilik: semirip mungkin dengan video)
+
+Implementasi lokal, belum dinilai pemilik. Aset baru dari kode: gudang dok ala video (atap pelana biru bergaris, dinding bergelombang, kusen dok biru bernomor, palet di ambang, AC dan logo atap), truk cab-over empat skema warna, forklift detail, palet kardus berlakban/kemasan biru, rak palet luar, kontainer teal, kantor dan gerai baru (pita kaca, tenda bergaris), pagar kaca, rumput, pohon berbaris, blok kota di latar. Interaksi: klik truk menampilkan kotak seleksi bersiku, label biru, garis rute (pita dilalui + titik sisa + pin dok) dan kamera terbang; forklift suasana bergerak. Kartu: ilustrasi isometrik WorldIcon, baris inventaris ala video, kartu truk berprogres, tab bersegmen dengan tab Dok, label lahan kosong ringkas, penanda ponsel ikon saja. Panduan: bagian Blueprint visual v3 di DUNIA-KOPERASI, folder docs/referensi-dunia/blueprint (denah, lembar aset, contoh kartu, bukti implementasi), halaman dev /dev/dunia-koperasi/aset, skill dunia-koperasi dan ui-ux-kopdes diperbarui.
+
+Bukti: 296 tes/45 berkas, typecheck, lint dan build lulus. Tangkapan headless Chromium (SwiftShader) data contoh pada 375, 768, 1024, 1280 dan 1440 px; 58–89 draw call. Belum: perangkat fisik, rekaman gerak, data cloud, penilaian pemilik. Di 1024–1279 px dock masih menutupi baris bawah kartu Daftar (keadaan lama).
+
 ## Penilaian pemilik terbaru
 
 Versi sekarang belum diterima: kawasan kecil/sepi, mobil belum ada, tampilan agak gelap, pengaturan waktu tidak mudah ditemukan dan perpindahan karakter belum terlihat. Gym aktif serta patroli manajer sesekali belum tersedia. Kontrol manual/animasi pose ada dalam kode, tetapi bukan bukti pengalaman tersebut memenuhi permintaan. Rencana paket revisi ada hanya di [DUNIA-KOPERASI](DUNIA-KOPERASI.md); pembaruan ini dokumentasi, belum implementasi runtime.

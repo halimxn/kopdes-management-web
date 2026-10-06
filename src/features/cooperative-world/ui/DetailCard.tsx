@@ -3,17 +3,10 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BookOpen,
-  Boxes,
-  Truck,
-  Building2,
   CheckCheck,
   ChevronRight,
   Dumbbell,
-  Map,
-  MessageCircle,
-  Store,
   Users,
-  Warehouse,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -21,7 +14,10 @@ import { Select } from '@/components/ui/Select';
 import { today } from '@/lib/date';
 import { recordHref } from '../../workspace/workspace-navigation';
 import { landPositions, warehouse, worldStations, worldZones, type WorldZone } from '../layout';
+import { truckRoute } from '../truck-routes';
+import { WorldIcon } from './WorldIcon';
 import {
+  deliverySteps,
   isBelowMinimum,
   type CharacterActivity,
   type MeetingStep,
@@ -59,25 +55,26 @@ function StockList({ items, state, empty }: { items: Item[]; state: StockState; 
   );
   return (
     <div className="cw-stock">
-      <h2 className="cw-section-title">
-        Barang <span>stok buku</span>
+      <h2 className="cw-section-title cw-section-split">
+        Inventaris <span>stok buku</span>
       </h2>
       {sorted.slice(0, 8).map((item) => {
         const low = isBelowMinimum(item);
         return (
-          <Link key={item.id} className="cw-row" href={recordHref('inventory-items', item)}>
-            <span className={`cw-row-icon ${low ? 'is-amber' : ''}`}>
-              <Boxes size={16} />
-            </span>
-            <span className="cw-row-text">
-              <strong>{String(item.data.title)}</strong>
-              <small>
-                Stok {String(item.data.book_quantity ?? '—')} {String(item.data.measurement || '')}{' '}
-                · min {String(item.data.minimum_quantity ?? '—')}
-              </small>
+          <Link
+            key={item.id}
+            className="cw-stock-row"
+            href={recordHref('inventory-items', item)}
+            title={`Minimum ${String(item.data.minimum_quantity ?? '—')}`}
+          >
+            <WorldIcon kind={low ? 'kardus-minimum' : 'kardus'} size={30} />
+            <span className="cw-stock-name">{String(item.data.title)}</span>
+            <span className="cw-stock-qty">
+              {String(item.data.book_quantity ?? '—')}
+              <small> {String(item.data.measurement || '')}</small>
             </span>
             <span className={`cw-pill ${low ? 'is-amber' : 'is-green'}`}>
-              {low ? 'Di bawah minimum' : 'Cukup'}
+              {low ? 'Minimum' : 'Cukup'}
             </span>
           </Link>
         );
@@ -89,6 +86,17 @@ function StockList({ items, state, empty }: { items: Item[]; state: StockState; 
       )}
     </div>
   );
+}
+
+/** Warna pill tahap pengiriman: tiba/diperiksa (bongkar) hijau, dikirim biru, lainnya abu. */
+function deliveryTone(status: string) {
+  return ['tiba', 'diperiksa'].includes(status)
+    ? 'is-green'
+    : status === 'dikirim'
+      ? 'is-blue'
+      : status === 'selesai'
+        ? ''
+        : 'is-amber';
 }
 
 export const activityNames: Record<CharacterActivity, string> = {
@@ -180,14 +188,14 @@ export function DetailCard(props: Props) {
           eyebrow: 'Pengaturan',
           title: 'Suasana & karakter',
           subtitle: 'Cuaca, waktu dan grafis',
-          icon: props.weatherIcon,
+          icon: <WorldIcon kind="suasana" size={40} />,
         }
       : selected === 'karakter'
         ? {
             eyebrow: 'Maskot',
             title: 'Maskot koperasi',
             subtitle: activityNames[props.activity],
-            icon: <MessageCircle size={22} />,
+            icon: <WorldIcon kind="orang" size={40} />,
           }
         : selected === 'gudang'
           ? {
@@ -197,35 +205,40 @@ export function DetailCard(props: Props) {
                   : `Gudang · ${warehouse.docks.length} dok`,
               title: worldZones.gudang.title,
               subtitle: 'Bongkar muat dan stok',
-              icon: <Warehouse size={22} />,
+              icon: <WorldIcon kind="gudang" size={40} />,
             }
           : selected === 'papan'
             ? {
                 eyebrow: 'Taman · papan',
                 title: 'Papan pengumuman',
                 subtitle: 'Keputusan rapat dan masa berlaku dokumen',
-                icon: <BookOpen size={22} />,
+                icon: <WorldIcon kind="papan" size={40} />,
               }
             : person
               ? {
                   eyebrow: `Tim · ${person.staff.data.section || 'seksi belum ditentukan'}`,
                   title: String(person.staff.data.title),
                   subtitle: String(person.staff.data.role || 'Peran belum diisi'),
-                  icon: <Users size={22} />,
+                  icon: <WorldIcon kind="orang" size={40} />,
                 }
               : delivery
                 ? {
                     eyebrow: `Pengiriman · ${delivery.data.direction === 'keluar' ? 'keluar' : 'masuk'}`,
                     title: String(delivery.data.title),
                     subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
-                    icon: <Truck size={22} />,
+                    icon: <WorldIcon kind="truk" size={40} />,
                   }
-                : selected === 'kendaraan-suasana'
+                : selected === 'kendaraan-suasana' || selected === 'forklift-suasana'
                   ? {
-                      eyebrow: 'Kendaraan',
-                      title: 'Mobil di jalan utama',
+                      eyebrow: selected === 'forklift-suasana' ? 'Halaman gudang' : 'Jalan utama',
+                      title: selected === 'forklift-suasana' ? 'Forklift' : 'Kendaraan lewat',
                       subtitle: 'Simulasi lingkungan',
-                      icon: <Truck size={22} />,
+                      icon: (
+                        <WorldIcon
+                          kind={selected === 'forklift-suasana' ? 'forklift' : 'truk'}
+                          size={40}
+                        />
+                      ),
                     }
                   : rackId
                     ? {
@@ -234,14 +247,14 @@ export function DetailCard(props: Props) {
                         subtitle: stockReady
                           ? `${rackItems.length} barang tercatat`
                           : 'Isi mengikuti daftar Barang',
-                        icon: <Boxes size={22} />,
+                        icon: <WorldIcon kind="rak" size={40} />,
                       }
                     : selected === 'staging'
                       ? {
                           eyebrow: 'Gudang · staging',
                           title: 'Area staging',
                           subtitle: 'Barang tanpa rak dan tanpa gerai',
-                          icon: <Boxes size={22} />,
+                          icon: <WorldIcon kind="palet" size={40} />,
                         }
                       : plot
                         ? {
@@ -250,14 +263,14 @@ export function DetailCard(props: Props) {
                             subtitle: plot.unit
                               ? 'Terhubung ke catatan gerai'
                               : 'Bidang tersedia untuk gerai baru',
-                            icon: <Store size={22} />,
+                            icon: <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={40} />,
                           }
                         : station
                           ? {
                               eyebrow: 'Kantor · interior',
                               title: station.title,
                               subtitle: 'Pilih area untuk membuka catatan',
-                              icon: <Building2 size={22} />,
+                              icon: <WorldIcon kind="kantor" size={40} />,
                             }
                           : {
                               eyebrow:
@@ -268,8 +281,23 @@ export function DetailCard(props: Props) {
                                     : `Zona · ${worldZones[zone].title}`,
                               title: 'Kawasan koperasi',
                               subtitle: model.title,
-                              icon: <Map size={22} />,
+                              icon: <WorldIcon kind="kawasan" size={40} />,
                             };
+  const truckSpot = delivery
+    ? model.trucks.find((row) => row.delivery.id === delivery.id)
+    : undefined;
+  const route = truckSpot ? truckRoute(truckSpot, model.trucks) : null;
+  const step = Math.max(
+    0,
+    deliverySteps.indexOf(String(delivery?.data.status) as (typeof deliverySteps)[number]),
+  );
+  const routeNote = !truckSpot
+    ? 'Truk tampil saat status dikirim, tiba atau diperiksa'
+    : truckSpot.place === 'dok'
+      ? `Di dok D${truckSpot.index + 1}`
+      : route?.dock !== null && route?.dock !== undefined
+        ? `Antre · menuju dok D${route.dock + 1}`
+        : 'Antre · semua dok terisi';
   const date = today();
   const overdue = model.tasks.filter(
     (row) => row.data.due_date && String(row.data.due_date) < date,
@@ -492,17 +520,34 @@ export function DetailCard(props: Props) {
         ) : delivery ? (
           <>
             <div className="cw-status-line">
-              <span className="cw-pill is-blue">{String(delivery.data.status)}</span>
-              <small>Truk tampil saat status dikirim, tiba atau diperiksa</small>
+              <span className={`cw-pill ${deliveryTone(String(delivery.data.status))}`}>
+                {String(delivery.data.status)}
+              </span>
+              <small>{routeNote}</small>
+            </div>
+            <div className="cw-progress" aria-label={`Tahap ${step + 1} dari ${deliverySteps.length}`}>
+              <i>
+                <b style={{ width: `${((step + 1) / deliverySteps.length) * 100}%` }} />
+              </i>
+              <span>
+                {step + 1}/{deliverySteps.length}
+              </span>
             </div>
             <Rows
               items={[
                 ['Pintu dok', String(delivery.data.dock || '')],
                 ['Tanggal rencana', String(delivery.data.planned_date || '')],
                 ['Tanggal tiba', String(delivery.data.arrived_date || '')],
+                ['Kendaraan', String(delivery.data.vehicle || '')],
                 ['Rincian barang', String(delivery.data.items || '')],
               ]}
             />
+            {truckSpot && (
+              <p className="cw-note">
+                Garis biru di peta adalah rute skematis di dalam kawasan (jalan utama → gerbang →
+                dok), bukan pelacakan GPS.
+              </p>
+            )}
             <p className="cw-note">
               Ubah status di halaman Pengiriman. Stok berubah hanya saat mutasi stok dicatat.
             </p>
@@ -513,11 +558,18 @@ export function DetailCard(props: Props) {
               Catat mutasi stok <ArrowRight size={14} />
             </Link>
           </>
-        ) : selected === 'kendaraan-suasana' ? (
-          <p className="cw-note">
-            Mobil ini hanya suasana jalan, bukan kendaraan atau pengiriman tercatat. Truk di kawasan
-            berasal dari catatan Pengiriman.
-          </p>
+        ) : selected === 'kendaraan-suasana' || selected === 'forklift-suasana' ? (
+          <>
+            <div className="cw-status-line">
+              <span className="cw-pill">Simulasi lingkungan</span>
+            </div>
+            <p className="cw-note">
+              {selected === 'forklift-suasana'
+                ? 'Forklift ini bergerak sebagai suasana halaman gudang, bukan alat atau mutasi stok tercatat.'
+                : 'Kendaraan ini hanya suasana jalan, bukan kendaraan atau pengiriman tercatat.'}{' '}
+              Truk di dok dan petak antre berasal dari catatan Pengiriman.
+            </p>
+          </>
         ) : rackId || selected === 'staging' ? (
           <>
             <p className="cw-note">

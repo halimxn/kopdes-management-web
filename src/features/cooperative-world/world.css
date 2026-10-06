@@ -9,15 +9,15 @@
   --cw-blue: #3866f6;
   --cw-blue-soft: #eaf0ff;
   --cw-green: #2f9e6e;
-  --cw-green-soft: #e3f5ec;
-  --cw-amber: #b9741c;
-  --cw-amber-soft: #fdf1df;
+  --cw-green-soft: #dff6e8;
+  --cw-amber: #b86e0e;
+  --cw-amber-soft: #fff0d9;
   --cw-red: #b7463f;
   --cw-red-soft: #fbe9e7;
-  --cw-line: #e6ebf5;
+  --cw-line: #e9eef7;
   --cw-card: #ffffff;
   --cw-radius: 14px;
-  --cw-shadow: 0 8px 24px rgba(30, 50, 100, 0.08), 0 1px 3px rgba(30, 50, 100, 0.05);
+  --cw-shadow: 0 10px 30px rgba(40, 60, 120, 0.09), 0 1px 3px rgba(40, 60, 120, 0.05);
   --cw-header: 64px;
   --cw-gap: 16px;
   --cw-right: 320px;
@@ -418,10 +418,10 @@
 .cw-kpi-icon {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  background: var(--cw-blue-soft);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, #f3f6ff, #e2eaff);
   color: var(--cw-blue);
   flex: none;
 }
@@ -566,10 +566,10 @@
 .cw-detail-icon {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  background: var(--cw-blue-soft);
+  width: 50px;
+  height: 50px;
+  border-radius: 13px;
+  background: linear-gradient(160deg, #f6f8ff, #e8eeff);
   color: var(--cw-blue);
   flex: none;
 }
@@ -1007,7 +1007,7 @@
   color: var(--cw-muted);
 }
 .cw-tracker-side {
-  width: 210px;
+  width: 216px;
   flex: none;
 }
 .cw-next {
@@ -1479,5 +1479,197 @@
   .cw-tour {
     top: 128px;
     right: var(--cw-gap);
+  }
+}
+
+/* ---------- Blueprint v3: kartu ala video (ilustrasi, tab bersegmen, progres) ---------- */
+.cw-world-icon {
+  display: block;
+  flex: none;
+}
+.cw-row-art {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f4f7fe;
+  flex: none;
+}
+/* Tab bersegmen seperti "Docks 2/2 · Forklifts 1/2 · Trucks 2" pada video. */
+.cw-tabs {
+  margin: 10px 10px 4px;
+  padding: 3px;
+  gap: 2px;
+  border: 0;
+  border-radius: 11px;
+  background: #f1f4fa;
+}
+.cooperative-world .cw-tabs button {
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.cooperative-world .cw-tabs button[aria-selected='true'] {
+  background: #ffffff;
+  color: var(--cw-ink);
+  box-shadow: 0 1px 4px rgba(40, 60, 120, 0.14);
+}
+.cw-tab-count {
+  background: none;
+  padding: 0;
+  margin-left: 4px;
+  color: var(--cw-muted);
+}
+[aria-selected='true'] > .cw-tab-count {
+  color: var(--cw-blue);
+}
+.cw-section-split {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+/* Baris inventaris: ilustrasi · nama · jumlah tebal · pill status. */
+.cw-stock-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto 82px;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 4px 4px;
+  border-bottom: 1px solid var(--cw-line);
+  border-radius: 8px;
+}
+.cw-stock-row:hover {
+  background: #f6f8fe;
+}
+.cw-stock-row .cw-pill {
+  justify-self: end;
+}
+.cw-stock-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cw-list-rows .cw-stock-row {
+  grid-template-columns: 32px minmax(0, 1fr) auto 82px;
+}
+/* Progres tahap di kartu truk: batang hijau dan pecahan di kanan. */
+.cw-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -2px 0 10px;
+  font-size: 12px;
+  color: var(--cw-muted);
+}
+.cw-progress i {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5eaf3;
+  overflow: hidden;
+}
+.cw-progress b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #36b37e;
+}
+/* Tab Dok: kode dok dua baris, titik warna, progres mini. */
+.cooperative-world .cw-dock-row {
+  gap: 10px;
+}
+.cw-dock-code {
+  display: grid;
+  width: 46px;
+  flex: none;
+  line-height: 1.2;
+}
+.cw-dock-code strong {
+  font-size: 13px;
+}
+.cw-dock-code small {
+  font-size: 10.5px;
+  color: var(--cw-muted);
+}
+.cw-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--cw-blue);
+  vertical-align: 1px;
+}
+.cw-mini-progress {
+  display: grid;
+  gap: 2px;
+  width: 40px;
+  flex: none;
+  font-size: 11px;
+  color: var(--cw-muted);
+  text-align: center;
+}
+.cw-mini-progress i {
+  height: 4px;
+  border-radius: 999px;
+  background: #e5eaf3;
+  overflow: hidden;
+}
+.cw-mini-progress b {
+  display: block;
+  height: 100%;
+  background: #36b37e;
+}
+/* Kartu pengiriman di pelacak: ilustrasi truk di kiri seperti video. */
+.cw-next.cw-next-art {
+  grid-template-columns: 38px minmax(0, 1fr);
+  column-gap: 8px;
+  padding-left: 10px;
+}
+.cw-next-art > :not(.cw-next-icon):not(.cw-next-arrow) {
+  grid-column: 2;
+}
+.cw-next-icon {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  align-self: center;
+}
+/* Lahan kosong: penanda bulat kecil tanpa teks agar peta tidak penuh label (seperti video). */
+.cooperative-world .cw-map-pin.is-empty:not(.is-selected) {
+  /* Area sentuh tetap 44 px; lingkaran terlihat 30 px. */
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+  background: radial-gradient(circle, #ffffffee 0 14px, #9db8a8 14px 15px, transparent 16px);
+}
+.cw-map-pin.is-empty:not(.is-selected) > span,
+.cw-map-pin.is-empty:not(.is-selected)::after {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .cw-stock-row,
+  .cw-list-rows .cw-stock-row {
+    grid-template-columns: 32px minmax(0, 1fr) auto 76px;
+  }
+}
+/* Ponsel: penanda tanpa teks kecuali yang dipilih, agar peta tidak tertutup label. */
+@media (max-width: 599px) {
+  .cooperative-world .cw-map-pin:not(.is-selected):not(.cw-person-pin) {
+    min-width: 44px;
+    padding: 6px;
+    border-radius: 50%;
+  }
+  .cw-map-pin:not(.is-selected):not(.cw-person-pin) > span,
+  .cw-map-pin:not(.is-selected):not(.cw-person-pin) > .cw-pin-status {
+    display: none;
   }
 }

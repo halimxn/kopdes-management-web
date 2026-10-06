@@ -1,11 +1,12 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Boxes, Building2, ChevronRight, Plus, Store, Warehouse } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { today } from '@/lib/date';
 import { recordHref } from '../../workspace/workspace-navigation';
 import {
+  deliverySteps,
   isBelowMinimum,
   rackIds,
   type MeetingStep,
@@ -14,8 +15,11 @@ import {
 } from '../world-model';
 import type { StockState } from './DetailCard';
 import { npcActivityNames, type NpcPlan } from '../npc/schedule';
+import { warehouse } from '../layout';
+import { truckRoute } from '../truck-routes';
+import { WorldIcon } from './WorldIcon';
 
-export type ListTab = 'lokasi' | 'hari' | 'tim' | 'stok' | 'tugas' | 'rapat';
+export type ListTab = 'lokasi' | 'dok' | 'hari' | 'tim' | 'stok' | 'tugas' | 'rapat';
 type Props = {
   model: WorldModel;
   timeline: MeetingStep[];
@@ -93,7 +97,7 @@ export function ListCard({
               ? 'Cukup'
               : 'Kosong',
         tone: !stockReady ? 'muted' : lowItems ? 'amber' : items.length ? 'green' : 'muted',
-        icon: <Boxes size={17} />,
+        icon: <WorldIcon kind="rak" size={30} />,
       };
     }),
     {
@@ -102,7 +106,7 @@ export function ListCard({
       note: 'Barang tanpa rak',
       pill: stockReady ? `${inventory.staging.length} barang` : '—',
       tone: 'muted',
-      icon: <Boxes size={17} />,
+      icon: <WorldIcon kind="palet" size={30} />,
     },
   ];
   const sitePlaces = [
@@ -112,7 +116,7 @@ export function ListCard({
       note: 'Rapat, tugas, kegiatan, arsip',
       pill: 'Masuk',
       tone: 'blue',
-      icon: <Building2 size={17} />,
+      icon: <WorldIcon kind="kantor" size={30} />,
     },
     {
       id: 'gudang',
@@ -120,7 +124,7 @@ export function ListCard({
       note: 'Dok bongkar muat dan stok',
       pill: low ? `${low} minimum` : '4 dok',
       tone: low ? 'amber' : 'blue',
-      icon: <Warehouse size={17} />,
+      icon: <WorldIcon kind="gudang" size={30} />,
     },
     ...model.plots.map((plot) => ({
       id: plot.id,
@@ -128,7 +132,7 @@ export function ListCard({
       note: `Lahan ${plot.id.split('-')[1].padStart(2, '0')} · ${plot.unit ? plot.unit.data.kind || 'Gerai' : 'Belum ada bangunan'}`,
       pill: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
       tone: plot.unit ? (plot.unit.data.status === 'aktif' ? 'green' : 'amber') : 'muted',
-      icon: plot.unit ? <Store size={17} /> : <Plus size={17} />,
+      icon: <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={30} />,
     })),
   ];
   const places = (location === 'gudang' ? rackPlaces : sitePlaces).filter(
@@ -139,10 +143,29 @@ export function ListCard({
         .filter((row) => !query || matches(`${row.data.title} ${row.data.sku || ''}`, query))
         .sort((a, b) => Number(isBelowMinimum(b)) - Number(isBelowMinimum(a)))
     : [];
+  // Tab Dok meniru tab "Docks" video: empat pintu dok dengan truk dari Pengiriman, lalu truk antre.
+  const docks = [
+    ...warehouse.docks.map((_, index) => {
+      const spot = model.trucks.find((row) => row.place === 'dok' && row.index === index);
+      return { key: `D${index + 1}`, label: `D${index + 1}`, note: 'Gudang', spot };
+    }),
+    ...model.trucks
+      .filter((row) => row.place === 'antre')
+      .map((spot) => {
+        const route = truckRoute(spot, model.trucks);
+        return {
+          key: `antre-${spot.delivery.id}`,
+          label: 'Antre',
+          note: route.dock === null ? 'Dok penuh' : `Ke D${route.dock + 1}`,
+          spot,
+        };
+      }),
+  ].filter((row) => !query || matches(`${row.label} ${row.spot?.delivery.data.title || ''}`, query));
   const tasks = model.tasks.filter((row) => !query || matches(String(row.data.title), query));
   const meetings = timeline.filter((step) => !query || matches(String(step.row.data.title), query));
   const tabs: { id: ListTab; label: string; count: number }[] = [
     { id: 'lokasi', label: location === 'gudang' ? 'Rak' : 'Lokasi', count: places.length },
+    { id: 'dok', label: 'Dok', count: model.trucks.length },
     { id: 'hari', label: 'Hari ini', count: events.length },
     { id: 'tim', label: 'Tim', count: team.length },
     { id: 'stok', label: 'Stok', count: stock.length },
@@ -172,7 +195,7 @@ export function ListCard({
         {tab === 'lokasi' &&
           places.map((item) => (
             <Button key={item.id} className="cw-row" onClick={() => onSelect(item.id)}>
-              <span className={`cw-row-icon is-${item.tone}`}>{item.icon}</span>
+              <span className="cw-row-art">{item.icon}</span>
               <span className="cw-row-text">
                 <strong>{item.title}</strong>
                 <small>{item.note}</small>
@@ -181,6 +204,52 @@ export function ListCard({
               <ChevronRight size={15} />
             </Button>
           ))}
+        {tab === 'dok' &&
+          docks.map((row) => {
+            const status = String(row.spot?.delivery.data.status || '');
+            const step = deliverySteps.indexOf(status as (typeof deliverySteps)[number]) + 1;
+            return (
+              <Button
+                key={row.key}
+                className="cw-row cw-dock-row"
+                onClick={() => onSelect(row.spot ? `kirim-${row.spot.delivery.id}` : 'gudang')}
+              >
+                <span className="cw-dock-code">
+                  <strong>{row.label}</strong>
+                  <small>{row.note}</small>
+                </span>
+                <span className="cw-row-text">
+                  {row.spot ? (
+                    <strong>
+                      <i className="cw-dot" /> {String(row.spot.delivery.data.title)}
+                    </strong>
+                  ) : (
+                    <small>Belum ada truk</small>
+                  )}
+                </span>
+                <span className={`cw-pill ${row.spot ? (row.spot.place === 'dok' ? 'is-green' : 'is-blue') : 'is-muted'}`}>
+                  {row.spot ? (row.spot.place === 'dok' ? 'Bongkar' : 'Antre') : 'Kosong'}
+                </span>
+                {row.spot ? (
+                  <span className="cw-mini-progress" aria-label={`Tahap ${step} dari ${deliverySteps.length}`}>
+                    <i>
+                      <b style={{ width: `${(step / deliverySteps.length) * 100}%` }} />
+                    </i>
+                    {step}/{deliverySteps.length}
+                  </span>
+                ) : (
+                  <span className="cw-mini-progress" />
+                )}
+                <ChevronRight size={15} />
+              </Button>
+            );
+          })}
+        {tab === 'dok' && !model.trucks.length && (
+          <p className="cw-empty">
+            {unavailable ? 'Data pengiriman belum tersedia.' : 'Tidak ada truk di kawasan.'}{' '}
+            <Link href="/pengiriman">Buka Pengiriman</Link>
+          </p>
+        )}
         {tab === 'hari' &&
           events.map((event) => (
             <Link key={event.key} className="cw-row" href={event.href}>
@@ -226,19 +295,19 @@ export function ListCard({
           stock.slice(0, 10).map((row) => {
             const short = isBelowMinimum(row);
             return (
-              <Link key={row.id} className="cw-row" href={recordHref('inventory-items', row)}>
+              <Link key={row.id} className="cw-stock-row" href={recordHref('inventory-items', row)}>
+                <WorldIcon kind={short ? 'kardus-minimum' : 'kardus'} size={30} />
                 <span className="cw-row-text">
                   <strong>{String(row.data.title)}</strong>
-                  <small>
-                    Stok buku {String(row.data.book_quantity ?? '—')}{' '}
-                    {String(row.data.measurement || '')} · rak{' '}
-                    {String(row.data.rack || 'belum ditentukan')}
-                  </small>
+                  <small>Rak {String(row.data.rack || 'belum ditentukan')}</small>
+                </span>
+                <span className="cw-stock-qty">
+                  {String(row.data.book_quantity ?? '—')}
+                  <small> {String(row.data.measurement || '')}</small>
                 </span>
                 <span className={`cw-pill ${short ? 'is-amber' : 'is-green'}`}>
-                  {short ? 'Di bawah minimum' : 'Cukup'}
+                  {short ? 'Minimum' : 'Cukup'}
                 </span>
-                <ChevronRight size={15} />
               </Link>
             );
           })}

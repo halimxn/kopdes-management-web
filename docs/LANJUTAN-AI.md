@@ -24,6 +24,8 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 
 ## Paket terakhir
 
+- 6 Oktober, **Blueprint visual v3** (arahan pemilik: semirip mungkin video, fokus tampilan): aset baru, rute truk, kartu ilustrasi; panduan di DUNIA-KOPERASI bagian Blueprint visual v3 dan docs/referensi-dunia/blueprint. Berikutnya menunggu penilaian pemilik, lalu menu web tambahan. Cara membuat ulang bahan blueprint: (1) lembar aset = buka /dev/dunia-koperasi/aset dan potret 1400 × 1380; (2) denah = transpile layout.ts + truck-routes.ts dengan typescript lalu gambar SVG (skrip satu kali di sesi 6 Oktober; tulis ulang sebagai scripts/ bila sering dipakai); (3) kartu-contoh.html memakai WorldIcon yang dirender renderToStaticMarkup. Tangkapan WebGL: pane browser berhenti menggambar saat tersembunyi; pakai Chromium headless (ms-playwright) via CDP dengan --use-angle=swiftshader. Jangan menyunting berkas UTF-8 dengan Set-Content PowerShell 5.1.
+
 - 6 Oktober, paket 10: QA empat lebar dengan contoh, perbaikan tombol tur, CHECKLIST/STATUS. personal.css ditunda.
 - 6 Oktober, paket 9: tur, pencarian Enter, linimasa, tindakan cepat, gerai bertahap, papan pengumuman, cahaya malam. Tag lokal checkpoint/paket-9. Belum di-push.
 - 6 Oktober, paket 8: briefing, manajer keliling berbasis data, obrolan berpapasan, kardus bongkar, bubble otomatis; skill proyek. Tag lokal checkpoint/paket-8. Belum di-push.

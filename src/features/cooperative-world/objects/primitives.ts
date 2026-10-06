@@ -5,19 +5,34 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 export type Vec3 = [number, number, number];
 
 // Palet dunia mengikuti video acuan: biru-putih dengan aksen kardus, marka dan pohon.
+// Tabel nilai dan perannya ada di docs/DUNIA-KOPERASI.md bagian "Blueprint visual v3".
 export const palette = {
   blue: '#3866f6',
+  blueDeep: '#2f58e6',
   navy: '#2443a6',
   white: '#fafcff',
+  wall: '#eef1f8',
+  rib: '#d2dae8',
   glass: '#a7c8e9',
+  glassDark: '#26354f',
   ground: '#e9eefb',
-  green: '#5fbf8a',
-  greenLight: '#9fdcb2',
+  asphalt: '#d3dbee',
+  green: '#4cc47f',
+  greenLight: '#8fe0ac',
+  grass: '#d3efdd',
+  trunk: '#8a7a66',
   wood: '#dfc59c',
   ink: '#2d3b56',
+  tyre: '#262c3b',
   cardboard: '#f2b36b',
   cardboardDark: '#d9944a',
+  tape: '#e9cf9f',
+  wrap: '#4f78f2',
+  wrapDark: '#3863e6',
   marking: '#f5c542',
+  forklift: '#f5b82e',
+  teal: '#1fa39a',
+  orange: '#ef7d32',
 };
 
 // Geometri dan material dipakai bersama antar objek agar jumlah alokasi GPU kecil.
@@ -41,6 +56,12 @@ function geometry(key: string, create: () => THREE.BufferGeometry) {
     geometries.set(key, found);
   }
   return found;
+}
+/** Sumber daya bersama tidak boleh dibuang oleh objek sementara (kotak seleksi, rute). */
+export function isSharedResource(resource: THREE.Material | THREE.BufferGeometry) {
+  return resource instanceof THREE.Material
+    ? [...materials.values()].includes(resource as THREE.MeshStandardMaterial)
+    : [...geometries.values()].includes(resource);
 }
 /** Dipanggil saat scene dibongkar agar scene berikutnya tidak memakai sumber daya yang sudah dibuang. */
 export function disposeSharedResources() {
@@ -69,7 +90,8 @@ export function mergeStatic(group: THREE.Object3D) {
     if (
       !(object instanceof THREE.Mesh) ||
       !(object.material instanceof THREE.MeshStandardMaterial) ||
-      object.material.vertexColors
+      object.material.vertexColors ||
+      object.material.transparent
     )
       return;
     const local = object.geometry.index ? object.geometry.toNonIndexed() : object.geometry.clone();
@@ -100,6 +122,97 @@ export function mergeStatic(group: THREE.Object3D) {
       empty.push(object);
   });
   empty.forEach((object) => object.removeFromParent());
+}
+
+/**
+ * Gabungkan semua mesh di grup menjadi satu mesh transparan (mis. panel pagar kaca).
+ * Ratusan panel tetap satu draw call; warna seragam karena material tunggal.
+ */
+export function mergeTransparent(group: THREE.Object3D, color: string, opacity: number) {
+  group.updateMatrixWorld(true);
+  const inverse = group.matrixWorld.clone().invert();
+  const parts: THREE.BufferGeometry[] = [];
+  const meshes: THREE.Mesh[] = [];
+  group.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const local = object.geometry.index ? object.geometry.toNonIndexed() : object.geometry.clone();
+    local.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, object.matrixWorld));
+    for (const name of Object.keys(local.attributes))
+      if (!['position', 'normal'].includes(name)) local.deleteAttribute(name);
+    parts.push(local);
+    meshes.push(object);
+  });
+  meshes.forEach((mesh) => mesh.removeFromParent());
+  if (!parts.length) return;
+  const key = `__transparent:${color}:${opacity}`;
+  let found = materials.get(key);
+  if (!found) {
+    found = new THREE.MeshStandardMaterial({
+      color,
+      transparent: true,
+      opacity,
+      roughness: 0.4,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    materials.set(key, found);
+  }
+  const mesh = new THREE.Mesh(mergeGeometries(parts), found);
+  parts.forEach((item) => item.dispose());
+  group.add(mesh);
+}
+
+/**
+ * Prisma segitiga untuk dinding pelana (gable) gudang: alas `width` di sumbu Z,
+ * puncak setinggi `rise`, tebal `depth` di sumbu X. Titik asal di tengah alas.
+ */
+export function gable(
+  parent: THREE.Object3D,
+  width: number,
+  rise: number,
+  depth: number,
+  position: Vec3,
+  color: string,
+) {
+  const key = `gable:${width}:${rise}:${depth}`;
+  const mesh = new THREE.Mesh(
+    geometry(key, () => {
+      const shape = new THREE.Shape();
+      shape.moveTo(-width / 2, 0);
+      shape.lineTo(width / 2, 0);
+      shape.lineTo(0, rise);
+      shape.closePath();
+      const extruded = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+      // Bentuk dibuat di bidang XY lalu diputar agar alas sejajar sumbu Z dan tebal di sumbu X.
+      extruded.translate(0, 0, -depth / 2);
+      extruded.rotateY(Math.PI / 2);
+      return extruded;
+    }),
+    material(color),
+  );
+  mesh.position.set(...position);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+/** Kerucut (ujung pin peta, lampu sorot). */
+export function cone(
+  parent: THREE.Object3D,
+  radius: number,
+  height: number,
+  position: Vec3,
+  color: string,
+) {
+  const mesh = new THREE.Mesh(
+    geometry(`cone:${radius}:${height}`, () => new THREE.ConeGeometry(radius, height, 16)),
+    material(color),
+  );
+  mesh.position.set(...position);
+  mesh.castShadow = true;
+  parent.add(mesh);
+  return mesh;
 }
 
 export function box(
@@ -187,4 +300,38 @@ export function sign(
   );
   mesh.position.set(...position);
   parent.add(mesh);
+}
+
+/** Pelat persegi membulat bertulisan (nomor dok, logo bulat). Satu tekstur per pelat. */
+export function badge(
+  parent: THREE.Object3D,
+  text: string,
+  position: Vec3,
+  size = 0.7,
+  background = palette.blue,
+  color = '#ffffff',
+) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.fillStyle = background;
+  ctx.beginPath();
+  ctx.roundRect(4, 4, 120, 120, 26);
+  ctx.fill();
+  ctx.font = `bold ${text.length > 2 ? 44 : 60}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color;
+  ctx.fillText(text.slice(0, 4), 64, 68, 112);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(size, size),
+    new THREE.MeshBasicMaterial({ map: texture, transparent: true }),
+  );
+  mesh.position.set(...position);
+  parent.add(mesh);
+  return mesh;
 }

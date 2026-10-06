@@ -18,6 +18,7 @@ import {
   warehouse,
   warehouseInterior,
   worldStations,
+  yardForkliftPath,
 } from './layout';
 import { dayPhase, getLighting } from './lighting';
 import {
@@ -38,7 +39,15 @@ import { createWarehouseInterior } from './objects/warehouse-interior';
 import { briefingSpot, createNpcs, updateNpcs, walkToward } from './npc/movement';
 import { npcActivityNames, type ManagerPlan, type NpcPlan } from './npc/schedule';
 import type { CharacterPose } from './objects/characters';
-import { createAmbientCars, createTrucks, truckPose, type AmbientCar } from './objects/vehicles';
+import {
+  createAmbientCars,
+  createTrucks,
+  createYardForklift,
+  type AmbientCar,
+} from './objects/vehicles';
+import { pathPose, truckPose, truckRoute } from './truck-routes';
+import { createSelectionBox, disposeGroup } from './objects/highlight';
+import { createRoute } from './objects/route';
 
 type Props = {
   model: WorldModel;
@@ -92,6 +101,8 @@ export function WorldScene({
   // Komponen ini hanya dirender di browser, sehingga petunjuk perangkat aman dibaca di sini.
   const tier = useMemo(() => resolveQuality(quality, readDeviceHints()), [quality]);
   const markerRefs = useRef(new Map<string, HTMLDivElement>());
+  /** Pin tujuan rute truk terpilih; dianimasikan naik-turun di loop gambar. */
+  const routePin = useRef<THREE.Object3D | null>(null);
   const covered = useRef(occlusion);
   const runtime = useRef<{
     camera: THREE.OrthographicCamera;
@@ -125,7 +136,12 @@ export function WorldScene({
     const settings = qualitySettings[tier];
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: settings.antialias, alpha: false });
+      renderer = new THREE.WebGLRenderer({
+        antialias: settings.antialias,
+        alpha: false,
+        // Hanya development: tangkapan layar QA dapat membaca isi kanvas.
+        preserveDrawingBuffer: process.env.NODE_ENV === 'development',
+      });
     } catch {
       const failureFrame = requestAnimationFrame(() => setFailed(true));
       return () => cancelAnimationFrame(failureFrame);
@@ -206,12 +222,14 @@ export function WorldScene({
     const world = new THREE.Group();
     scene.add(world);
     let cars: AmbientCar[] = [];
+    let yardForklift: THREE.Group | null = null;
     let nightLights: THREE.Object3D | null = null;
     if (location === 'luar') {
       createExterior(world, model);
       createTrucks(world, model.trucks);
       nightLights = createNightLights(world);
       cars = createAmbientCars(world);
+      yardForklift = createYardForklift(world);
     }
     if (location === 'gudang') createWarehouseInterior(world, model.inventory);
     if (location === 'dalam') {
@@ -307,7 +325,11 @@ export function WorldScene({
       );
       positions.set(
         'gudang',
-        new THREE.Vector3(warehouse.center[0], warehouse.size[1] + 2, warehouse.center[1]),
+        new THREE.Vector3(
+          warehouse.center[0],
+          warehouse.size[1] + warehouse.roofRise + 1.6,
+          warehouse.center[1],
+        ),
       );
       positions.set(
         'papan',
@@ -315,7 +337,7 @@ export function WorldScene({
       );
       for (const spot of model.trucks) {
         const [x, z] = truckPose(spot);
-        positions.set(`kirim-${spot.delivery.id}`, new THREE.Vector3(x, 3.8, z));
+        positions.set(`kirim-${spot.delivery.id}`, new THREE.Vector3(x, 4.3, z));
       }
       model.plots.forEach((plot) =>
         positions.set(
@@ -443,9 +465,17 @@ export function WorldScene({
       if (!reduced.matches)
         for (const car of cars) {
           car.group.position.x += car.speed * Math.min(delta, 0.06);
-          if (car.group.position.x > 33) car.group.position.x = -33;
-          if (car.group.position.x < -33) car.group.position.x = 33;
+          if (car.group.position.x > 36) car.group.position.x = -36;
+          if (car.group.position.x < -36) car.group.position.x = 36;
         }
+      // Forklift suasana bolak-balik staging ? rak luar; diam di titik awal saat gerak minimal.
+      if (yardForklift) {
+        const pose = pathPose(yardForkliftPath, reduced.matches ? 0 : elapsed, 1.6, 1.8);
+        yardForklift.position.set(pose.x, 0, pose.z);
+        yardForklift.rotation.y = pose.angle;
+      }
+      const pin = routePin.current;
+      if (pin) pin.position.y = reduced.matches ? 0 : Math.sin(elapsed * 2.4) * 0.15;
       rain.visible = state.weather === 'hujan' && location === 'luar';
       rain.position.set(controls.target.x, 0, controls.target.z);
       if (rain.visible && !reduced.matches) {
@@ -504,30 +534,18 @@ export function WorldScene({
       if (!target && object.userData.selection === selected) target = object;
     });
     if (!target) return;
-    const bounds = new THREE.Box3().setFromObject(target);
-    const size = bounds.getSize(new THREE.Vector3());
-    const center = bounds.getCenter(new THREE.Vector3());
-    const highlight = new THREE.Group();
-    const color = palette.blue;
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x + 0.5, size.y + 0.3, size.z + 0.5)),
-      new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85 }),
-    );
-    edges.position.copy(center);
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(size.x + 1, size.z + 1),
-      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.14, depthWrite: false }),
-    );
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set(center.x, 0.07, center.z);
-    highlight.add(edges, floor);
+    const highlight = createSelectionBox(new THREE.Box3().setFromObject(target));
     world.add(highlight);
+    // Truk terpilih menampilkan rute seperti video: jalur dilalui, sisa jalur dan dok tujuan.
+    const spot = location === 'luar'
+      ? model.trucks.find((row) => `kirim-${row.delivery.id}` === selected)
+      : undefined;
+    const route = spot ? createRoute(world, truckRoute(spot, model.trucks)) : null;
+    routePin.current = (route?.userData.pin as THREE.Object3D | undefined) || null;
     return () => {
-      highlight.removeFromParent();
-      edges.geometry.dispose();
-      (edges.material as THREE.Material).dispose();
-      floor.geometry.dispose();
-      floor.material.dispose();
+      disposeGroup(highlight);
+      if (route) disposeGroup(route);
+      routePin.current = null;
     };
   }, [selected, location, model, tier]);
   const low = model.inventory.low.length;

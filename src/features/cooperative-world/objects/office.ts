@@ -3,7 +3,41 @@ import { box, cylinder, palette, sign, sphere } from './primitives';
 import { bench, chair, tree } from './props';
 import { officeInterior, officeSize } from '../layout';
 
-/** Gedung kawasan: kantor koperasi (main) atau gerai dari catatan unit. */
+const windowBlue = '#9fc0f5';
+
+/**
+ * Pita jendela kaca dengan tiang putih pada sisi depan (+Z) atau timur (+X).
+ * `from`/`to` adalah rentang sepanjang sisi; `face` jarak sisi dari pusat.
+ */
+function windowBand(
+  parent: THREE.Object3D,
+  axis: 'x' | 'z',
+  from: number,
+  to: number,
+  y: number,
+  height: number,
+  face: number,
+) {
+  const length = to - from,
+    mid = (from + to) / 2;
+  if (length <= 0) return;
+  const at = (along: number, out: number): [number, number, number] =>
+    axis === 'x' ? [along, y, face + out] : [face + out, y, along];
+  const size = (along: number, depth: number): [number, number, number] =>
+    axis === 'x' ? [along, height, depth] : [depth, height, along];
+  box(parent, size(length, 0.06), at(mid, 0.03), windowBlue, 0);
+  for (let s = from; s <= to + 0.01; s += 0.9) box(parent, size(0.06, 0.1), at(s, 0.05), palette.white, 0);
+  // Ambang bawah jendela.
+  const sill = at(mid, 0.07);
+  sill[1] = y - height / 2 - 0.02;
+  box(parent, axis === 'x' ? [length + 0.1, 0.07, 0.14] : [0.14, 0.07, length + 0.1], sill, '#dfe6f3', 0);
+}
+
+/**
+ * Gedung kawasan ala bangunan kota pada video: dinding putih, pita jendela kaca biru,
+ * parapet biru. Kantor koperasi (main) dua lantai dengan kanopi pintu; gerai satu lantai
+ * dengan tenda bergaris biru-putih dan etalase kaca.
+ */
 export function building(
   parent: THREE.Object3D,
   x: number,
@@ -19,28 +53,57 @@ export function building(
   const w = main ? officeSize.width : 3.8,
     h = main ? officeSize.height : 2.2,
     d = main ? officeSize.depth : 2.6;
-  box(g, [w + 0.65, 0.16, d + 0.65], [0, 0.08, 0], '#f7f9ff');
-  box(g, [w, h, d], [0, h / 2 + 0.16, 0], main ? palette.blue : palette.white);
-  box(g, [w + 0.16, 0.2, d + 0.2], [0, h + 0.2, 0], palette.navy);
-  for (let i = -2; i <= 2; i++) box(g, [0.035, 0.035, d], [(i * w) / 5, h + 0.32, 0], '#648cfb', 0);
-  box(g, [w + 0.4, 0.13, 0.95], [0, h * 0.69, d / 2 + 0.3], main ? '#8cacf9' : palette.blue);
-  box(g, [1.15, 1.7, 0.08], [0, 1.02, d / 2 + 0.015], '#293e6a');
-  box(g, [0.93, 1.55, 0.09], [0, 1.02, d / 2 + 0.06], palette.glass);
-  box(g, [0.04, 1.55, 0.12], [0, 1.02, d / 2 + 0.1], palette.white);
-  // Kantor punya dua jendela tiap sisi pintu; gerai satu.
-  const windows = main ? [w / 2 - 0.9, w / 2 - 2.2] : [w / 2 - 0.75];
-  for (const side of [-1, 1])
-    for (const offset of windows) {
-      box(g, [0.95, 1, 0.09], [side * offset, 1.35, d / 2 + 0.04], '#bedcfa');
-      box(g, [0.04, 1, 0.12], [side * offset, 1.35, d / 2 + 0.09], palette.white);
-    }
-  sign(g, main ? 'KOPERASI' : title, [0, h * 0.84, d / 2 + 0.08], w * 0.73);
+  const base = 0.16;
+  box(g, [w + 0.7, base, d + 0.7], [0, base / 2, 0], '#eef2f9');
+  box(g, [w, h, d], [0, h / 2 + base, 0], palette.white, 0.04);
+  box(g, [w + 0.16, 0.32, d + 0.16], [0, h + base + 0.1, 0], palette.blue, 0.04);
+  box(g, [w - 0.3, 0.04, d - 0.3], [0, h + base + 0.27, 0], '#dfe6f3', 0);
+  const front = d / 2;
   if (main) {
-    box(g, [1.1, 0.3, 0.7], [-1, h + 0.42, -0.5], '#cbd4e9');
+    for (const side of [-1, 1])
+      box(g, [0.2, h, 0.2], [side * (w / 2 - 0.02), h / 2 + base, front], palette.blue, 0.02);
+    windowBand(g, 'x', -w / 2 + 0.45, -0.95, 1.25, 0.95, front);
+    windowBand(g, 'x', 0.95, w / 2 - 0.45, 1.25, 0.95, front);
+    windowBand(g, 'x', -w / 2 + 0.45, w / 2 - 0.45, 2.75, 0.95, front);
+    windowBand(g, 'z', -d / 2 + 0.4, d / 2 - 0.4, 1.25, 0.95, w / 2);
+    windowBand(g, 'z', -d / 2 + 0.4, d / 2 - 0.4, 2.75, 0.95, w / 2);
+    // Pintu kaca dan kanopi biru.
+    box(g, [1.4, 1.75, 0.08], [0, 0.98, front + 0.02], palette.glassDark);
+    box(g, [1.2, 1.6, 0.06], [0, 0.95, front + 0.07], palette.glass, 0);
+    box(g, [0.04, 1.6, 0.1], [0, 0.95, front + 0.1], palette.white, 0);
+    box(g, [2.6, 0.14, 1.2], [0, 2.02, front + 0.6], palette.blue, 0.03);
+    for (const side of [-1, 1]) box(g, [0.08, 1.9, 0.08], [side * 1.2, 1.05, front + 1.12], palette.navy, 0);
+    sign(g, 'KOPERASI', [0, h - 0.45, front + 0.08], 3.2);
+    for (const [ux, uz] of [
+      [-1.8, -0.8],
+      [1.6, -0.6],
+    ])
+      box(g, [1.0, 0.4, 0.8], [ux, h + base + 0.48, uz], '#f4f6fb', 0.05);
     for (const side of [-1, 1]) {
-      cylinder(g, 0.32, 0.5, [side * (w / 2 - 0.2), 0.41, d / 2 + 0.75], '#e3e9f4');
-      sphere(g, 0.42, [side * (w / 2 - 0.2), 0.84, d / 2 + 0.75], palette.green);
+      cylinder(g, 0.32, 0.5, [side * (w / 2 - 0.3), 0.41, front + 0.75], '#e3e9f4');
+      sphere(g, 0.42, [side * (w / 2 - 0.3), 0.84, front + 0.75], palette.green);
     }
+  } else {
+    // Etalase kaca, pintu, tenda bergaris dan papan nama gerai.
+    box(g, [w - 0.5, 1.15, 0.06], [0, 0.85, front + 0.03], windowBlue, 0);
+    for (const s of [-1.2, -0.4, 0.4, 1.2]) box(g, [0.06, 1.15, 0.1], [s, 0.85, front + 0.05], palette.white, 0);
+    box(g, [0.8, 1.3, 0.08], [0, 0.82, front + 0.07], palette.glassDark, 0);
+    const awning = new THREE.Group();
+    awning.position.set(0, h * 0.74, front + 0.42);
+    awning.rotation.x = 0.38;
+    g.add(awning);
+    const stripes = 7;
+    for (let i = 0; i < stripes; i++)
+      box(
+        awning,
+        [(w + 0.3) / stripes, 0.07, 0.95],
+        [-(w + 0.3) / 2 + ((i + 0.5) * (w + 0.3)) / stripes, 0, 0],
+        i % 2 ? palette.white : palette.blue,
+        0,
+      );
+    box(awning, [w + 0.3, 0.16, 0.06], [0, -0.06, 0.48], palette.blue, 0);
+    windowBand(g, 'z', -d / 2 + 0.4, d / 2 - 0.4, 1.0, 0.8, w / 2);
+    sign(g, title, [0, h * 0.93, front + 0.08], w * 0.78);
   }
   return g;
 }
