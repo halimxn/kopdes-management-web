@@ -1,4 +1,5 @@
 'use client';
+import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import './world.css';
@@ -15,7 +16,7 @@ import {
   Minus,
   Moon,
   Plus,
-  RotateCcw,
+  Gamepad2,
   Sun,
   Sunrise,
   Sunset,
@@ -36,15 +37,10 @@ import {
   type WorldLocation,
   type WorldPreferences,
 } from './world-model';
-import {
-  minWorldZoom,
-  warehouseInterior,
-  worldStations,
-  worldZones,
-  type WorldZone,
-} from './layout';
+import { worldStations, worldZones, type WorldZone } from './layout';
 import { dayPhase } from './lighting';
-import { truckFocus } from './truck-routes';
+import { pixelZones } from './pixel/map';
+import { zoomForStep } from './pixel/camera';
 import { WorldHeader } from './ui/WorldHeader';
 import { planManager, planStaff } from './npc/schedule';
 import { today } from '@/lib/date';
@@ -54,6 +50,10 @@ import { ListCard } from './ui/ListCard';
 import { TodayTracker } from './ui/TodayTracker';
 import { MobileSheet, type SheetSnap, type SheetTab } from './ui/MobileSheet';
 
+const PixelStage = dynamic(() => import('./pixel/PixelStage').then((module) => module.PixelStage), {
+  ssr: false,
+  loading: () => <div className="cw-loading">Menyiapkan dunia pixel…</div>,
+});
 
 const wideQuery = '(min-width: 1024px)';
 /** Desktop memakai kartu mengambang; layar lebih kecil memakai lembar bawah. */
@@ -107,11 +107,10 @@ export function CooperativeWorld({
   const [query, setQuery] = useState('');
   // Bawaan dekat seperti video: kavling logistik; zoom keluar tetap tersedia.
   const [zone, setZone] = useState<WorldZone>('gudang');
-  // Titik khusus saat memilih lahan dari daftar; zona dipakai bila kosong.
-  const [spot, setSpot] = useState<readonly [number, number] | null>(null);
   const [recenter, setRecenter] = useState(0);
-  const [zoom, setZoom] = useState(worldZones.gudang.zoom);
-  const [rotation, setRotation] = useState(0);
+  const [zoom, setZoom] = useState(pixelZones.gudang.zoom);
+  // Manajer otomatis mengikuti jadwal; berubah ke kendali pengguna saat WASD/ketuk tanah.
+  const [control, setControl] = useState(false);
   const [rehearsal, setRehearsal] = useState<CharacterActivity | 'otomatis'>('otomatis');
   const [sheet, setSheet] = useState<SheetSnap>('ringkas');
   const [sheetTab, setSheetTab] = useState<SheetTab>('detail');
@@ -120,8 +119,6 @@ export function CooperativeWorld({
     return () => clearInterval(tick);
   }, []);
   const model = useMemo(() => getWorldModel(data, now), [data, now]);
-  // Geometri tidak bergantung jam: tick menit tidak boleh mengatur ulang kamera.
-  const sceneModel = useMemo(() => getWorldModel(data, new Date()), [data]);
   const timeline = useMemo(() => meetingTimeline(model.meetings, now), [model.meetings, now]);
   const plans = useMemo(
     () =>
@@ -150,8 +147,6 @@ export function CooperativeWorld({
         : operations === false
           ? 'belum-aktif'
           : 'aktif';
-  const focus: readonly [number, number] =
-    location === 'luar' ? spot || worldZones[zone].target : spot || [0, 0];
   const clock = new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta',
     hour: '2-digit',
@@ -216,57 +211,33 @@ export function CooperativeWorld({
               : 'rapat',
     );
     if (next === 'gudang' || next === 'pendingin') setZone('gudang');
-    setSpot(null);
     // Interior gudang lebih lebar dari kantor; zoom awal lebih jauh agar enam rak terlihat.
-    setZoom(next === 'luar' ? worldZones[zone].zoom : 0.8);
-    setRotation(0);
+    setZoom(next === 'luar' ? pixelZones[zone].zoom : 0.9);
     setRecenter((value) => value + 1);
     setPanelOpen(true);
   }
   function chooseZone(next: WorldZone) {
     setZone(next);
-    setSpot(null);
-    setZoom(worldZones[next].zoom);
+    setZoom(pixelZones[next].zoom);
     setRecenter((value) => value + 1);
     setLocation('luar');
     setSelected(next === 'gudang' ? 'gudang' : 'kawasan');
     // Di ponsel lembar diciutkan agar zona yang dipilih terlihat.
     setSheet('ringkas');
   }
-  /** Pindah ke ruang lain lalu terbang ke titiknya; dipakai item daftar yang "pergi ke tempatnya". */
-  function travel(
-    next: WorldLocation,
-    id: string,
-    target: readonly [number, number],
-    close = 1.25,
-  ) {
+  /** Pindah ke ruang lain lalu kamera menuju objeknya; dipakai item daftar yang "pergi ke tempatnya". */
+  function travel(next: WorldLocation, id: string, close = 0.9) {
     setLocation(next);
     setSelected(id);
     showDetail();
-    setSpot(target);
     setZoom(close);
-    setRotation(0);
     setRecenter((value) => value + 1);
   }
   function select(id: string, fly = false) {
     if (id === 'koperasi') return enter('dalam');
-    // Rapat → ruang rapat kantor; tugas → meja tugas; barang → raknya di gudang (atau staging).
-    if (id.startsWith('rapat-') || id.startsWith('tugas-')) {
-      const station = worldStations.find(
-        (s) => s.id === (id.startsWith('rapat-') ? 'rapat' : 'tugas'),
-      )!;
-      return travel('dalam', id, [station.position[0], station.position[2]]);
-    }
-    if (id.startsWith('barang-')) {
-      const item = model.inventory.items.find((row) => row.id === id.slice(7));
-      const rack = String(item?.data.rack || '') as RackId;
-      return travel(
-        'gudang',
-        id,
-        rackIds.includes(rack) ? warehouseInterior.racks[rack] : warehouseInterior.staging,
-        1.1,
-      );
-    }
+    // Rapat dan tugas → kantor; barang → gudang. Interior pixel menyusul di P5.
+    if (id.startsWith('rapat-') || id.startsWith('tugas-')) return travel('dalam', id);
+    if (id.startsWith('barang-')) return travel('gudang', id);
     // Karakter Tim di ruang lain: pindah ke ruangnya dulu agar kamera dapat mengikutinya.
     const plan = id.startsWith('staf-')
       ? plans.find((row) => `staf-${row.staff.id}` === id)
@@ -274,27 +245,21 @@ export function CooperativeWorld({
     if (plan?.location && plan.location !== location) setLocation(plan.location);
     setSelected(id);
     showDetail();
-    // Pilihan dari daftar menggerakkan kamera; klik di scene tidak memindahkan kamera,
-    // kecuali truk: seperti video, kamera terbang agar truk dan rutenya ke dok terlihat.
-    const rack = id.startsWith('rak-') ? warehouseInterior.racks[id.slice(4) as RackId] : undefined;
+    // Pilihan dari daftar menggerakkan kamera; truk dipilih dengan zoom sedang agar dok terlihat.
     const truckSpot =
       location === 'luar'
         ? model.trucks.find((row) => `kirim-${row.delivery.id}` === id)
         : undefined;
-    const target = model.plots.find((item) => item.id === id)?.position || rack;
+    const known = model.plots.some((item) => item.id === id) || id.startsWith('rak-');
     if (truckSpot) {
-      setSpot(truckFocus(truckSpot, model.trucks));
-      // Truk antre: rute ke dok panjang, jadi kamera lebih jauh agar truk dan dok sama-sama terlihat.
-      setZoom(truckSpot.place === 'antre' ? 0.68 : 1.05);
+      setZoom(0.8);
       setRecenter((value) => value + 1);
-    } else if (fly && target) {
-      setSpot(target);
-      setZoom(1.15);
+    } else if (fly && known) {
+      setZoom(0.9);
       setRecenter((value) => value + 1);
     } else if (fly && id === 'gudang') {
       setZone('gudang');
-      setSpot(null);
-      setZoom(worldZones.gudang.zoom);
+      setZoom(pixelZones.gudang.zoom);
       setRecenter((value) => value + 1);
     }
   }
@@ -484,8 +449,19 @@ export function CooperativeWorld({
       />
 
       <section className="cw-viewport" aria-label="Dunia koperasi interaktif">
-        {/* Mesin dunia pixel (PixiJS) dipasang di paket P2; sementara tampilkan status. */}
-        <div className="cw-loading">Dunia pixel sedang dibangun.</div>
+        <PixelStage
+          selected={selected}
+          location={location}
+          zone={zone}
+          zoom={zoom}
+          recenter={recenter}
+          occlusion={occlusion}
+          control={control}
+          night={night}
+          onSelect={(id) => select(id)}
+          onZoom={setZoom}
+          onControl={setControl}
+        />
         <KpiCards
           model={model}
           timeline={timeline}
@@ -537,32 +513,38 @@ export function CooperativeWorld({
           <Button
             aria-label="Perbesar"
             disabled={zoom >= 2.4}
-            onClick={() => setZoom((value) => Math.min(2.4, value + 0.2))}
+            onClick={() =>
+              setZoom((value) =>
+                zoomForStep({ width: window.innerWidth, height: window.innerHeight }, value, 1),
+              )
+            }
           >
             <Plus size={18} />
           </Button>
           <Button
             aria-label="Perkecil"
-            disabled={zoom <= 0.35}
+            disabled={zoom <= 0.2}
             onClick={() =>
-              setZoom((value) => Math.max(location === 'luar' ? minWorldZoom : 0.35, value - 0.2))
+              setZoom((value) =>
+                zoomForStep({ width: window.innerWidth, height: window.innerHeight }, value, -1),
+              )
             }
           >
             <Minus size={18} />
           </Button>
           <span />
           <Button
-            aria-label="Putar kamera"
-            onClick={() => setRotation((value) => value + Math.PI / 2)}
+            aria-label={control ? 'Kembalikan manajer ke mode otomatis' : 'Kendalikan manajer'}
+            aria-pressed={control}
+            title={control ? 'Mode kendali: WASD atau ketuk tanah' : 'Manajer otomatis'}
+            onClick={() => setControl((value) => !value)}
           >
-            <RotateCcw size={17} />
+            <Gamepad2 size={17} />
           </Button>
           <Button
             aria-label="Atur ulang kamera"
             onClick={() => {
-              setSpot(null);
-              setZoom(location === 'luar' ? worldZones[zone].zoom : 0.8);
-              setRotation(0);
+              setZoom(location === 'luar' ? pixelZones[zone].zoom : 0.9);
               setRecenter((value) => value + 1);
             }}
           >
@@ -617,7 +599,9 @@ export function CooperativeWorld({
             <strong>{tourSteps[tour].text}</strong>
           </div>
         )}
-        <div className="cw-hint">Geser untuk memutar · Cubit / gulir untuk zoom</div>
+        <div className="cw-hint">
+          Geser untuk menjelajah · Cubit / gulir untuk zoom · WASD atau ketuk tanah untuk berjalan
+        </div>
       </section>
       <nav className="cw-dock" aria-label="Navigasi dunia koperasi">
         <Link href="/beranda" aria-label="Kembali ke Beranda">

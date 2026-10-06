@@ -46,8 +46,8 @@ Generator: `node scripts/dunia-pixel/preview.mjs [nama]` → `artifacts/dunia-pi
 |---|---|---|
 | P1 Preview | Gaya, palet, orang, kendaraan, denah, contoh interaksi | Selesai, disetujui (palet Eastward) |
 | P0 Bersih | Tag arsip, hapus kode/dependensi/skill/referensi 3D, kontrak ini | Selesai |
-| P2 Mesin | PixiJS, tilemap, kamera geser/zoom bulat, avatar manajer, penanda dan kamera ikut, berhenti saat tersembunyi | Berikutnya |
-| P3 Eksterior | Peta utuh sesuai denah, bangunan per unit, dok, kendaraan skala baru (reasoning tinggi) | |
+| P2 Mesin | PixiJS, denah pixel `pixel/map.ts`, A* `pixel/path.ts`, kamera skala bulat `pixel/camera.ts`, avatar manajer (otomatis / WASD / ketuk tanah), penanda siku + kamera ikut, berhenti saat tersembunyi | Selesai (greybox; aset final P3) |
+| P3 Eksterior | Ganti greybox dengan aset generator: bangunan per unit, dok, kendaraan skala baru, tanah/jalan (reasoning tinggi) | Berikutnya |
 | P4 Karakter | Animasi jalan 4 arah, staf dari data Tim, editor rupa manajer, warga simulasi (reasoning tinggi) | |
 | P5 Interior | 8 ruang dengan transisi pudar; rak dari kolom Lokasi (reasoning tinggi) | |
 | P6 Kartu | Kartu gaya baru, aksi cepat ke form operasional | |

@@ -2,7 +2,7 @@
 
 ## Arahan aktif (7 Oktober 2026)
 
-Dunia Koperasi diganti menjadi **2D pixel ala Eastward (PixiJS)**. Baca DUNIA-KOPERASI (kontrak dan paket P0–P8) dan docs/dunia-pixel/. P1 preview dan P0 bersih selesai; berikutnya **P2 mesin PixiJS** (tilemap, kamera, avatar manajer, penanda + kamera ikut). P3–P5 (aset) perlu reasoning tinggi: beri tahu pemilik sebelum mulai. Commit lokal per paket; push setelah semua tahap selesai. Bagian di bawah tentang 3D adalah riwayat.
+Dunia Koperasi diganti menjadi **2D pixel ala Eastward (PixiJS)**. Baca DUNIA-KOPERASI (kontrak dan paket P0–P8) dan docs/dunia-pixel/. P1, P0 dan P2 (mesin PixiJS greybox) selesai; berikutnya **P3 eksterior**: ganti greybox di `pixel/engine.ts` dengan aset dari generator (atlas PNG). P3–P5 (aset) perlu reasoning tinggi: beri tahu pemilik sebelum mulai. Commit lokal per paket; push setelah semua tahap selesai. Bagian di bawah tentang 3D adalah riwayat.
 
 ## Arahan lama (riwayat 3D)
 

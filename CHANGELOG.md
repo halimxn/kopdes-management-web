@@ -1,5 +1,11 @@
 # Changelog
 
+## Dunia Koperasi pixel: P2 mesin PixiJS — 7 Oktober 2026
+
+- `pixel/map.ts` denah dunia (id bangunan sama dengan data), `pixel/path.ts` A* delapan arah, `pixel/camera.ts` skala bulat menurut sisi layar tersempit, `pixel/engine.ts` PixiJS (tanah bertekstur, sungai dan jembatan, bangunan greybox berpapan nama, avatar manajer, penanda siku berdenyut, kamera mengikuti, geser/cubit/gulir, WASD/ketuk tanah, jeda saat tersembunyi, reduced-motion).
+- Kontrol kamera: putar dihapus, tombol kendali manajer ditambah; zoom bertingkat bulat.
+- Tes: validasi denah, jalur lewat jembatan, tujuan terhalang, skala kamera.
+
 ## Dunia Koperasi pixel: P1 preview dan P0 hapus 3D — 7 Oktober 2026
 
 - Arah baru disetujui pemilik: 2D pixel top-down ala Eastward (PixiJS), palet nada tanah + grading Eastward; kontrak DUNIA-KOPERASI ditulis ulang, acuan gambar di docs/dunia-pixel/.

@@ -22,6 +22,22 @@ import {
   truckRoute,
 } from '@/features/cooperative-world/truck-routes';
 import { allBuildings, validateDistrict } from '@/features/cooperative-world/district';
+import {
+  WORLD,
+  blockedGrid,
+  bridges,
+  buildingFor,
+  grid,
+  mapBuildings,
+  validateMap,
+} from '@/features/cooperative-world/pixel/map';
+import { findPath } from '@/features/cooperative-world/pixel/path';
+import {
+  clampCamera,
+  followStep,
+  pixelScale,
+  zoomForStep,
+} from '@/features/cooperative-world/pixel/camera';
 const row = (
   id: string,
   data: Record<string, unknown>,
@@ -142,7 +158,6 @@ describe('bangunan gerai menurut jenis', () => {
     expect(at(model, 'sembako')).toBe('s2');
   });
 });
-
 
 describe('jadwal rapat hari ini', () => {
   it('mengurutkan rapat dan menandai selesai, berlangsung, nanti menurut WIB', () => {
@@ -377,7 +392,10 @@ describe('ringkasan zona', () => {
     const model = getWorldModel(
       {
         units: [row('k', { title: 'K', kind: 'klinik' })],
-        deliveries: [row('d', { title: 'D', status: 'tiba' }), row('e', { title: 'E', status: 'dikirim' })],
+        deliveries: [
+          row('d', { title: 'D', status: 'tiba' }),
+          row('e', { title: 'E', status: 'dikirim' }),
+        ],
       },
       new Date(),
     );
@@ -397,7 +415,9 @@ describe('riwayat 7 hari', () => {
       row('c', { date: '2026-10-01' }),
       row('d', { date: '2026-09-20' }),
     ];
-    expect(weekCounts(rows, (r) => String(r.data.date), '2026-10-06')).toEqual([0, 1, 0, 0, 0, 0, 2]);
+    expect(weekCounts(rows, (r) => String(r.data.date), '2026-10-06')).toEqual([
+      0, 1, 0, 0, 0, 0, 2,
+    ]);
   });
 });
 
@@ -429,5 +449,57 @@ describe('rak pendingin cold storage', () => {
     expect(summary.coldRacks.C1.map((item) => item.id)).toEqual(['a']);
     expect(summary.racks.A.map((item) => item.id)).toEqual(['b']);
     expect(summary.staging.map((item) => item.id)).toEqual(['c']);
+  });
+});
+
+describe('dunia pixel: denah, jalur, kamera', () => {
+  it('denah valid: id unik, di dalam dunia, tidak saling tumpang atau di atas jalan', () => {
+    expect(validateMap()).toEqual([]);
+  });
+  it('setiap bangunan unit data punya bangunan pixel dengan id yang sama', () => {
+    const ids = mapBuildings.map((b) => b.id);
+    for (const b of allBuildings()) expect(ids).toContain(b.id);
+  });
+  it('lokasi dalam ruangan memfokuskan bangunannya', () => {
+    expect(buildingFor('rapat', 'dalam')?.id).toBe('kantor');
+    expect(buildingFor('x', 'pendingin')?.id).toBe('cold-storage');
+    expect(buildingFor('kawasan', 'luar')).toBeUndefined();
+  });
+  it('A* menghindari bangunan, menyeberang sungai lewat jembatan', () => {
+    const blocked = blockedGrid();
+    const path = findPath(blocked, grid.cols, grid.rows, [5, 45], [40, 45]);
+    expect(path).not.toBeNull();
+    expect(path!.every(([c, r]) => !blocked[r * grid.cols + c])).toBe(true);
+    const bridge = bridges[0];
+    expect(
+      path!.some(
+        ([c, r]) =>
+          c * 16 >= bridge.x &&
+          c * 16 < bridge.x + bridge.w &&
+          r * 16 >= bridge.y - 16 &&
+          r * 16 < bridge.y + bridge.h,
+      ),
+    ).toBe(true);
+  });
+  it('tujuan di atap diganti sel terdekat yang dapat dilalui', () => {
+    const blocked = blockedGrid();
+    const kantor = mapBuildings.find((b) => b.id === 'kantor')!.foot;
+    const goal = [Math.floor((kantor.x + 40) / 16), Math.floor((kantor.y + 20) / 16)] as const;
+    const path = findPath(blocked, grid.cols, grid.rows, [50, 46], goal);
+    const end = path!.at(-1)!;
+    expect(blocked[end[1] * grid.cols + end[0]]).toBe(0);
+  });
+  it('skala pixel bulat, zoom bertingkat, kamera tetap di dalam dunia', () => {
+    const desktop = { width: 1920, height: 1080 };
+    expect(pixelScale(desktop, 0.62)).toBe(3);
+    expect(pixelScale({ width: 375, height: 812 }, 0.62)).toBe(1);
+    expect(pixelScale(desktop, 0.1)).toBe(1);
+    expect(pixelScale(desktop, zoomForStep(desktop, 0.62, 1))).toBe(4);
+    const view = { width: 1440, height: 900, right: 352, top: 0, bottom: 0 };
+    const [x, y] = clampCamera([-500, 99999], view, 3, WORLD);
+    expect(x).toBeGreaterThanOrEqual((1440 - 352) / 6);
+    expect(y).toBeLessThanOrEqual(WORLD.h - 900 / 6);
+    expect(followStep(0, 100, 1, true)).toBe(100);
+    expect(followStep(0, 100, 0.1, false)).toBeGreaterThan(0);
   });
 });
