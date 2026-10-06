@@ -22,7 +22,19 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 3. Sebelum tiap paket buat tag checkpoint; commit kecil per paket; PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 4. Akhir paket: perbarui bagian "Paket terakhir" di bawah, STATUS dan CHANGELOG.
 
-## Paket berjalan: perbaikan kecil v3.1 (keputusan pemilik 6 Oktober, hasil wawancara)
+## Paket berjalan: Distrik ala video v4 (keputusan pemilik 6 Oktober, wawancara kedua)
+
+Acuan tunggal: video. Zip pemilik (PANDUAN_AGENT/dunia-koperasi-referensi-luas.html) hanya gambaran, bukan panduan. Jangan berpatokan pada denah lama.
+Keputusan: distrik kota grid berjalan berlajur + zebra cross; kavling berpagar rapi (halaman, parkir, rumput/pohon), tidak berdempetan. Kavling: Logistik (gudang gaya WH-04 + lingkungannya) + Cold storage (gaya WH-03) berbagi halaman dok berlantai tinggi, marka kuning, parkir truk, cas forklift, kardus staging dari barang tanpa rak; Administrasi (kantor + simpan pinjam + parkir); Kesehatan (klinik + apotek berdampingan); Niaga (sembako + kavling gerai tambahan); Lahan pertanian L1–L6 kosong. Posisi unit KDMP tetap; bangunan tampil dari data Gerai, belum buka = kavling rencana. Warna dasar = sampel video (tanah #e4ecfc, #d4dcf4, #bccce4; dinding #ececfc; biru #2f6be8/#1454cc); warna lain improvisasi pastel senada. Bayangan berona biru, sudut membulat, AO di Tinggi, bayangan kontak di Sedang/Hemat. Bawaan siang cerah, cuaca/waktu manual di Suasana. Kamera bawaan dekat, halus. Kartu putih 82–88 % + blur desktop, 95 % tanpa blur ponsel/Hemat; ikon ilustrasi biru; bar chart (stok vs minimum, progres dok, mini 7 hari dari data nyata, sembunyi bila tanpa riwayat). Pemilih zona ala video (kavling + bar + ringkasan data). Klik item daftar pergi ke tempatnya (rapat→ruang rapat, tugas→meja, stok→rak, Tim→karakter, Dok→truk). Truk data masuk, belok halus, mundur ke dok; kendaraan suasana keliling grid. Penunjuk tanah kosong = kotak biru rendah saat dipilih. Interior baru: cold storage (lokasi barang cold storage, rak C1–C3) dan gerai per jenis (sembako, apotek, klinik, simpan pinjam; barang/staf dari data). Angka hanya dari data.
+
+- [ ] 1. Pasang skill Three.js ringan dari GitHub; denah distrik ala video (tampak atas + sketsa isometrik) → BERHENTI untuk persetujuan pemilik.
+- [ ] 2. Palet, kavling, jalan, pagar, parkir, gudang WH-04, cold storage WH-03, bangunan membulat, AO.
+- [ ] 3. Kartu transparan, pemilih zona ala video, bar chart, klik pergi ke tempat.
+- [ ] 4. Animasi truk (belok, mundur ke dok), kendaraan suasana di grid, kamera halus.
+- [ ] 5. Interior cold storage.
+- [ ] 6. Interior gerai.
+
+## Paket selesai: perbaikan kecil v3.1 (keputusan pemilik 6 Oktober, hasil wawancara)
 
 Kerjakan berurutan; satu commit lokal per langkah (tanpa push). Centang di sini saat selesai.
 
