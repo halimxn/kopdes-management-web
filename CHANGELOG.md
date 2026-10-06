@@ -1,5 +1,11 @@
 # Changelog
 
+## Rencana Dunia Koperasi v2 — 6 Oktober 2026
+
+- Simpan rencana v2 yang disetujui pemilik di DUNIA-KOPERASI: 3D low-poly ringan, kawasan lebih luas dengan gudang, NPC per seksi dan manajer, UI kartu dan bottom sheet ponsel mengikuti video, Pengiriman dan Mutasi stok, tujuh ide tambahan, urutan paket 0–10.
+- Simpan delapan frame video referensi dan perbarui serah terima AI. Main dikembalikan ke ecddd85 (9551476); pekerjaan dunia v1 diarsipkan pada tag `arsip/dunia-v1-20261005`.
+- Dokumentasi saja; tes aplikasi tidak diulang.
+
 ## Sederhanakan aturan AI dan lingkup panduan — 5 Oktober 2026
 
 - Ringkas KEPUTUSAN, skill clean-code dan indeks dokumen; satu jalur acuan AGENTS → DUNIA-KOPERASI → STATUS.

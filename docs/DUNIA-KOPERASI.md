@@ -13,6 +13,7 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jika gaya berubah atas permin
 ## Referensi
 
 - Video pengguna ssstwitter.com_1791130638800.mp4 berdurasi 72,26 detik; dianalisis empat frame pada 1,0 / 20,2 / 39,7 / 63,6 detik.
+- [Delapan frame video](referensi-dunia/referensi_desain_video/) pada 0/12/20/32/40/44/52/64 detik (6 Oktober): acuan utama gudang, dok, truk, forklift, kartu detail, kartu tab dan pelacak pengiriman.
 - [Contact sheet video](referensi-dunia/video-contact-sheet.jpg): sumber komposisi kartu dan lingkungan luar. Label/angka video tidak menjadi data aplikasi.
 - [Interior pengguna](referensi-dunia/interior-pengguna.png): kantor cutaway isometrik, putih, kaca, workstation berkelompok, kayu muda. Referensi berwatermark tidak dipakai sebagai aset latar web.
 - Screenshot QA lokal: artifacts/world-reference/qa/. Screenshot awal desktop sebelum penghapusan blur sudah usang; gunakan bukti terbaru pada STATUS.
@@ -120,49 +121,129 @@ Paket berikut dimulai dari terang/kontrol waktu/perluasan map sesuai rencana di 
 
 Kemiripan detail dengan video, kelengkapan interaksi, kontras semua label, target sentuh semua kontrol, fallback WebGL, semua viewport/state, perangkat fisik dan kinerja perangkat rendah belum boleh dinyatakan selesai dari tes DOM/build. Bukti aktual ada pada [STATUS](STATUS.md) dan [CHECKLIST](CHECKLIST.md).
 
-## Rencana revisi setelah penilaian pemilik — 5 Oktober 2026
+## Rencana Dunia Koperasi v2 — disetujui pemilik 6 Oktober 2026
 
-Status: **rencana, belum diimplementasikan**. Pemilik melihat map terlalu kecil/sepi, belum ada mobil, tampilan agak gelap, pengaturan waktu tidak terasa tersedia, dan gerakan karakter belum terlihat. Treadmill/gerak anggota tubuh di kode belum memenuhi permintaan gym aktif dan manajer berkeliling. Keberhasilan tes sebelumnya tidak menutup kekurangan ini.
+Status: **rencana disetujui, belum diimplementasikan**. Menggantikan rencana revisi 5 Oktober. Pekerjaan dunia v1 yang sempat dibuat lalu dinilai kacau diarsipkan pada tag `arsip/dunia-v1-20261005` dan dibatalkan di main (commit 9551476). Jangan menggabungkan ulang cabang/tag itu secara massal; ambil gagasan atau berkas tertentu saja setelah diperiksa.
 
-### Paket 1 — terang, kontrol waktu dan perluasan kawasan
+Acuan visual utama: [delapan frame video](referensi-dunia/referensi_desain_video/) (00–64 detik). Label, merek dan angka di video bukan data aplikasi.
 
-- Ubah kawasan dasar dari sekitar 29 × 17 menjadi target awal 56 × 36 unit; ukuran dapat disesuaikan setelah render. Perbesar ruang lingkungan, jangan hanya mengecilkan gedung/karakter atau menjauhkan kamera sehingga isi makin sulit dilihat.
-- Atur tujuh lahan di dua sisi jalan penghubung, kantor sebagai pusat, plaza kecil, trotoar, ruang parkir dan area bongkar muat. Sisakan lahan pengembangan. Ukuran gedung tetap terbaca dan karakter tidak hilang di map.
-- Sediakan kamera awal yang memperlihatkan kantor, beberapa gerai dan jalan; zoom/geser memungkinkan menjelajah kawasan lain. Tambahkan tombol kembali ke kantor dan batas geser sesuai map.
-- Gunakan siang cerah sebagai default pengguna baru. Preferensi manual yang sudah tersimpan tetap dihormati. Waktu otomatis WIB tetap pilihan eksplisit, sehingga malam nyata tidak memaksa kunjungan pertama menjadi gelap.
-- Tampilkan kontrol berlabel **Waktu** dan **Cuaca** langsung pada kartu yang terlihat di desktop maupun ponsel; pilihan Pagi/Siang/Senja/Malam/Otomatis WIB. Bedakan label pencahayaan simulasi dari jam WIB aktual.
-- Malam tetap terbaca lewat cahaya lingkungan/lampu gedung/jalan; kartu dan teks tetap terang, tidak ditutup lapisan gelap. Verifikasi semua pilihan segera mengubah scene dan tersimpan setelah reload.
+### Keputusan pemilik
 
-### Paket 2 — kendaraan dan interaksi kawasan
+1. **Tetap 3D low-poly**, bukan pixel art. Ringan dicapai lewat teknik render, bukan ganti gaya.
+2. **Tambah entitas Pengiriman (`deliveries`) dan Mutasi stok (`stock-movements`).** Stok buku hanya berubah lewat tombol konfirmasi yang mencatat mutasi. Satu migrasi SQL; cloud tetap menunggu persetujuan sesuai [MIGRASI-SQL](MIGRASI-SQL.md).
+3. **Lima seksi kantor:** layanan anggota, administrasi & keuangan, usaha & gerai, gudang & logistik, umum.
+4. **Paket 0 merapikan folder** sebelum paket dunia. Berkas besar dirapikan saat disentuh; `personal.css` menjadi paket tersendiri di akhir.
+5. **Tujuh ide tambahan** di bawah masuk rencana.
+6. Setiap paket: tag checkpoint, commit kecil, PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 
-- Buat mesh modular kendaraan mengikuti bentuk/warna kendaraan dalam frame video: mobil kecil manajer, van ekspedisi, dan truk boks. Jangan mengarang merek, pemasok atau transaksi.
-- Tempatkan satu kendaraan parkir dan satu kendaraan suasana yang bergerak di jalur jalan, berhenti di area bongkar muat lalu keluar/parkir. Siklus suasana jarang dan tidak menabrak pejalan kaki/gedung; kendaraan tidak terus berputar memenuhi map.
-- Klik kendaraan membuka kartu kendaraan dan keterangan **Simulasi lingkungan**. Pengiriman operasional baru ditampilkan bila domain/data pengiriman tersedia; jangan memberi nomor resi, muatan atau status pengiriman palsu.
-- Klik bangku, lahan, kantor, papan lokasi dan area logistik memberi respons yang berguna: duduk, detail lahan, masuk kantor, fokus kamera atau kartu rencana. Sediakan padanan tombol HTML/keyboard.
-- Detail pohon, lampu, marka, pot, kursi dan parkir mengisi kawasan; jangan mengisi tujuh lahan kosong dengan gerai dekoratif.
+### Gaya dan performa
 
-### Paket 3 — manajer berjalan dan bubble sesekali
+- Palet tetap biru-putih, ditambah aksen dari video: oranye kardus `#f2b36b`, kuning marka/forklift `#f5c542`, hijau pohon lebih jenuh. Siang lebih cerah, bayangan kontak tegas; hindari tampilan pucat/abu-abu.
+- Objek berulang memakai instancing/geometri gabungan; render saat ada gerak; DPR ponsel ≤ 1,5; bayangan hanya desktop; NPC jauh memakai model sederhana; animasi berhenti saat tab tersembunyi.
+- Tingkat kualitas Tinggi/Sedang/Hemat otomatis dengan pilihan manual di Suasana.
+- Anggaran: desktop < 150 draw call dan 60 fps; ponsel menengah < 80 draw call dan stabil 30 fps.
 
-- Satu maskot manajer utama melakukan alur **idle → berjalan → memeriksa lokasi → berhenti → kembali**. Animasi kaki/tangan dan arah badan mengikuti perpindahan posisi; gerak tangan saja bukan patroli.
-- Usulan awal yang dapat dituning: diam 90–180 detik, patroli 20–40 detik ke 2–3 titik kantor/gerai, lalu kembali. Setelah klik pengguna, tunda patroli agar detail tidak kabur. Tidak perlu navigasi AI/cloud; gunakan waypoint trotoar dan jalur bebas bangunan.
-- Bubble otomatis sesekali: “Ada tugas?” atau “Ada kegiatan?”. Tampilkan 5–8 detik, jeda minimal 120 detik, jangan menumpuk. Klik bubble membuka tugas/kegiatan yang terkait. Respons ringkas hanya memakai catatan yang benar-benar dimuat; data gagal dimuat tidak disebut kosong.
-- Pertanyaan adalah dialog maskot lokal, bukan pendapat pegawai atau layanan AI. Rapat/kegiatan aktif mengalahkan patroli; pilihan pratinjau boleh menguji seluruh gerak tanpa mengubah catatan.
+### Tata letak kawasan (± 4× luas v0)
 
-### Paket 4 — gym dalam kantor dan aktivitas di tempat yang tepat
+```
+                 JALAN UTAMA (truk suplier masuk) ══════════════════════
+   ┌─ Gerbang + pos ─┐   ┌──────────── GUDANG KOPERASI ────────────┐
+   │  Parkir truk    │   │ Rak palet │ Penerimaan/QC │ Stok dingin  │
+   │  antre (2–3)    │   └──Dok 1──Dok 2──Dok 3──Dok 4─────────────┘
+   └─────────────────┘      halaman bongkar-muat, marka kuning, forklift
+   ═══════ JALAN DALAM KAWASAN (kendaraan & pejalan kaki) ═══════════
+   ┌──── KANTOR KOPERASI (cutaway) ──────────────┐   ┌─ Taman/titik kumpul ─┐
+   │ Layanan anggota │ Administrasi & Keuangan    │   │ bangku, pohon,       │
+   │ Ruang rapat     │ Usaha & Gerai              │   │ papan pengumuman     │
+   │ Ruang manajer   │ Gudang & Logistik │ Pantry │   └──────────────────────┘
+   │ Gym/kegiatan    │ Arsip                      │
+   └─────────────────────────────────────────────┘
+   ═══════ BOULEVARD GERAI ══════════════════════════════════════════
+   [Lahan 1] [Lahan 2] [Lahan 3] [Lahan 4] [Lahan 5] [Lahan 6] [Lahan 7]
+```
 
-- Buat zona gym dalam cutaway yang jelas terpisah dari meja rapat/kerja: alas olahraga, treadmill, dumbbell/rak, bangku latihan dan penanda **Gym / kegiatan**. Sesuaikan skala agar tidak menutup workstation atau sirkulasi.
-- Saat ada kegiatan hari ini dari catatan jurnal/kegiatan yang valid, karakter berpindah ke zona gym dan beraksi pada alat: jalan/lari di treadmill atau latihan ringan. Tangan/kaki/badan bergerak selaras alat; tidak olahraga di tengah meja rapat.
-- Gym merupakan simbol visual kegiatan umum sesuai permintaan pemilik; kartu tetap menampilkan judul kegiatan asli, jangan mengubah kegiatan asli menjadi catatan olahraga. Jangan mengarang jadwal mulai/selesai jika catatan hanya punya tanggal.
-- Saat rapat sedang berlangsung, manajer menempati kursi rapat dengan pose duduk dan alat tidak bergerak sendiri. Tugas proses mengarah ke meja tugas. Tanpa catatan, manajer idle/patroli; pratinjau gym diberi label pratinjau.
-- Pertahankan prioritas rapat → kegiatan → tugas proses → idle/patroli. Bila kelak kegiatan memiliki jam/interval, adapter memakai interval asli tanpa mengarang kehadiran.
+- Gudang besar seperti video dan dapat dibuka seperti kantor.
+- Pemilih zona di header meniru dropdown situs pada video: Semua kawasan / Kantor / Gudang / Boulevard gerai; kamera berpindah mulus.
+- Lahan memakai kolom `slot` (1–7) pada Gerai; tanpa slot memakai urutan lama.
+- Pin biru hanya dari data nyata: stok di bawah minimum, pengiriman tiba hari ini, dokumen akan kedaluwarsa, tugas lewat tenggat.
+- Truk suplier hanya dari pengiriman berstatus dalam perjalanan/tiba. Kendaraan suasana berlabel *Simulasi lingkungan*.
 
-### Kerangka teknis dan urutan penerimaan
+### NPC karyawan dan manajer
 
-- world-model.ts: konfigurasi posisi zona/waypoint, adapter kegiatan dan prioritas; state simulasi dipisahkan dari catatan operasional.
-- world-objects.ts: mesh map/kendaraan/gym dan pose berjalan/duduk/latihan yang dapat diubah per fungsi.
-- WorldScene.tsx: loop berbasis delta waktu, rute kendaraan/manajer, posisi target, klik dan proyeksi bubble mengikuti kepala. Jangan membangun ulang scene setiap tick atau setiap langkah.
-- CooperativeWorld.tsx/world.css: kontrol waktu terlihat, kartu kendaraan/gym, bubble dan tautan sumber. Pertahankan komposisi UI/palet dalam kontrak ini.
-- Preferensi tetap lokal dan tervalidasi; bila kontrak berubah, migrasikan nilai lama. Jangan membuat tabel/migrasi cloud untuk animasi atau kendaraan suasana. Layout permanen dan pengiriman nyata dibahas terpisah.
-- Reduced-motion: kendaraan/manajer berhenti pada lokasi bermakna, bubble otomatis nonaktif; interaksi klik dan pratinjau statis tetap tersedia. Hentikan animasi saat tab tidak terlihat dan batasi jumlah mesh/partikel untuk ponsel.
-- Selesaikan paket 1 dulu, lalu 2, 3, 4 dengan screenshot exterior/interior dan interaksi nyata pada 360/768/1024/1440. Uji pergantian waktu/reload, kendaraan berhenti, patroli tidak menembus gedung, bubble tidak sering, rapat duduk dan kegiatan di gym. Rekam cuplikan gerak singkat sebagai bukti; screenshot/tes DOM saja tidak membuktikan perpindahan karakter.
-- Kemiripan video dan penerimaan visual tetap terbuka sampai pemilik menilai hasil. Update STATUS/CHECKLIST berdasarkan bukti baru, bukan checklist rencana ini.
+NPC karyawan berasal dari *Tim gerai* berstatus ditunjuk/aktif, dengan kolom baru: seksi, tempat kerja (kantor/gudang/gerai), jam kerja, penampilan (warna baju, rambut). Data kosong → meja kosong dan ajakan menambah tim. NPC anonim hanya di mode pratinjau berlabel.
+
+| Prioritas | Kondisi dari data (WIB) | Perilaku |
+|---|---|---|
+| 1 | Rapat berlangsung dan nama di peserta; peserta kosong → semua staf kantor | Ke ruang rapat, duduk |
+| 2 | Pengiriman tiba, staf seksi gudang & logistik | Ke dok, bongkar, bawa kardus |
+| 3 | Tugas proses dengan penanggung jawab = nama staf | Bekerja di meja seksi |
+| 4 | 12:00–13:00 | Pantry |
+| 5 | Jam kerja tanpa pemicu | Keliling: seksi lain → gudang → gerai → kembali |
+| 6 | Di luar jam kerja | Pulang; lampu kantor redup |
+
+Manajer (maskot utama): briefing pagi singkat di titik kumpul; siang keliling seksi, berhenti di meja staf dengan tugas lewat tenggat, ke dok saat truk tiba dan berbicara dengan sopir, mengunjungi lahan berstatus persiapan; sore kembali ke ruang manajer. Rapat/kegiatan aktif mengalahkan keliling.
+
+Interaksi: dua NPC berpapasan berhenti, saling menghadap, bubble ikon 3–5 detik; serah-terima kardus gudang → gerai; staf melapor ke manajer. Teks bubble hanya judul catatan asli atau ikon umum; jeda jarang, tidak menumpuk. Kartu NPC menyatakan posisi adalah **visualisasi jadwal/tugas, bukan bukti kehadiran**. Reduced-motion menghentikan gerak; NPC ditempatkan di lokasi bermakna.
+
+### UI kartu seperti video
+
+1. **KPI kiri atas:** ikon dalam kotak biru pucat, angka besar, label dan sumber. Default: stok barang, pengiriman hari ini, tugas terbuka; berganti per zona.
+2. **Kartu detail kanan:** eyebrow biru kapital (`GUDANG · DOK 2`), judul tebal, sub-judul, pill status bertext, baris kunci–nilai, progress tipis, daftar barang dengan pill Cukup/Di bawah minimum.
+3. **Kartu tab kanan bawah:** Dok / Tim / Kendaraan atau Gerai / Tugas sesuai zona.
+4. **Pelacak pengiriman bawah:** Dipesan → Dikirim → Tiba → Diperiksa → Masuk stok, plus kartu ringkas pengiriman terpilih.
+5. **Label mengambang** di objek terpilih dan kotak sorot biru.
+
+Radius 14 px, border `#e6ebf5`, bayangan lembut, Inter, angka tabular, tanpa blur latar.
+
+- **Ponsel 360–767:** header 56 px (logo, pill zona, jam WIB, avatar); KPI chip geser ± 64 px; kontrol kamera kolom kecil kanan; detail menjadi bottom sheet tiga posisi (ringkas/setengah/penuh) yang memuat kartu tab dan pelacak sebagai tab; tanpa pilihan hanya strip "Pengiriman berikutnya" di atas dock.
+- **Tablet 768–1023:** panel kanan 320 px, pelacak bawah. Area sentuh ≥ 44 px, status selalu bertext.
+
+### Fitur web pendukung
+
+| Fitur | Isi | Di dunia |
+|---|---|---|
+| Pengiriman `deliveries` | Arah masuk/keluar, suplier/ekspedisi (Mitra), gerai tujuan, tanggal rencana/tiba, dok, sopir/plat opsional, status 5 tahap, baris barang dipesan vs diterima, selisih/rusak, bukti | Truk, dok, pelacak, pin |
+| Mutasi stok `stock-movements` | Jejak perubahan stok buku: penerimaan, kirim ke gerai, penyesuaian opname; hanya lewat tombol konfirmasi | Kardus bergerak, isi rak |
+| Suplier & ekspedisi | Kategori baru pada Mitra & kontak, barang dipasok, termin; tanpa tabel ganda | Label truk, kartu kendaraan |
+| Tim & seksi | Kolom seksi, tempat kerja, jam kerja, penampilan pada Tim gerai; halaman struktur tim per seksi | NPC, meja seksi |
+| Lokasi barang | Lokasi (gudang/gerai) dan rak pada Barang | Rak, pin stok minimum |
+| Slot lahan | `slot` pada Gerai | Posisi gerai tetap |
+| Ringkasan peringatan | Stok minimum, pengiriman terlambat, dokumen kedaluwarsa, tugas lewat tenggat | Pin dunia, kartu Beranda |
+
+Kolom tambahan masuk data JSON yang ada; dua entitas baru menambah daftar entitas `hub_records` dan pemeriksaan relasinya. Belum termasuk POS, akuntansi lengkap, hutang suplier dan harga beli otomatis.
+
+### Ide tambahan yang disetujui
+
+1. **Laporan harian:** kamera berkeliling zona dan menampilkan ringkasan hari ini dari data nyata.
+2. **Pencarian menggerakkan kamera** ke rak, meja staf, lahan atau dok terkait.
+3. **Linimasa hari ini** 06:00–18:00 untuk melihat kejadian tercatat; bukan rekaman.
+4. **Tindakan cepat di kartu** (Tandai tiba, Masukkan ke stok, Mulai opname rak) membuka form asli dengan konfirmasi.
+5. **Kesiapan gerai tampak di lahan:** pondasi → rangka → jadi mengikuti persentase checklist kesiapan.
+6. **Papan pengumuman** depan kantor: keputusan rapat terbaru dan dokumen akan kedaluwarsa.
+7. **Suasana kecil:** hari libur/Jumat siang kantor sepi, malam lampu jalan/jendela menyala.
+
+Di luar lingkup: absensi pegawai sungguhan dan multiuser real-time.
+
+### Struktur kode dunia
+
+- `layout.ts`: koordinat zona, waypoint, jalur pejalan kaki/kendaraan.
+- `objects/office.ts`, `objects/warehouse.ts`, `objects/vehicles.ts`, `objects/characters.ts`, `objects/props.ts`.
+- `npc/schedule.ts`: fungsi murni data + jam → tujuan NPC, diuji Vitest. `npc/movement.ts`: gerak antar waypoint berbasis delta waktu.
+- `ui/`: KPI, kartu detail, kartu tab, pelacak, bottom sheet.
+- `world-model.ts` tetap adapter data; simulasi tidak pernah ditulis ke database.
+
+### Urutan paket
+
+0. **Rapikan folder:** `AUDIT.md` ke `docs/`, dokumen historis ke `docs/arsip/`, `Records/Editor/catalog/schemas` ke `src/features/records/`; perbarui tautan/impor, tanpa menghapus isi.
+1. **Fondasi dunia:** pecah berkas, tingkat kualitas, palet beraksen, siang cerah.
+2. **Peta baru:** layout, jalan, gerbang, boulevard dengan `slot`, pemilih zona, kamera antar-zona.
+3. **UI kartu ala video** dan bottom sheet ponsel.
+4. **Gudang** dari data Barang.
+5. **Data logistik web:** Pengiriman, Mutasi stok, kategori suplier, kolom staf/barang, tes migrasi PGlite. SQL cloud setelah persetujuan.
+6. **Kendaraan** dari data pengiriman dan kendaraan suasana berlabel.
+7. **Kantor bersekat dan NPC karyawan.**
+8. **Manajer dan interaksi** antar NPC.
+9. **Ide tambahan** 1–7.
+10. **Penutup:** uji performa ponsel, `personal.css`, STATUS/CHECKLIST/CHANGELOG, screenshot baru.
+
+Setiap paket: tes, typecheck, lint, build; periksa 360/768/1024/1440; rekam gerak singkat untuk perubahan animasi; perbarui LANJUTAN-AI. Penerimaan visual tetap menunggu penilaian pemilik.
