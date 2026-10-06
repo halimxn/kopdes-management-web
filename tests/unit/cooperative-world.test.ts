@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getWorldHour,
   getWorldModel,
+  meetingTimeline,
   worldPreferencesSchema,
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
@@ -130,5 +131,23 @@ describe('slot lahan gerai', () => {
     expect(model.plots[0].unit?.id).toBe('baru');
     expect(model.plots[2].unit?.id).toBe('aneh');
     expect(model.overflow).toBe(0);
+  });
+});
+
+describe('jadwal rapat hari ini', () => {
+  it('mengurutkan rapat dan menandai selesai, berlangsung, nanti menurut WIB', () => {
+    const meetings = [
+      row('sore', { title: 'Sore', date: '2026-10-06', time: '15:00', duration: 30 }),
+      row('pagi', { title: 'Pagi', date: '2026-10-06', time: '08:00', duration: 60 }),
+      row('siang', { title: 'Siang', date: '2026-10-06', time: '10:00', duration: 90 }),
+    ];
+    // 10:30 WIB
+    const steps = meetingTimeline(meetings, new Date('2026-10-06T03:30:00Z'));
+    expect(steps.map((step) => [step.row.id, step.state])).toEqual([
+      ['pagi', 'selesai'],
+      ['siang', 'berlangsung'],
+      ['sore', 'nanti'],
+    ]);
+    expect(steps[1].end).toBe('11:30');
   });
 });
