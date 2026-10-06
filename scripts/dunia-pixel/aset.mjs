@@ -12,6 +12,7 @@ import {
   mapBuildings,
 } from '../../src/features/cooperative-world/pixel/map.ts';
 import { gradeRgb } from '../../src/features/cooperative-world/pixel/grade.ts';
+import { MARGIN as VM, VEHICLES } from './kendaraan.mjs';
 import {
   K,
   acUnit,
@@ -437,6 +438,15 @@ for (const r of TREE_SIZES)
       if (r === 16) bush(w / 2 - 22, h - 10, 12, blossom);
     }, `pohon-${r}${blossom}`);
   }
-for (const dir of ['bangunan', 'pohon'])
+// Kendaraan: sprite + manifest jangkar (garis tanah sisi terdekat) untuk mesin.
+const manifest = {};
+for (const v of VEHICLES) {
+  const w = v.w + VM * 2;
+  const h = v.h + VM * 2;
+  writeSprite('kendaraan', v.name, w, h, () => v.draw(VM, VM), v.name);
+  manifest[v.name] = { w, h, ax: VM + v.w / 2, ay: VM + v.ground, length: v.w, margin: VM };
+}
+writeFileSync(`${OUT}/kendaraan/manifest.json`, JSON.stringify(manifest, null, 2));
+for (const dir of ['bangunan', 'pohon', 'kendaraan'])
   for (const f of (await import('node:fs')).readdirSync(`${OUT}/${dir}`)) bytes += (await import('node:fs')).statSync(`${OUT}/${dir}/${f}`).size;
 console.log(`aset ditulis ke ${OUT} (${(bytes / 1024).toFixed(0)} KB)`);

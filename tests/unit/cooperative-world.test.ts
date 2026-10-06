@@ -514,3 +514,40 @@ describe('aset pixel', () => {
       );
   });
 });
+
+describe('kendaraan pixel', () => {
+  it('lalu lintas suasana berlajur kiri dan berputar di luar layar', async () => {
+    const { ambientTraffic, ambientPose } = await import('@/features/cooperative-world/pixel/vehicles');
+    const east = ambientTraffic.find((v) => v.dir === 1 && v.road === 'desa')!;
+    const west = ambientTraffic.find((v) => v.dir === -1 && v.road === 'desa')!;
+    expect(ambientPose(east, 0).y).toBeLessThan(ambientPose(west, 0).y);
+    expect(ambientPose(east, 0).view).toBe('kanan');
+    const a = ambientPose(east, 10);
+    const b = ambientPose(east, 11);
+    expect(b.x - a.x).toBeCloseTo(east.speed, 0);
+    const lanes = new Map<string, Set<number>>();
+    for (const v of ambientTraffic) {
+      const key = `${v.road}${v.dir}`;
+      lanes.set(key, (lanes.get(key) || new Set()).add(v.speed));
+    }
+    for (const speeds of lanes.values()) expect(speeds.size).toBe(1);
+  });
+  it('rute kedatangan berakhir dengan ekor truk di muka dok', async () => {
+    const { arrivalRoute, poseAlong, dockPose } = await import('@/features/cooperative-world/pixel/vehicles');
+    const route = arrivalRoute(1);
+    expect(poseAlong(route, 0).view).toBe('kiri');
+    const end = poseAlong(route, 999);
+    expect(end.done).toBe(true);
+    expect([end.x, end.y]).toEqual([dockPose(1).x, dockPose(1).y]);
+    expect(end.view).toBe('depan');
+  });
+  it('jenis truk dari teks kendaraan, D4 tanpa keterangan = pendingin', async () => {
+    const { truckKind, recentArrival } = await import('@/features/cooperative-world/pixel/vehicles');
+    expect(truckKind('Colt diesel bak', 'dok', 0)).toBe('bakkayu');
+    expect(truckKind('Truk reefer', 'antre', 0)).toBe('pendingin');
+    expect(truckKind('', 'dok', 3)).toBe('pendingin');
+    expect(truckKind('', 'dok', 0)).toBe('boks');
+    expect(recentArrival('2026-10-07T01:00:00Z', new Date('2026-10-07T01:10:00Z'))).toBe(true);
+    expect(recentArrival('2026-10-07T01:00:00Z', new Date('2026-10-07T01:20:00Z'))).toBe(false);
+  });
+});

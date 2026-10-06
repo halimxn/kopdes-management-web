@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WorldZone } from '../layout';
 import type { SheetSnap } from '../ui/MobileSheet';
-import type { StageState, WorldHandle } from './engine';
+import type { StageState, StageTruck, WorldHandle } from './engine';
 
 type Props = {
+  trucks: StageTruck[];
   selected: string;
   location: string;
   zone: WorldZone;
@@ -40,6 +41,7 @@ export function PixelStage(props: Props) {
   });
   const [failed, setFailed] = useState(false);
   const state: StageState = {
+    trucks: props.trucks,
     selected: props.selected,
     location: props.location,
     zone: props.zone,

@@ -41,6 +41,7 @@ import { worldStations, worldZones, type WorldZone } from './layout';
 import { dayPhase } from './lighting';
 import { pixelZones } from './pixel/map';
 import { zoomForStep } from './pixel/camera';
+import { recentArrival, truckKind } from './pixel/vehicles';
 import { WorldHeader } from './ui/WorldHeader';
 import { planManager, planStaff } from './npc/schedule';
 import { today } from '@/lib/date';
@@ -132,6 +133,18 @@ export function CooperativeWorld({
   const managerPlan = useMemo(
     () => planManager(plans, { tasks: model.tasks, deliveries: model.deliveries }, now, today(now)),
     [plans, model, now],
+  );
+  // Truk dari Pengiriman untuk dunia pixel; yang baru tiba (atau semua di pratinjau) beranimasi.
+  const stageTrucks = useMemo(
+    () =>
+      model.trucks.map((spot) => ({
+        id: `kirim-${spot.delivery.id}`,
+        kind: truckKind(String(spot.delivery.data.vehicle || ''), spot.place, spot.index),
+        place: spot.place,
+        index: spot.index,
+        arriving: spot.place === 'dok' && (preview || recentArrival(spot.delivery.updated_at, now)),
+      })),
+    [model.trucks, preview, now],
   );
   const hour = getWorldHour(preferences.time, now);
   const night = dayPhase(hour) === 'malam';
@@ -450,6 +463,7 @@ export function CooperativeWorld({
 
       <section className="cw-viewport" aria-label="Dunia koperasi interaktif">
         <PixelStage
+          trucks={stageTrucks}
           selected={selected}
           location={location}
           zone={zone}

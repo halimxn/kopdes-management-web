@@ -13,7 +13,7 @@ Keputusan pemilik 7 Oktober 2026 (sesi `/grill-me`). Dokumen ini satu-satunya ko
 | Resolusi | Kanvas dasar 640×360 diperbesar bilangan bulat (3× pada 1920×1080), `image-rendering: pixelated`. |
 | Aset | Digambar lewat kode (generator di `scripts/dunia-pixel/`) menjadi PNG/atlas. Pack berlisensi atau seniman bisa menyusul tanpa mengubah mesin. Uji perender 2.5D ditolak pemilik. |
 | Orang | ±30×56 px, kepala besar, bayangan, pose: diam, jalan (samping), lambai, angkat, duduk, bicara. Variasi: hijab, peci, caping, helm, topi, kacamata, celemek, jas. |
-| Kendaraan | Serong 3/4 (atap + sisi/muka). Truk boks KDMP, truk berpendingin, truk bak kayu bercat bermuatan karung bertutup terpal (komoditas), pikap, motor roda tiga, angkot, forklift. Digambar ulang ±1,6× agar sebanding dengan orang (P3). |
+| Kendaraan | Skala 24 px/m (panjang, tinggi) dan 12 px/m (kedalaman); lajur kiri; `pixel/vehicles.ts` (lalu lintas suasana, dok D1–D3 gudang + D4 cold storage, antre di pool, rute datang lalu mundur ke dok). Serong 3/4 (atap + sisi/muka). Truk boks KDMP, truk berpendingin, truk bak kayu bercat bermuatan karung bertutup terpal (komoditas), pikap, motor roda tiga, angkot, forklift. Digambar ulang ±1,6× agar sebanding dengan orang (P3). |
 | Manajer | Avatar: otomatis mengikuti jadwal data, dapat diambil alih (WASD / ketuk-untuk-jalan). Rupa dipilih pengguna. |
 | Organisasi | 7 unit KDMP (kantor, sembako, apotek, klinik, gudang komoditas, cold storage terpisah, simpan pinjam, logistik), staf dari data Tim, pengurus/pengawas dari data, balai desa (rapat anggota), warga sebagai latar anonim. Suplier/ekspedisi = kavling rencana. |
 | Interaksi | Klik objek → penanda siku berdenyut + label → kamera zoom dan mengikuti → kartu. Aksi kartu membuka form operasional yang sudah ada (tanpa mutasi baru di dunia). |
@@ -47,7 +47,7 @@ Aset aplikasi: `node --no-warnings scripts/dunia-pixel/aset.mjs` (ukuran dari `p
 | P1 Preview | Gaya, palet, orang, kendaraan, denah, contoh interaksi | Selesai, disetujui (palet Eastward) |
 | P0 Bersih | Tag arsip, hapus kode/dependensi/skill/referensi 3D, kontrak ini | Selesai |
 | P2 Mesin | PixiJS, denah pixel `pixel/map.ts`, A* `pixel/path.ts`, kamera skala bulat `pixel/camera.ts`, avatar manajer (otomatis / WASD / ketuk tanah), penanda siku + kamera ikut, berhenti saat tersembunyi | Selesai (greybox; aset final P3) |
-| P3 Eksterior | P3a bangunan/rumah/pohon dari `scripts/dunia-pixel/aset.mjs` → `public/dunia/` (+ lapisan `-malam` aditif), grading bersama `pixel/grade.ts`; P3b kendaraan skala baru + lalu lintas + truk dok dari Pengiriman; P3c perabot jalan dan detail area | P3a selesai |
+| P3 Eksterior | P3a bangunan/rumah/pohon dari `scripts/dunia-pixel/aset.mjs` → `public/dunia/` (+ lapisan `-malam` aditif), grading bersama `pixel/grade.ts`; P3b kendaraan skala baru + lalu lintas + truk dok dari Pengiriman; P3c perabot jalan dan detail area | P3a, P3b selesai |
 | P4 Karakter | Animasi jalan 4 arah, staf dari data Tim, editor rupa manajer, warga simulasi (reasoning tinggi) | |
 | P5 Interior | 8 ruang dengan transisi pudar; rak dari kolom Lokasi (reasoning tinggi) | |
 | P6 Kartu | Kartu gaya baru, aksi cepat ke form operasional | |

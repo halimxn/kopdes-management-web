@@ -38,8 +38,30 @@ import {
 import { findPath, type Cell } from './path';
 import { drawPixelText, pixelTextWidth } from './pixel-font';
 import { gradeCss, gradeHex } from './grade';
+import {
+  ambientPose,
+  ambientTraffic,
+  arrivalRoute,
+  dockPose,
+  poseAlong,
+  queuePose,
+  spriteFor,
+  type Pose,
+  type Route,
+  type TruckKind,
+  type VehicleKind,
+} from './vehicles';
 
+/** Truk dari data Pengiriman; `arriving` = baru berubah status, dianimasikan datang ke dok. */
+export type StageTruck = {
+  id: string;
+  kind: TruckKind;
+  place: 'dok' | 'antre';
+  index: number;
+  arriving: boolean;
+};
 export type StageState = {
+  trucks: StageTruck[];
   selected: string;
   location: string;
   zone: WorldZone;
@@ -377,6 +399,114 @@ export async function createWorld(
     actors.addChild(t);
   }
 
+  // kendaraan: sprite per tampak; jangkar dari manifest generator (garis tanah sisi terdekat)
+  type Anchor = { w: number; h: number; ax: number; ay: number; length: number; margin: number };
+  let manifest: Record<string, Anchor> = {};
+  try {
+    manifest = await Assets.load<Record<string, Anchor>>('/dunia/kendaraan/manifest.json');
+  } catch {
+    // Tanpa manifest, kendaraan tidak digambar; dunia lain tetap berjalan.
+  }
+  const vehicleTex = await loadTextures(
+    Object.keys(manifest).flatMap((n) => [
+      spriteUrl('kendaraan', n),
+      spriteUrl('kendaraan', `${n}-malam`),
+    ]),
+  );
+  type Mover = {
+    kind: VehicleKind;
+    body: Sprite;
+    light: Sprite;
+    pose: Pose;
+    anchor: Anchor | null;
+    route?: Route;
+    clock: number;
+  };
+  const movers = new Map<string, Mover>();
+  const placeMover = (m: Mover, pose: Pose) => {
+    m.pose = pose;
+    const name = spriteFor(m.kind, pose.view);
+    const anchor = manifest[name];
+    const tex = vehicleTex.get(spriteUrl('kendaraan', name));
+    const lit = vehicleTex.get(spriteUrl('kendaraan', `${name}-malam`));
+    m.body.visible = Boolean(anchor && tex);
+    m.light.visible = Boolean(anchor && lit);
+    if (!anchor || !tex) return;
+    if (m.anchor !== anchor) {
+      m.anchor = anchor;
+      m.body.hitArea = new Rectangle(
+        -anchor.length / 2,
+        -(anchor.ay - anchor.margin),
+        anchor.length,
+        anchor.ay - anchor.margin + 4,
+      );
+    }
+    const pairs: [Sprite, Texture | undefined][] = [
+      [m.body, tex],
+      [m.light, lit],
+    ];
+    for (const [sprite, texture] of pairs) {
+      if (!texture) continue;
+      if (sprite.texture !== texture) sprite.texture = texture;
+      sprite.anchor.set(anchor.ax / anchor.w, anchor.ay / anchor.h);
+      sprite.scale.x = pose.view === 'kiri' ? -1 : 1;
+      sprite.position.set(Math.round(pose.x), Math.round(pose.y));
+    }
+    m.body.zIndex = pose.y;
+  };
+  const addMover = (id: string, kind: VehicleKind, pose: Pose) => {
+    const body = new Sprite();
+    body.eventMode = 'static';
+    body.cursor = 'pointer';
+    body.on('pointertap', () => {
+      tapGuard = true;
+      callbacks.onSelect(id);
+    });
+    const light = new Sprite();
+    actors.addChild(body);
+    glow.addChild(light);
+    const m: Mover = { kind, body, light, pose, anchor: null, clock: 0 };
+    movers.set(id, m);
+    placeMover(m, pose);
+    return m;
+  };
+  const moverBounds = (m: Mover): Box | null =>
+    m.anchor
+      ? {
+          x: m.pose.x - m.anchor.length / 2,
+          y: m.pose.y - (m.anchor.ay - m.anchor.margin),
+          w: m.anchor.length,
+          h: m.anchor.ay - m.anchor.margin + 4,
+        }
+      : null;
+  for (const v of ambientTraffic) addMover(v.id, v.kind, ambientPose(v, 0));
+  let trafficTime = 0;
+  /** Samakan truk dengan data: hapus yang hilang, tambah yang baru (beranimasi bila baru tiba). */
+  const syncTrucks = (list: StageTruck[]) => {
+    const ids = new Set(list.map((t) => t.id));
+    for (const [id, m] of movers)
+      if (id.startsWith('kirim-') && !ids.has(id)) {
+        m.body.destroy();
+        m.light.destroy();
+        movers.delete(id);
+      }
+    for (const t of list) {
+      const rest = t.place === 'dok' ? dockPose(t.index) : queuePose(t.index);
+      const existing = movers.get(t.id);
+      if (existing) {
+        if (!existing.route && (existing.pose.x !== rest.x || existing.pose.y !== rest.y))
+          placeMover(existing, rest);
+        continue;
+      }
+      const m = addMover(t.id, t.kind, rest);
+      if (t.arriving && !reduced) {
+        m.route = arrivalRoute(t.index);
+        placeMover(m, poseAlong(m.route, 0));
+      }
+    }
+  };
+  syncTrucks(initial.trucks);
+
   // avatar manajer dan jalurnya
   const blocked = blockedGrid();
   const avatar = new Graphics();
@@ -428,6 +558,9 @@ export async function createWorld(
   });
   const target = (): [number, number] => {
     if (state.selected === 'karakter') return [pos.x, pos.y - 28];
+    const mover = movers.get(state.selected);
+    const mb = mover && moverBounds(mover);
+    if (mb) return boxCenter(mb);
     const b = buildingFor(state.selected, state.location);
     if (b) return boxCenter(buildingBounds(b));
     return pixelZones[state.zone].center;
@@ -576,6 +709,20 @@ export async function createWorld(
     avatar.position.set(Math.round(pos.x), Math.round(pos.y));
     avatar.zIndex = pos.y;
 
+    // kendaraan: lalu lintas suasana berhenti saat reduced-motion; truk datang mengikuti rute
+    if (!reduced) trafficTime += dt;
+    for (const v of ambientTraffic) {
+      const m = movers.get(v.id);
+      if (m) placeMover(m, ambientPose(v, trafficTime));
+    }
+    for (const m of movers.values())
+      if (m.route) {
+        m.clock += dt;
+        const p = poseAlong(m.route, m.clock);
+        placeMover(m, p);
+        if (p.done) m.route = undefined;
+      }
+
     // kamera
     const scale = pixelScale(app.screen, state.zoom);
     if (following) {
@@ -594,12 +741,15 @@ export async function createWorld(
     // penanda
     marker.clear();
     const b = state.selected === 'karakter' ? null : buildingFor(state.selected, state.location);
+    const selectedMover = movers.get(state.selected);
     const box: Box | null =
       state.selected === 'karakter'
         ? { x: pos.x - 18, y: pos.y - 64, w: 36, h: 68 }
-        : b
-          ? buildingBounds(b)
-          : null;
+        : selectedMover
+          ? moverBounds(selectedMover)
+          : b
+            ? buildingBounds(b)
+            : null;
     if (box) {
       const grow = reduced ? 0 : Math.round((Math.sin(pulse * 4) + 1) * 2);
       const x0 = box.x - 6 - grow;
@@ -638,6 +788,7 @@ export async function createWorld(
       lastRecenter = next.recenter;
       lastSelected = next.selected;
       if (state.control && !next.control) path = [];
+      if (next.trucks !== state.trucks) syncTrucks(next.trucks);
       state = next;
     },
     destroy() {

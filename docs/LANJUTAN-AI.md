@@ -2,7 +2,7 @@
 
 ## Arahan aktif (7 Oktober 2026)
 
-Dunia Koperasi diganti menjadi **2D pixel ala Eastward (PixiJS)**. Baca DUNIA-KOPERASI (kontrak dan paket P0–P8) dan docs/dunia-pixel/. P1, P0 dan P2 (mesin PixiJS greybox) selesai; P3a (sprite bangunan/rumah/pohon) selesai; berikutnya **P3b** kendaraan skala baru, lalu lintas beranimasi, truk dok dari Pengiriman, lalu P3c perabot jalan. P3–P5 (aset) perlu reasoning tinggi: beri tahu pemilik sebelum mulai. Commit lokal per paket; push setelah semua tahap selesai. Bagian di bawah tentang 3D adalah riwayat.
+Dunia Koperasi diganti menjadi **2D pixel ala Eastward (PixiJS)**. Baca DUNIA-KOPERASI (kontrak dan paket P0–P8) dan docs/dunia-pixel/. P1, P0 dan P2 (mesin PixiJS greybox) selesai; P3a (sprite bangunan/rumah/pohon) selesai; P3b (kendaraan, lalu lintas, truk dok) selesai; berikutnya **P3c** perabot jalan dan detail area (lampu, bangku, kabel, tenda pasar, air mancur, pagar). P3–P5 (aset) perlu reasoning tinggi: beri tahu pemilik sebelum mulai. Commit lokal per paket; push setelah semua tahap selesai. Bagian di bawah tentang 3D adalah riwayat.
 
 ## Arahan lama (riwayat 3D)
 

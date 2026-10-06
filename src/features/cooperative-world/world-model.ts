@@ -263,10 +263,9 @@ export type ZoneSummary = { note: string; value?: number; total?: number };
  * Ringkasan per zona untuk pemilih zona (pola dropdown situs pada video): angka hanya dari
  * data — gerai tercatat per kavling, dok terisi dari pengiriman, tugas dan rapat hari ini.
  */
-export function zoneSummaries(model: WorldModel): Record<
-  'semua' | 'gudang' | 'kantor' | 'kesehatan' | 'gerai' | 'lahan',
-  ZoneSummary
-> {
+export function zoneSummaries(
+  model: WorldModel,
+): Record<'semua' | 'gudang' | 'kantor' | 'kesehatan' | 'gerai' | 'lahan', ZoneSummary> {
   const recorded = (ids: string[]) =>
     model.plots.filter((plot) => ids.includes(plot.id) && plot.unit).length;
   const atDock = model.trucks.filter((spot) => spot.place === 'dok').length;

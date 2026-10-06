@@ -288,10 +288,7 @@ export function ListCard({
                         <i className="cw-dot" /> {String(row.spot.delivery.data.title)}
                       </strong>
                       <small>
-                        {[
-                          row.spot.delivery.data.license_plate,
-                          row.spot.delivery.data.driver_name,
-                        ]
+                        {[row.spot.delivery.data.license_plate, row.spot.delivery.data.driver_name]
                           .filter(Boolean)
                           .map(String)
                           .join(' · ') ||

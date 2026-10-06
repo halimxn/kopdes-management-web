@@ -1,5 +1,11 @@
 # Changelog
 
+## Dunia Koperasi pixel: P3b kendaraan dan lalu lintas — 7 Oktober 2026
+
+- `scripts/dunia-pixel/kendaraan.mjs`: truk boks KDMP, truk pendingin, truk bak kayu bercat (samping, depan, belakang), angkot, pikap sayur, motor, motor roda tiga; manifest jangkar `public/dunia/kendaraan/manifest.json`.
+- `pixel/vehicles.ts`: lalu lintas suasana berlajur kiri (berhenti saat reduced-motion), posisi dok D1–D4 dan antrean pool, rute kedatangan dari Jalan Provinsi lalu mundur ke dok, jenis truk dari kolom kendaraan.
+- Mesin: kendaraan dapat diklik (penanda dan kamera mengikuti), lampu kendaraan menyala malam; truk disinkronkan dari data Pengiriman.
+
 ## Dunia Koperasi pixel: P3a sprite bangunan — 7 Oktober 2026
 
 - `scripts/dunia-pixel/aset.mjs` menggambar sprite bangunan (kantor, klinik, sembako, apotek, simpan pinjam, balai joglo, gerai 1–3, gudang komoditas, cold storage), 9 rumah warga (3 jenis × 3 lebar) dan 6 pohon ke `public/dunia/` (255 KB) beserta lapisan cahaya malam.
