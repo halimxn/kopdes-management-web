@@ -52,6 +52,12 @@ Kerjakan berurutan; satu commit lokal per langkah (tanpa push). Centang di sini 
 
 ## Paket terakhir
 
+- 6 Oktober, **Distrik Mini Kompak & 3D Pixel Downsampling** selesai lokal (commit `5ed67dd`, tag `checkpoint/dunia-kompak-pixel`). Menjawab keluhan performa pemilik via sesi `/grill-me`:
+  - Peta diringkas menjadi 1 perempatan jalan ringkas (`Jalan Raya` × `Jalan Koperasi`) yang menghubungkan 4 kavling aktif (Logistik, Administrasi, Kesehatan, Niaga). 4 jalan lingkar luar, 16 blok kota latar belakang, dan 6 petak lahan kosong 128m dihapus (>70% pengurangan geometri).
+  - Kunci penuh mode 3D Pixel Downsampling permanen: kanvas WebGL di-downsample internal (skala 0.5x Tinggi, 0.4x Sedang, 0.33x Hemat) lalu di-upscale tajam secara crisp dengan CSS `image-rendering: pixelated; crisp-edges`.
+  - Performa ringan: GTAOPass dimatikan total, bayangan disederhanakan ke BasicShadowMap 512 tajam retro, lantai diperkecil ke 360×360, dan fog dirapatkan ke 85–140. Menghemat beban GPU ~80% dan berjalan 60 FPS stabil.
+  - 304 tes / 45 berkas lulus 100%, typecheck 0 error, lint 0 error, build Next.js sukses (7.8s), uji browser subagent 0 error.
+
 - 6 Oktober, **Field Pengiriman Lengkap** (kolom sopir, nomor plat, estimasi jam tiba WIB) selesai lokal (tag checkpoint/pengiriman-detail). Skema Zod `deliveries`, form Editor input time/helper, kartu `/pengiriman` di Records, serta kartu `DetailCard`, `TodayTracker`, dan `ListCard` (dok) di Dunia Koperasi. 304 tes lulus, typecheck, lint, build lulus.
 
 - 6 Oktober, **Distrik v4** selesai lokal (commit per langkah, tag checkpoint/v4). Berikutnya: penilaian pemilik, lalu menu web tambahan (mis. data lahan pertanian). Port 3000 dipakai dev server pemilik; tangkapan headless memakai Chromium ms-playwright via CDP (lihat paket v3).
