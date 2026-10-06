@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { WorldIcon } from './WorldIcon';
+import { Spark } from './Charts';
 import type { StockState } from './DetailCard';
 import { rackIds, type MeetingStep, type WorldModel } from '../world-model';
 
@@ -39,6 +40,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
       value: stockValue(inventory.items.length),
       unit: '',
       note: stockNote(`${inventory.atUnits.length} ditempatkan di gerai`),
+      spark: { values: model.week.deliveries, label: 'Pengiriman 7 hari' },
     },
     {
       href: '/barang',
@@ -73,6 +75,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
       value: value(model.tasks.length),
       unit: '',
       note: unavailable ? 'Data belum tersedia' : `${working} sedang dikerjakan`,
+      spark: { values: model.week.tasks, label: 'Tugas dibuat 7 hari' },
     },
     {
       href: '/rapat',
@@ -80,6 +83,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
       label: 'Rapat hari ini',
       value: value(model.meetings.length),
       unit: '',
+      spark: { values: model.week.meetings, label: 'Rapat 7 hari' },
       note: unavailable
         ? 'Data belum tersedia'
         : current
@@ -103,6 +107,9 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
             </strong>
             <span className="cw-kpi-note">{card.note}</span>
           </span>
+          {'spark' in card && card.spark && !unavailable && (
+            <Spark values={card.spark.values} label={card.spark.label} />
+          )}
         </Link>
       ))}
     </div>

@@ -8,6 +8,7 @@ import { recordHref } from '../../workspace/workspace-navigation';
 import { warehouse, worldStations, worldZones, type WorldZone } from '../layout';
 import { truckRoute } from '../truck-routes';
 import { WorldIcon } from './WorldIcon';
+import { StockBar } from './Charts';
 import {
   deliverySteps,
   isBelowMinimum,
@@ -60,7 +61,13 @@ function StockList({ items, state, empty }: { items: Item[]; state: StockState; 
             title={`Minimum ${String(item.data.minimum_quantity ?? '—')}`}
           >
             <WorldIcon kind={low ? 'kardus-minimum' : 'kardus'} size={30} />
-            <span className="cw-stock-name">{String(item.data.title)}</span>
+            <span className="cw-stock-main">
+              <span className="cw-stock-name">{String(item.data.title)}</span>
+              <StockBar
+                stock={Number(item.data.book_quantity)}
+                minimum={Number(item.data.minimum_quantity) || 0}
+              />
+            </span>
             <span className="cw-stock-qty">
               {String(item.data.book_quantity ?? '—')}
               <small> {String(item.data.measurement || '')}</small>

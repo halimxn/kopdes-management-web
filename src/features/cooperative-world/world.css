@@ -1770,3 +1770,63 @@
   font-weight: 700;
   color: var(--cw-ink);
 }
+/* Grafik kartu: batang stok vs minimum dan mini grafik 7 hari (biru, hari ini lebih tua). */
+.cw-stock-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.cw-stock-bar {
+  position: relative;
+  display: block;
+  height: 5px;
+  max-width: 140px;
+  border-radius: 999px;
+  background: #e3e9f6;
+}
+.cw-stock-bar b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6d93f5, var(--cw-blue));
+}
+.cw-stock-bar.is-low b {
+  background: linear-gradient(90deg, #f6c46a, #e89a2c);
+}
+.cw-stock-bar u {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 9px;
+  border-radius: 1px;
+  background: #8a99b1;
+}
+.cw-row-text .cw-stock-bar {
+  margin-top: 4px;
+}
+.cw-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 30px;
+  margin-left: auto;
+  align-self: center;
+  flex: none;
+}
+.cw-spark i {
+  width: 5px;
+  border-radius: 3px 3px 1px 1px;
+  background: #c3d3fb;
+}
+.cw-spark i.is-today {
+  background: var(--cw-blue);
+}
+.cw-kpi {
+  width: auto;
+  min-width: 196px;
+}
+@media (max-width: 1023px) {
+  .cw-spark {
+    display: none;
+  }
+}

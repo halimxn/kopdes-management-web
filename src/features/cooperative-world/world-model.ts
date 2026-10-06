@@ -53,6 +53,16 @@ export function getWorldModel(data: Workspace, now: Date) {
     staff: data.staff || [],
     notices: noticeBoard(data.decisions || [], data.documents || [], date),
     trucks: placeTrucks(data.deliveries || []),
+    // Riwayat 7 hari (WIB) untuk mini grafik KPI; hanya dari tanggal yang tercatat.
+    week: {
+      meetings: weekCounts(data.meetings || [], (row) => String(row.data.date || ''), date),
+      deliveries: weekCounts(
+        data.deliveries || [],
+        (row) => String(row.data.arrived_date || row.data.planned_date || ''),
+        date,
+      ),
+      tasks: weekCounts(data['work-items'] || [], (row) => row.created_at.slice(0, 10), date),
+    },
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),
   };
@@ -276,4 +286,10 @@ export function zoneSummaries(model: WorldModel): Record<
     },
     lahan: { note: 'Enam petak · data lahan belum dicatat' },
   };
+}
+
+/** Jumlah catatan per hari selama 7 hari terakhir sampai `date` (lama → baru). */
+export function weekCounts(rows: Item[], dateOf: (row: Item) => string, date: string) {
+  const days = [6, 5, 4, 3, 2, 1, 0].map((back) => addDays(date, -back));
+  return days.map((day) => rows.filter((row) => dateOf(row) === day).length);
 }

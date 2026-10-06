@@ -9,6 +9,7 @@ import {
   isBelowMinimum,
   worldPreferencesSchema,
   zoneSummaries,
+  weekCounts,
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
 import { dayPhase, getLighting } from '@/features/cooperative-world/lighting';
@@ -398,5 +399,17 @@ describe('ringkasan zona', () => {
     expect(summary.gudang.note).toContain('1 antre');
     expect(summary.kesehatan).toMatchObject({ value: 1, total: 2 });
     expect(summary.lahan.value).toBeUndefined();
+  });
+});
+
+describe('riwayat 7 hari', () => {
+  it('menghitung per hari dari tanggal tercatat, lama ke baru', () => {
+    const rows = [
+      row('a', { date: '2026-10-06' }),
+      row('b', { date: '2026-10-06' }),
+      row('c', { date: '2026-10-01' }),
+      row('d', { date: '2026-09-20' }),
+    ];
+    expect(weekCounts(rows, (r) => String(r.data.date), '2026-10-06')).toEqual([0, 1, 0, 0, 0, 0, 2]);
   });
 });

@@ -18,6 +18,7 @@ import { npcActivityNames, type NpcPlan } from '../npc/schedule';
 import { warehouse } from '../layout';
 import { truckRoute } from '../truck-routes';
 import { WorldIcon } from './WorldIcon';
+import { StockBar } from './Charts';
 
 export type ListTab = 'lokasi' | 'dok' | 'hari' | 'tim' | 'stok' | 'tugas' | 'rapat';
 type Props = {
@@ -307,6 +308,10 @@ export function ListCard({
                 <span className="cw-row-text">
                   <strong>{String(row.data.title)}</strong>
                   <small>Rak {String(row.data.rack || 'belum ditentukan')}</small>
+                  <StockBar
+                    stock={Number(row.data.book_quantity)}
+                    minimum={Number(row.data.minimum_quantity) || 0}
+                  />
                 </span>
                 <span className="cw-stock-qty">
                   {String(row.data.book_quantity ?? '—')}
