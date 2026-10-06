@@ -5,20 +5,20 @@ import type { Workspace } from '../workspace/useWorkspace';
 export const worldPreferencesSchema = z.object({
   version: z.literal(1).default(1),
   weather: z.enum(['cerah', 'berawan', 'hujan']).default('cerah'),
-  time: z.enum(['otomatis', 'pagi', 'siang', 'senja', 'malam']).default('siang'),
+  time: z.enum(['otomatis', 'pagi', 'siang', 'senja', 'malam']).default('otomatis'),
   outfit: z.enum(['biru', 'lavender', 'hijau']).default('biru'),
 });
 export type WorldPreferences = z.infer<typeof worldPreferencesSchema>;
 export type WorldLocation = 'luar' | 'dalam';
-export type CharacterActivity = 'idle' | 'work' | 'meeting' | 'gym' | 'greet' | 'walk' | 'talk';
+export type CharacterActivity = 'idle' | 'work' | 'meeting' | 'gym';
 export const landPositions: readonly [number, number][] = [
-  [-18, -10],
-  [-9, -10],
-  [0, -10],
-  [9, -10],
-  [18, -10],
-  [-18, 0],
-  [18, 0],
+  [-9, -6],
+  [-3, -6],
+  [3, -6],
+  [9, -6],
+  [-9, 3],
+  [3, 3],
+  [9, 3],
 ];
 export const worldStations = [
   {
@@ -26,73 +26,28 @@ export const worldStations = [
     title: 'Meja rapat',
     href: '/rapat',
     description: 'Agenda, notulen, dan keputusan.',
-    position: [7.8, 0, -4.5],
-    scope: 'kantor',
+    position: [-4, 0, -2],
   },
   {
     id: 'tugas',
     title: 'Meja tugas',
     href: '/tugas',
     description: 'Pekerjaan dan tenggat yang perlu ditindaklanjuti.',
-    position: [0, 0, -4.4],
-    scope: 'kantor',
+    position: [3, 0, -2],
   },
   {
     id: 'kegiatan',
     title: 'Area kegiatan',
     href: '/jurnal',
-    description: 'Zona gym & olahraga sebagai visualisasi kegiatan hari ini.',
-    position: [7.8, 0, 4.6],
-    scope: 'kantor',
+    description: 'Karakter berolahraga sebagai visualisasi kegiatan hari ini.',
+    position: [4, 0, 3],
   },
   {
     id: 'dokumen',
-    title: 'Arsip & Pencatatan',
+    title: 'Arsip & buku',
     href: '/dokumen',
-    description: 'Lemari arsip tiga zona: Anggota (data keanggotaan), Kas (buku kas masuk/keluar), dan Barang (stok & opname). Klik rak untuk membuka modul pencatatan terkait.',
-    position: [-7.6, 0, 5.6],
-    scope: 'kantor',
-  },
-  {
-    id: 'gudang',
-    title: 'Gudang Logistik',
-    href: '/barang',
-    description: 'Pusat pasokan barang, area bongkar muat 3 dermaga, dan armada logistik.',
-    position: [30, 0, -1.5],
-    scope: 'luar',
-  },
-] as const;
-
-export const worldVehicles = [
-  {
-    id: 'kendaraan-manajer',
-    name: 'Mobil Manajer',
-    kind: 'Kendaraan dinas',
-    description: 'Mobil operasional manajer untuk peninjauan gerai dan mitra.',
-  },
-  {
-    id: 'kendaraan-motor',
-    name: 'Sepeda Motor Dinas',
-    kind: 'Kurir & staf lapangan',
-    description: 'Operasional gesit staf koperasi untuk mobilitas antar-gerai.',
-  },
-  {
-    id: 'kendaraan-van',
-    name: 'Van Distribusi',
-    kind: 'Armada logistik',
-    description: 'Van pengiriman pasokan reguler ke unit-unit gerai koperasi.',
-  },
-  {
-    id: 'kendaraan-truk',
-    name: 'Truk Muatan Logistik',
-    kind: 'Angkutan barang',
-    description: 'Truk pengangkut pasokan muatan besar menuju area bongkar muat.',
-  },
-  {
-    id: 'kendaraan-truk-mitra',
-    name: 'Truk Ekspedisi Mitra',
-    kind: 'Mitra logistik',
-    description: 'Armada pengiriman pasokan bahan baku dari jaringan suplier koperasi.',
+    description: 'Dokumen koperasi dan pintasan pencatatan.',
+    position: [-4, 0, 3],
   },
 ] as const;
 
@@ -134,8 +89,6 @@ export function getWorldModel(data: Workspace, now: Date) {
     overflow: Math.max(0, units.length - landPositions.length),
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),
-    stakeholders: data.stakeholders || [],
-    staff: data.staff || [],
   };
 }
 export type WorldModel = ReturnType<typeof getWorldModel>;

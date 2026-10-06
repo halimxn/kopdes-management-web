@@ -99,7 +99,6 @@ export function SprintModal({
           </div>
           <Button
             type="button"
-            variant="ghost"
             className="close-btn"
             onClick={onClose}
             disabled={busy}
