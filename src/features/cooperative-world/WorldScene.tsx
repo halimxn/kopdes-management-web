@@ -37,6 +37,11 @@ type Props = {
   focus: readonly [number, number];
   /** Bertambah setiap kali pengguna meminta kamera kembali ke tujuan meski nilainya sama. */
   recenter: number;
+  /**
+   * Bagian layar yang tertutup kartu (px dari kanan/atas, dan lembar bawah ponsel).
+   * Titik fokus kamera ditempatkan di tengah area yang masih terlihat.
+   */
+  occlusion: { right: number; top: number; sheet: 'ringkas' | 'setengah' | 'penuh' | null };
   zoom: number;
   rotation: number;
   selected: string;
@@ -53,6 +58,7 @@ export function WorldScene({
   activity,
   focus,
   recenter,
+  occlusion,
   zoom,
   rotation,
   selected,
@@ -63,9 +69,13 @@ export function WorldScene({
   // Komponen ini hanya dirender di browser, sehingga petunjuk perangkat aman dibaca di sini.
   const tier = useMemo(() => resolveQuality(quality, readDeviceHints()), [quality]);
   const markerRefs = useRef(new Map<string, HTMLDivElement>());
-  const runtime = useRef<{ camera: THREE.OrthographicCamera; controls: OrbitControls } | null>(
-    null,
-  );
+  const covered = useRef(occlusion);
+  const runtime = useRef<{
+    camera: THREE.OrthographicCamera;
+    controls: OrbitControls;
+    world: THREE.Group;
+    resize: () => void;
+  } | null>(null);
   const motion = useRef({ activity, weather, hour });
   const selectAction = useRef(onSelect);
   const [failed, setFailed] = useState(false);
@@ -136,7 +146,6 @@ export function WorldScene({
     controls.maxPolarAngle = 1.18;
     controls.enablePan = true;
     controls.maxTargetRadius = location === 'luar' ? 30 : 10;
-    runtime.current = { camera, controls };
     const ambient = new THREE.HemisphereLight('#f5f9ff', '#aeb8cf', 2.8);
     scene.add(ambient);
     const sun = new THREE.DirectionalLight('#fff7e8', 3.8);
@@ -238,12 +247,24 @@ export function WorldScene({
       renderer.setSize(width, height);
       const aspect = width / height;
       const span = cameraSpan[location][aspect < 1 ? 'portrait' : 'landscape'];
-      camera.left = -span * aspect;
-      camera.right = span * aspect;
-      camera.top = span;
-      camera.bottom = -span;
+      const cover = covered.current;
+      const sheet =
+        cover.sheet === 'ringkas'
+          ? 170
+          : cover.sheet === 'setengah'
+            ? Math.min(window.innerHeight * 0.52, 460) + 84
+            : 0;
+      // Fraksi posisi fokus; dibatasi agar fokus tidak terdorong ke tepi layar kecil.
+      const fx = Math.max(0.3, (width - cover.right) / 2 / width);
+      const visible = Math.max(height * 0.3, height - cover.top - sheet);
+      const fy = Math.min(0.6, Math.max(0.25, (cover.top + visible / 2) / height));
+      camera.left = -2 * span * aspect * fx;
+      camera.right = 2 * span * aspect * (1 - fx);
+      camera.top = 2 * span * fy;
+      camera.bottom = -2 * span * (1 - fy);
       camera.updateProjectionMatrix();
     };
+    runtime.current = { camera, controls, world, resize };
     const observer = new ResizeObserver(resize);
     observer.observe(node);
     resize();
@@ -271,11 +292,13 @@ export function WorldScene({
       if (disposed) return;
       frame = requestAnimationFrame(draw);
       if (document.hidden || stamp - previous < settings.frameInterval) return;
-      elapsed += Math.min((stamp - previous) / 1000, 0.06);
+      const delta = (stamp - previous) / 1000;
+      elapsed += Math.min(delta, 0.06);
       previous = stamp;
       if (view.current.moving) {
         readGoal();
-        const k = reduced.matches ? 1 : 0.14;
+        // Laju berbasis waktu agar kamera tetap tiba ±0,6 detik walau frame tersendat.
+        const k = reduced.matches ? 1 : 1 - Math.exp(-Math.min(delta, 0.5) * 7);
         offset.copy(camera.position).sub(controls.target).lerp(goalOffset, k);
         controls.target.lerp(goalTarget, k);
         camera.position.copy(controls.target).add(offset);
@@ -371,20 +394,71 @@ export function WorldScene({
     };
     // The scene is rebuilt only when its geometry/data changes; animation settings use motion.current.
   }, [location, model, outfit, tier]);
+  // Kartu/lembar berubah ukuran: hitung ulang proyeksi agar fokus tetap di area terlihat.
+  useEffect(() => {
+    covered.current = occlusion;
+    runtime.current?.resize();
+  }, [occlusion]);
+  // Kotak sorot biru di sekitar objek terpilih, seperti kotak seleksi truk pada video acuan.
+  useEffect(() => {
+    const world = runtime.current?.world;
+    if (!world) return;
+    let target: THREE.Object3D | undefined;
+    world.traverse((object) => {
+      if (!target && object.userData.selection === selected) target = object;
+    });
+    if (!target) return;
+    const bounds = new THREE.Box3().setFromObject(target);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const highlight = new THREE.Group();
+    const color = palette.blue;
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x + 0.5, size.y + 0.3, size.z + 0.5)),
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85 }),
+    );
+    edges.position.copy(center);
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(size.x + 1, size.z + 1),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.14, depthWrite: false }),
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(center.x, 0.07, center.z);
+    highlight.add(edges, floor);
+    world.add(highlight);
+    return () => {
+      highlight.removeFromParent();
+      edges.geometry.dispose();
+      (edges.material as THREE.Material).dispose();
+      floor.geometry.dispose();
+      floor.material.dispose();
+    };
+  }, [selected, location, model, tier]);
   const markers =
     location === 'luar'
       ? [
-          { id: 'koperasi', label: 'Kantor koperasi', occupied: true },
-          { id: 'gudang', label: 'Gudang koperasi', occupied: true },
+          { id: 'koperasi', label: 'Kantor koperasi', occupied: true, status: 'Masuk' },
+          {
+            id: 'gudang',
+            label: 'Gudang koperasi',
+            occupied: true,
+            status: `${warehouse.docks.length} dok`,
+          },
           ...model.plots.map((plot, i) => ({
             id: plot.id,
             label: plot.unit
               ? String(plot.unit.data.title)
               : `Lahan ${String(i + 1).padStart(2, '0')}`,
             occupied: Boolean(plot.unit),
+            status: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
           })),
         ]
-      : worldStations.map((station) => ({ id: station.id, label: station.title, occupied: true }));
+      : worldStations.map((station) => ({
+          id: station.id,
+          label: station.title,
+          occupied: true,
+          status: 'Buka',
+        }));
   return (
     <div className="cw-scene" ref={host}>
       {failed && (
@@ -418,6 +492,7 @@ export function WorldScene({
                 <Plus size={14} />
               )}
               <span>{marker.label}</span>
+              {selected === marker.id && <em className="cw-pin-status">{marker.status}</em>}
             </Button>
           </div>
         ))}

@@ -1,63 +1,66 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import './world.css';
 import {
   ArrowLeft,
-  ArrowRight,
   Building2,
-  CheckCheck,
   ChevronRight,
   Cloud,
   CloudRain,
-  Compass,
-  Dumbbell,
   Expand,
   House,
-  Layers3,
   Map,
   MessageCircle,
   Minus,
   Moon,
   Plus,
   RotateCcw,
-  Search,
-  Settings2,
-  Store,
   Sun,
-  Truck,
-  Users,
-  X,
-  BookOpen,
-  ChevronDown,
-  Warehouse,
+  Sunrise,
+  Sunset,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import { Input } from '@/components/ui/Input';
 import { usePreference } from '@/lib/usePreference';
 import type { Workspace } from '../workspace/useWorkspace';
 import {
   getWorldHour,
   getWorldModel,
+  meetingTimeline,
   worldPreferencesSchema,
   type CharacterActivity,
   type WorldLocation,
   type WorldPreferences,
 } from './world-model';
-import { recordHref } from '../workspace/workspace-navigation';
-import { warehouse, worldStations, worldZones, type WorldZone } from './layout';
+import { worldStations, worldZones, type WorldZone } from './layout';
+import { dayPhase } from './lighting';
+import { WorldHeader } from './ui/WorldHeader';
+import { KpiCards } from './ui/KpiCards';
+import { DetailCard, activityNames } from './ui/DetailCard';
+import { ListCard } from './ui/ListCard';
+import { TodayTracker } from './ui/TodayTracker';
+import { MobileSheet, type SheetSnap, type SheetTab } from './ui/MobileSheet';
+
 const WorldScene = dynamic(() => import('./WorldScene').then((module) => module.WorldScene), {
   ssr: false,
   loading: () => <div className="cw-loading">Menyiapkan lingkungan 3D…</div>,
 });
-const activityNames = {
-  idle: 'Bersantai',
-  meeting: 'Duduk rapat',
-  work: 'Mengerjakan tugas',
-  gym: 'Berolahraga',
-};
+
+const wideQuery = '(min-width: 1024px)';
+/** Desktop memakai kartu mengambang; layar lebih kecil memakai lembar bawah. */
+function useWideLayout() {
+  return useSyncExternalStore(
+    (notify) => {
+      const query = window.matchMedia?.(wideQuery);
+      query?.addEventListener('change', notify);
+      return () => query?.removeEventListener('change', notify);
+    },
+    () => window.matchMedia?.(wideQuery).matches ?? true,
+    () => true,
+  );
+}
+
 type Props = {
   data: Workspace;
   preview?: boolean;
@@ -67,13 +70,6 @@ type Props = {
   partial?: boolean;
 };
 
-function zoneIcon(zone: WorldZone) {
-  if (zone === 'kantor') return <Building2 size={18} />;
-  if (zone === 'gudang') return <Warehouse size={18} />;
-  if (zone === 'gerai') return <Store size={18} />;
-  return <Map size={18} />;
-}
-
 export function CooperativeWorld({
   data,
   preview = false,
@@ -82,6 +78,7 @@ export function CooperativeWorld({
   refresh,
   partial = false,
 }: Props) {
+  const wide = useWideLayout();
   const [now, setNow] = useState(() => new Date());
   const [location, setLocation] = useState<WorldLocation>('luar');
   const [savedPreferences, savePreferences] = usePreference('hub-world-preferences-v1', '{}');
@@ -98,26 +95,28 @@ export function CooperativeWorld({
   const [panelOpen, setPanelOpen] = useState(true);
   const [query, setQuery] = useState('');
   const [zone, setZone] = useState<WorldZone>('semua');
-  const [zoneMenu, setZoneMenu] = useState(false);
-  // Titik khusus saat memilih lahan/gudang dari daftar; zona dipakai bila kosong.
+  // Titik khusus saat memilih lahan dari daftar; zona dipakai bila kosong.
   const [spot, setSpot] = useState<readonly [number, number] | null>(null);
   const [recenter, setRecenter] = useState(0);
   const [zoom, setZoom] = useState(worldZones.semua.zoom);
   const [rotation, setRotation] = useState(0);
-  const focus: readonly [number, number] =
-    location === 'dalam' ? [0, 0] : spot || worldZones[zone].target;
   const [rehearsal, setRehearsal] = useState<CharacterActivity | 'otomatis'>('otomatis');
+  const [sheet, setSheet] = useState<SheetSnap>('ringkas');
+  const [sheetTab, setSheetTab] = useState<SheetTab>('detail');
   useEffect(() => {
     const tick = window.setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(tick);
   }, []);
   const model = useMemo(() => getWorldModel(data, now), [data, now]);
-  // Geometry is independent of the clock: minute ticks must not reset the camera.
+  // Geometri tidak bergantung jam: tick menit tidak boleh mengatur ulang kamera.
   const sceneModel = useMemo(() => getWorldModel(data, new Date()), [data]);
+  const timeline = useMemo(() => meetingTimeline(model.meetings, now), [model.meetings, now]);
   const hour = getWorldHour(preferences.time, now);
+  const night = dayPhase(hour) === 'malam';
   const activity = rehearsal === 'otomatis' ? model.activity : rehearsal;
-  const plot = model.plots.find((item) => item.id === selected);
-  const station = worldStations.find((item) => item.id === selected);
+  const unavailable = loading || Boolean(error);
+  const focus: readonly [number, number] =
+    location === 'dalam' ? [0, 0] : spot || worldZones[zone].target;
   const clock = new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta',
     hour: '2-digit',
@@ -129,16 +128,23 @@ export function CooperativeWorld({
     day: 'numeric',
     month: 'short',
   }).format(now);
+  const phase = dayPhase(hour);
   const weatherIcon =
     preferences.weather === 'hujan' ? (
       <CloudRain size={18} />
     ) : preferences.weather === 'berawan' ? (
       <Cloud size={18} />
-    ) : hour >= 19 || hour < 6 ? (
+    ) : phase === 'malam' ? (
       <Moon size={18} />
+    ) : phase === 'pagi' ? (
+      <Sunrise size={18} />
+    ) : phase === 'senja' ? (
+      <Sunset size={18} />
     ) : (
       <Sun size={18} />
     );
+  const weatherName = { cerah: 'Cerah', berawan: 'Berawan', hujan: 'Hujan' }[preferences.weather];
+  const ambienceLabel = `${weatherName} · ${preferences.time === 'otomatis' ? phase : preferences.time}`;
   const bubble =
     rehearsal !== 'otomatis'
       ? `Pratinjau animasi: ${activityNames[activity].toLowerCase()}.`
@@ -147,139 +153,135 @@ export function CooperativeWorld({
         : model.tasks.length
           ? `${model.tasks.length} tugas masih terbuka. Mari lihat meja tugas!`
           : 'Klik gedung koperasi untuk masuk. Kita bisa melihat ruang rapat dan meja tugas!';
+  const status: { label: string; tone: 'green' | 'muted' | 'red' } = preview
+    ? { label: 'Pratinjau desain', tone: 'muted' }
+    : error
+      ? { label: 'Data tidak tersedia', tone: 'red' }
+      : { label: 'Data ruang kerja', tone: 'green' };
+
+  function showDetail() {
+    setPanelOpen(true);
+    setSheetTab('detail');
+    setSheet((value) => (value === 'ringkas' ? 'setengah' : value));
+  }
   function enter(next: WorldLocation) {
     setLocation(next);
     setSelected(next === 'luar' ? 'kawasan' : 'rapat');
     setSpot(null);
     setZoom(next === 'luar' ? worldZones[zone].zoom : 1);
     setRotation(0);
+    setRecenter((value) => value + 1);
     setPanelOpen(true);
   }
   function chooseZone(next: WorldZone) {
-    setZoneMenu(false);
     setZone(next);
     setSpot(null);
     setZoom(worldZones[next].zoom);
     setRecenter((value) => value + 1);
-    if (location === 'dalam') {
-      setLocation('luar');
-      setSelected(next === 'gudang' ? 'gudang' : 'kawasan');
-    } else if (next === 'gudang') setSelected('gudang');
+    setLocation('luar');
+    setSelected(next === 'gudang' ? 'gudang' : 'kawasan');
+    // Di ponsel lembar diciutkan agar zona yang dipilih terlihat.
+    setSheet('ringkas');
   }
   function select(id: string, fly = false) {
     if (id === 'koperasi') return enter('dalam');
     setSelected(id);
-    setPanelOpen(true);
-    // Pilihan dari daftar menggerakkan kamera ke objeknya; klik di scene tidak memindahkan kamera.
+    showDetail();
+    // Pilihan dari daftar menggerakkan kamera; klik di scene tidak memindahkan kamera.
     const target = model.plots.find((item) => item.id === id)?.position;
     if (fly && target) {
       setSpot(target);
       setZoom(1.15);
       setRecenter((value) => value + 1);
-    } else if (fly && id === 'gudang') chooseZone('gudang');
+    } else if (fly && id === 'gudang') {
+      setZone('gudang');
+      setSpot(null);
+      setZoom(worldZones.gudang.zoom);
+      setRecenter((value) => value + 1);
+    }
   }
   function preference<K extends keyof WorldPreferences>(key: K, value: WorldPreferences[K]) {
     savePreferences(JSON.stringify({ ...preferences, [key]: value }));
   }
-  const count = (value: number) => (loading || error ? '—' : value);
-  const title =
-    selected === 'gudang'
-      ? worldZones.gudang.title
-      : selected === 'lingkungan'
-        ? 'Suasana & karakter'
-        : selected === 'logistik'
-          ? 'Area pengembangan'
-          : selected === 'karakter'
-            ? 'Maskot koperasi'
-            : plot
-              ? plot.unit
-                ? String(plot.unit.data.title)
-                : `Lahan ${selected.split('-')[1]}`
-              : station
-                ? station.title
-                : 'Kawasan koperasi';
+  const detail = (
+    <DetailCard
+      selected={selected}
+      location={location}
+      zone={zone}
+      model={model}
+      timeline={timeline}
+      preferences={preferences}
+      onPreference={preference}
+      rehearsal={rehearsal}
+      onRehearsal={(value) => {
+        setRehearsal(value);
+        if (value !== 'idle' && value !== 'otomatis') setLocation('dalam');
+      }}
+      activity={activity}
+      weatherIcon={weatherIcon}
+      status={status}
+      unavailable={unavailable}
+      onSelect={(id) => select(id)}
+      onClose={wide ? () => setPanelOpen(false) : undefined}
+    />
+  );
+  const list = (
+    <ListCard
+      model={model}
+      timeline={timeline}
+      query={query}
+      unavailable={unavailable}
+      onSelect={(id) => select(id, true)}
+    />
+  );
+  const tracker = (
+    <TodayTracker
+      model={model}
+      timeline={timeline}
+      dateLabel={dateLabel}
+      unavailable={unavailable}
+    />
+  );
+  const selectedPlot = model.plots.find((plot) => plot.id === selected);
+  const sheetTitle =
+    selected === 'kawasan'
+      ? location === 'dalam'
+        ? 'Kantor koperasi'
+        : worldZones[zone].title
+      : selectedPlot
+        ? String(selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`)
+        : selected === 'gudang'
+          ? worldZones.gudang.title
+          : selected === 'lingkungan'
+            ? 'Suasana'
+            : selected === 'karakter'
+              ? 'Maskot koperasi'
+              : worldStations.find((item) => item.id === selected)?.title || 'Kantor koperasi';
+  // Kartu kanan desktop (320 px + jarak) atau lembar bawah ponsel menutupi sebagian scene.
+  const occlusion = useMemo(
+    () =>
+      wide ? { right: panelOpen ? 352 : 0, top: 0, sheet: null } : { right: 0, top: 130, sheet },
+    [wide, panelOpen, sheet],
+  );
+
   return (
-    <main className={`cooperative-world ${hour >= 19 || hour < 6 ? 'cw-night' : ''}`}>
-      <header className="cw-topbar">
-        <Link className="cw-brand" href="/beranda" title="Kembali ke Beranda">
-          <span className="cw-brand-icon">
-            <Layers3 size={23} />
-          </span>
-          <span>
-            Dunia<span className="cw-brand-light">Koperasi</span>
-            <small>RUANG KERJA INTERAKTIF</small>
-          </span>
-        </Link>
-        <div className="cw-search">
-          <Search size={16} />
-          <Input
-            aria-label="Cari gerai atau ruangan"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setSelected('kawasan');
-              setPanelOpen(true);
-            }}
-            placeholder="Cari gerai, ruangan…"
-          />
-          <kbd>/</kbd>
-        </div>
-        <div className="cw-zone-picker">
-          <Button
-            className="cw-top-location"
-            aria-haspopup="true"
-            aria-expanded={zoneMenu}
-            onClick={() => setZoneMenu((open) => !open)}
-            onKeyDown={(event) => event.key === 'Escape' && setZoneMenu(false)}
-          >
-            <span className="cw-location-icon">
-              {zoneIcon(location === 'dalam' ? 'kantor' : zone)}
-            </span>
-            <span>
-              <strong>{location === 'dalam' ? 'Kantor · interior' : worldZones[zone].title}</strong>
-              <small>{model.title}</small>
-            </span>
-            <ChevronDown size={15} />
-          </Button>
-          {zoneMenu && (
-            <div className="cw-zone-menu cw-glass" role="menu" aria-label="Pilih zona">
-              {(Object.keys(worldZones) as WorldZone[]).map((key) => (
-                <Button
-                  key={key}
-                  role="menuitem"
-                  aria-current={location === 'luar' && zone === key ? 'true' : undefined}
-                  onClick={() => chooseZone(key)}
-                  onKeyDown={(event) => event.key === 'Escape' && setZoneMenu(false)}
-                >
-                  <span className="cw-location-icon">{zoneIcon(key)}</span>
-                  <span>
-                    <strong>{worldZones[key].title}</strong>
-                    <small>{worldZones[key].subtitle}</small>
-                  </span>
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-        <span className="cw-live">
-          <i />
-          {clock} WIB
-        </span>
-        <Button
-          className="cw-icon-button"
-          aria-label="Pengaturan suasana"
-          onClick={() => select('lingkungan')}
-        >
-          <Settings2 size={18} />
-        </Button>
-        <div className="cw-profile">
-          <span>{model.manager.slice(0, 1).toUpperCase()}</span>
-          <div>
-            <strong>{model.manager}</strong>
-            <small>Ruang pribadi</small>
-          </div>
-        </div>
-      </header>
+    <main className={`cooperative-world ${night ? 'cw-night' : ''}`}>
+      <WorldHeader
+        title={model.title}
+        manager={model.manager}
+        location={location}
+        zone={zone}
+        onZone={chooseZone}
+        query={query}
+        onQuery={(value) => {
+          setQuery(value);
+          setSheetTab('lokasi');
+          if (!wide) setSheet((current) => (current === 'ringkas' ? 'setengah' : current));
+        }}
+        clock={clock}
+        ambience={{ icon: weatherIcon, label: ambienceLabel }}
+        onAmbience={() => select('lingkungan')}
+      />
 
       <section className="cw-viewport" aria-label="Dunia koperasi interaktif">
         <WorldScene
@@ -291,6 +293,7 @@ export function CooperativeWorld({
           quality={preferences.quality}
           focus={focus}
           recenter={recenter}
+          occlusion={occlusion}
           activity={activity}
           zoom={zoom}
           rotation={rotation}
@@ -298,47 +301,8 @@ export function CooperativeWorld({
           bubble={bubble}
           onSelect={select}
         />
-        <div className="cw-stat-row">
-          <Link href="/gerai" className="cw-glass cw-stat">
-            <span className="cw-stat-icon">
-              <Store size={20} />
-            </span>
-            <div>
-              <small>Gerai tercatat</small>
-              <strong>
-                {count(model.units.length)} <em>/ 7 lahan</em>
-              </strong>
-              <span>
-                {loading
-                  ? 'Memuat data…'
-                  : error
-                    ? 'Data belum tersedia'
-                    : 'Terhubung ke Unit Gerai'}
-              </span>
-            </div>
-          </Link>
-          <Link href="/tugas" className="cw-glass cw-stat">
-            <span className="cw-stat-icon">
-              <CheckCheck size={20} />
-            </span>
-            <div>
-              <small>Tugas terbuka</small>
-              <strong>{count(model.tasks.length)}</strong>
-              <span>Pekerjaan yang dimuat</span>
-            </div>
-          </Link>
-          <Link href="/rapat" className="cw-glass cw-stat">
-            <span className="cw-stat-icon">
-              <Users size={20} />
-            </span>
-            <div>
-              <small>Rapat hari ini</small>
-              <strong>{count(model.meetings.length)}</strong>
-              <span>{model.currentMeeting ? 'Dalam waktu rapat' : 'Sesuai jadwal tersimpan'}</span>
-            </div>
-          </Link>
-        </div>
-        <div className="cw-location-breadcrumb">
+        <KpiCards model={model} timeline={timeline} unavailable={unavailable} loading={loading} />
+        <div className="cw-crumbs">
           <Button onClick={() => enter('luar')} aria-label="Lihat kawasan">
             <House size={14} />
             Kawasan
@@ -349,20 +313,20 @@ export function CooperativeWorld({
               <span>Kantor koperasi</span>
             </>
           )}
+          {(preview || partial || error || loading) && (
+            <span className="cw-notice" role={error ? 'alert' : 'status'}>
+              {preview
+                ? 'Pratinjau desain · tanpa data operasional'
+                : error
+                  ? `Data tidak dapat dimuat. ${error}`
+                  : loading
+                    ? 'Memuat catatan koperasi…'
+                    : 'Menampilkan catatan yang sudah dimuat.'}
+              {error && refresh && <Button onClick={() => void refresh()}>Coba lagi</Button>}
+            </span>
+          )}
         </div>
-        {(preview || partial || error || loading) && (
-          <div className="cw-data-notice" role={error ? 'alert' : 'status'}>
-            {preview
-              ? 'Pratinjau desain · tanpa data operasional'
-              : error
-                ? `Data tidak dapat dimuat. ${error}`
-                : loading
-                  ? 'Memuat catatan koperasi…'
-                  : 'Menampilkan catatan yang sudah dimuat.'}
-            {error && refresh && <Button onClick={() => void refresh()}>Coba lagi</Button>}
-          </div>
-        )}
-        <div className="cw-camera-tools cw-glass" aria-label="Kontrol kamera">
+        <div className="cw-camera cw-card" aria-label="Kontrol kamera">
           <Button
             aria-label="Perbesar"
             disabled={zoom >= 2.4}
@@ -396,442 +360,46 @@ export function CooperativeWorld({
             <Expand size={17} />
           </Button>
         </div>
-        {!panelOpen && (
-          <Button className="cw-open-panel cw-glass" onClick={() => setPanelOpen(true)}>
-            <Layers3 size={17} />
-            Detail kawasan
-          </Button>
-        )}
-        {panelOpen && (
-          <aside className="cw-detail cw-glass" aria-label="Detail lokasi">
-            <div className="cw-detail-heading">
-              <span className="cw-detail-icon">
-                {plot ? (
-                  <Store size={24} />
-                ) : selected === 'lingkungan' ? (
-                  weatherIcon
-                ) : selected === 'karakter' ? (
-                  <MessageCircle size={22} />
-                ) : (
-                  <Building2 size={24} />
-                )}
-              </span>
-              <div>
-                <span className="cw-eyebrow">
-                  {location === 'luar' ? 'DUNIA KOPERASI' : 'KANTOR • INTERIOR'}
-                </span>
-                <h1>{title}</h1>
-                <p>
-                  {plot
-                    ? plot.unit
-                      ? 'Terhubung ke catatan gerai'
-                      : 'Bidang tersedia untuk gerai baru'
-                    : location === 'luar'
-                      ? 'Lingkungan dan ruang kerja'
-                      : 'Pilih area untuk membuka catatan'}
-                </p>
-              </div>
-              <Button
-                className="cw-panel-close"
-                aria-label="Tutup detail"
-                onClick={() => setPanelOpen(false)}
-              >
-                <X size={17} />
-              </Button>
-            </div>
-            <div className="cw-detail-body">
-              {selected === 'lingkungan' ? (
-                <>
-                  <p className="cw-panel-note">
-                    Atur suasana visual. Cuaca adalah simulasi, bukan prakiraan cuaca setempat.
-                  </p>
-                  <label className="cw-field">
-                    Cuaca
-                    <Select
-                      ariaLabel="Cuaca simulasi"
-                      value={preferences.weather}
-                      onChange={(value) =>
-                        preference('weather', value as WorldPreferences['weather'])
-                      }
-                      options={['cerah', 'berawan', 'hujan']}
-                    />
-                  </label>
-                  <label className="cw-field">
-                    Waktu & pencahayaan
-                    <Select
-                      ariaLabel="Waktu pencahayaan"
-                      value={preferences.time}
-                      onChange={(value) => preference('time', value as WorldPreferences['time'])}
-                      options={[
-                        { value: 'otomatis', label: 'Otomatis · WIB' },
-                        'pagi',
-                        'siang',
-                        'senja',
-                        'malam',
-                      ]}
-                    />
-                  </label>
-                  <label className="cw-field">
-                    Pakaian maskot
-                    <Select
-                      ariaLabel="Warna pakaian maskot"
-                      value={preferences.outfit}
-                      onChange={(value) =>
-                        preference('outfit', value as WorldPreferences['outfit'])
-                      }
-                      options={['biru', 'lavender', 'hijau']}
-                    />
-                  </label>
-                  <label className="cw-field">
-                    Kualitas grafis
-                    <Select
-                      ariaLabel="Kualitas grafis"
-                      value={preferences.quality}
-                      onChange={(value) =>
-                        preference('quality', value as WorldPreferences['quality'])
-                      }
-                      options={[
-                        { value: 'otomatis', label: 'Otomatis · sesuai perangkat' },
-                        { value: 'tinggi', label: 'Tinggi · bayangan halus' },
-                        { value: 'sedang', label: 'Sedang' },
-                        { value: 'hemat', label: 'Hemat · tanpa bayangan' },
-                      ]}
-                    />
-                  </label>
-                  <p className="cw-panel-note">Pilihan suasana disimpan di perangkat ini.</p>
-                </>
-              ) : selected === 'karakter' ? (
-                <>
-                  <div className="cw-character-portrait">
-                    <span className="cw-portrait-head">
-                      <i />
-                      <i />
-                      <b />
-                    </span>
-                    <span className="cw-portrait-shirt" />
-                  </div>
-                  <span className="cw-status">{activityNames[activity]}</span>
-                  <p className="cw-panel-note">
-                    Maskot visual ruang kerja. Animasi mengikuti jadwal rapat, kegiatan hari ini,
-                    lalu tugas dalam proses.
-                  </p>
-                  <label className="cw-field">
-                    Pratinjau gerakan
-                    <Select
-                      ariaLabel="Pratinjau gerakan karakter"
-                      value={rehearsal}
-                      onChange={(value) => {
-                        setRehearsal(value as CharacterActivity | 'otomatis');
-                        if (value !== 'idle' && value !== 'otomatis') setLocation('dalam');
-                      }}
-                      options={[
-                        { value: 'otomatis', label: 'Ikuti data ruang kerja' },
-                        ...Object.entries(activityNames).map(([value, label]) => ({
-                          value,
-                          label,
-                        })),
-                      ]}
-                    />
-                  </label>
-                  {rehearsal !== 'otomatis' && (
-                    <p className="cw-panel-note">
-                      Mode pratinjau; tidak mengubah data rapat atau kegiatan.
-                    </p>
-                  )}
-                </>
-              ) : selected === 'logistik' ? (
-                <>
-                  <div className="cw-planning-icon">
-                    <Truck size={44} />
-                  </div>
-                  <span className="cw-status cw-status-muted">Rencana pengembangan</span>
-                  <p className="cw-panel-note">
-                    Area bongkar muat telah disiapkan di tepi jalan. Tahap berikutnya: data suplier,
-                    jadwal pengiriman, mobil ekspedisi, dan status kedatangan.
-                  </p>
-                  <Link className="cw-primary-link" href="/mitra">
-                    Lihat mitra & kontak <ArrowRight size={15} />
-                  </Link>
-                </>
-              ) : selected === 'gudang' ? (
-                <>
-                  <div className="cw-status-line">
-                    <span className="cw-status">Area logistik</span>
-                    <small>{warehouse.docks.length} pintu dok</small>
-                  </div>
-                  <div className="cw-plot-diagram">
-                    <Warehouse size={48} strokeWidth={1} />
-                    <span>Rak, dok bongkar muat dan area staging</span>
-                  </div>
-                  <p className="cw-panel-note">
-                    Isi rak akan mengikuti catatan Barang, dan truk di dok mengikuti catatan
-                    Pengiriman setelah fitur itu tersedia. Kardus dan forklift saat ini hanya
-                    pemandangan.
-                  </p>
-                  <Link className="cw-primary-link" href="/barang">
-                    Buka daftar barang <ArrowRight size={15} />
-                  </Link>
-                </>
-              ) : plot ? (
-                <>
-                  <span className={`cw-status ${plot.unit ? '' : 'cw-status-muted'}`}>
-                    {plot.unit ? String(plot.unit.data.status) : 'Lahan kosong'}
-                  </span>
-                  <div className="cw-plot-diagram">
-                    <Store size={48} strokeWidth={1} />
-                    <span>
-                      {plot.unit
-                        ? String(plot.unit.data.kind || 'Unit gerai')
-                        : 'Siap ditempati gerai'}
-                    </span>
-                  </div>
-                  <p className="cw-panel-note">
-                    {plot.unit
-                      ? String(plot.unit.data.location || 'Lokasi belum diisi pada catatan gerai.')
-                      : 'Tambahkan unit pada halaman Gerai. Bangunan akan muncul otomatis pada lahan yang tersedia setelah data dimuat ulang.'}
-                  </p>
-                  <Link
-                    className="cw-primary-link"
-                    href={plot.unit ? recordHref('units', plot.unit) : '/gerai'}
-                  >
-                    {plot.unit ? 'Buka catatan gerai' : 'Tambahkan gerai'}
-                    <ArrowRight size={15} />
-                  </Link>
-                </>
-              ) : station ? (
-                <>
-                  <span className="cw-status">Ruang kerja</span>
-                  <p className="cw-panel-note">{station.description}</p>
-                  <div className="cw-room-links">
-                    {worldStations.map((item) => (
-                      <Button
-                        key={item.id}
-                        aria-pressed={selected === item.id}
-                        onClick={() => select(item.id)}
-                      >
-                        {item.id === 'rapat' ? (
-                          <Users size={17} />
-                        ) : item.id === 'tugas' ? (
-                          <CheckCheck size={17} />
-                        ) : item.id === 'kegiatan' ? (
-                          <Dumbbell size={17} />
-                        ) : (
-                          <BookOpen size={17} />
-                        )}
-                        {item.title}
-                        <ChevronRight size={14} />
-                      </Button>
-                    ))}
-                  </div>
-                  <Link className="cw-primary-link" href={station.href}>
-                    Buka {station.title.toLowerCase()}
-                    <ArrowRight size={15} />
-                  </Link>
-                  {selected === 'dokumen' && (
-                    <Link className="cw-secondary-link" href="/pencatatan">
-                      Buka buku pencatatan <ArrowRight size={14} />
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="cw-status-line">
-                    <span className="cw-status">
-                      {error ? 'Data tidak tersedia' : 'Kawasan interaktif'}
-                    </span>
-                    <small>7 bidang lahan</small>
-                  </div>
-                  <div className="cw-detail-metrics">
-                    <div>
-                      <small>Gerai terisi</small>
-                      <strong>
-                        {count(Math.min(model.units.length, 7))}
-                        <span> / 7</span>
-                      </strong>
-                      <div className="cw-capacity">
-                        <i
-                          style={{
-                            width: `${error || loading ? 0 : (Math.min(model.units.length, 7) / 7) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <small>Area kantor</small>
-                      <strong>
-                        4<span> ruangan</span>
-                      </strong>
-                      <div className="cw-capacity cw-purple">
-                        <i />
-                      </div>
-                    </div>
-                  </div>
-                  <h2>
-                    Lokasi <span>{location === 'luar' ? 'Kawasan' : 'Kantor'}</span>
-                  </h2>
-                  <div className="cw-location-list">
-                    {(!query || 'kantor koperasi'.includes(query.toLowerCase())) && (
-                      <Button onClick={() => enter('dalam')}>
-                        <span className="cw-list-icon">
-                          <Building2 size={18} />
-                        </span>
-                        <span>
-                          <strong>Kantor koperasi</strong>
-                          <small>Rapat, tugas, kegiatan & arsip</small>
-                        </span>
-                        <ChevronRight size={15} />
-                      </Button>
-                    )}
-                    {(!query || 'gudang koperasi'.includes(query.toLowerCase())) && (
-                      <Button onClick={() => select('gudang', true)}>
-                        <span className="cw-list-icon">
-                          <Warehouse size={18} />
-                        </span>
-                        <span>
-                          <strong>Gudang koperasi</strong>
-                          <small>Dok bongkar muat dan stok</small>
-                        </span>
-                        <ChevronRight size={15} />
-                      </Button>
-                    )}
-                    {model.plots
-                      .filter((item) =>
-                        `${item.unit?.data.title || item.id}`
-                          .toLowerCase()
-                          .includes(query.toLowerCase()),
-                      )
-                      .map((item) => (
-                        <Button key={item.id} onClick={() => select(item.id, true)}>
-                          <span className={`cw-list-icon ${!item.unit ? 'cw-empty-icon' : ''}`}>
-                            {item.unit ? <Store size={17} /> : <Plus size={17} />}
-                          </span>
-                          <span>
-                            <strong>
-                              {item.unit
-                                ? String(item.unit.data.title)
-                                : `Lahan gerai ${item.id.split('-')[1]}`}
-                            </strong>
-                            <small>
-                              {item.unit ? String(item.unit.data.status) : 'Belum ada bangunan'}
-                            </small>
-                          </span>
-                          <span className="cw-slot-number">
-                            {item.id.split('-')[1].padStart(2, '0')}
-                          </span>
-                        </Button>
-                      ))}
-                    {query &&
-                      !model.plots.some((item) =>
-                        `${item.unit?.data.title || item.id}`
-                          .toLowerCase()
-                          .includes(query.toLowerCase()),
-                      ) &&
-                      !'kantor koperasi'.includes(query.toLowerCase()) &&
-                      !'gudang koperasi'.includes(query.toLowerCase()) && (
-                        <p className="cw-panel-note">Lokasi tidak ditemukan.</p>
-                      )}
-                  </div>
-                  {model.overflow > 0 && (
-                    <p className="cw-panel-note">
-                      {model.overflow} gerai lainnya tersedia di daftar Gerai; kawasan ini memiliki
-                      tujuh lahan.
-                    </p>
-                  )}
-                  <Button className="cw-logistics-link" onClick={() => select('logistik')}>
-                    <Truck size={17} />
-                    <span>Suplier & ekspedisi</span>
-                    <small>Rencana</small>
-                    <ChevronRight size={14} />
-                  </Button>
-                </>
-              )}
-            </div>
-            <footer className="cw-detail-footer">
-              <span>
-                <i />
-                {preview ? 'Pratinjau desain' : error ? 'Koneksi bermasalah' : 'Data ruang kerja'}
-              </span>
-              <Button
-                onClick={() => {
-                  setSelected('kawasan');
-                  setQuery('');
-                }}
-              >
-                Semua lokasi <ArrowRight size={13} />
-              </Button>
-            </footer>
-          </aside>
-        )}
 
-        <div className="cw-bottom-left">
-          <div className="cw-weather cw-glass">
-            <span className="cw-weather-symbol">{weatherIcon}</span>
-            <div>
-              <strong>
-                {preferences.weather === 'cerah'
-                  ? 'Cerah'
-                  : preferences.weather === 'berawan'
-                    ? 'Berawan'
-                    : 'Hujan'}
-              </strong>
-              <small>
-                Cuaca simulasi · {preferences.time === 'otomatis' ? 'waktu WIB' : preferences.time}
-              </small>
+        {wide ? (
+          <>
+            <div className="cw-right">
+              {panelOpen ? (
+                <div className="cw-card cw-detail">{detail}</div>
+              ) : (
+                <Button className="cw-card cw-open-detail" onClick={() => setPanelOpen(true)}>
+                  <Map size={17} />
+                  Detail kawasan
+                </Button>
+              )}
+              <div className="cw-card cw-list-card">{list}</div>
             </div>
-            <Button aria-label="Atur cuaca dan waktu" onClick={() => select('lingkungan')}>
-              <Settings2 size={15} />
-            </Button>
-          </div>
-          <div className="cw-activity-card cw-glass">
-            <div className="cw-activity-title">
-              <span>
-                <span className="cw-pulse" />
-                Ruang kerja hari ini
-              </span>
-              <small>{dateLabel}</small>
-            </div>
-            <div className="cw-activity-steps">
-              {[
-                {
-                  icon: <CheckCheck size={16} />,
-                  label: 'Tugas',
-                  value: count(model.tasks.length),
-                  href: '/tugas',
-                },
-                {
-                  icon: <Users size={16} />,
-                  label: 'Rapat',
-                  value: count(model.meetings.length),
-                  href: '/rapat',
-                },
-                {
-                  icon: <Dumbbell size={16} />,
-                  label: 'Kegiatan',
-                  value: count(model.activities.length),
-                  href: '/jurnal',
-                },
-              ].map((item) => (
-                <Link key={item.label} href={item.href}>
-                  <span>{item.icon}</span>
-                  <strong>{item.label}</strong>
-                  <small>{item.value} catatan</small>
-                </Link>
-              ))}
-              <Button className="cw-mascot-action" onClick={() => select('karakter')}>
-                <MessageCircle size={20} />
-                <span>
-                  Maskot<small>{activityNames[activity]}</small>
-                </span>
-                <ChevronRight size={14} />
+            <div className="cw-card cw-tracker-card">{tracker}</div>
+          </>
+        ) : (
+          <MobileSheet
+            snap={sheet}
+            onSnap={setSheet}
+            tab={sheetTab}
+            onTab={setSheetTab}
+            summary={
+              <Button
+                className="cw-sheet-line"
+                onClick={() => setSheet(sheet === 'ringkas' ? 'setengah' : 'ringkas')}
+              >
+                <strong>{sheetTitle}</strong>
+                <small>
+                  {timeline.find((step) => step.state !== 'selesai')
+                    ? `Rapat ${timeline.find((step) => step.state !== 'selesai')?.time} WIB`
+                    : `${unavailable ? '—' : model.tasks.length} tugas terbuka`}
+                </small>
               </Button>
-            </div>
-          </div>
-        </div>
-        <div className="cw-compass">
-          <Compass size={32} strokeWidth={1.2} />
-          <span>U</span>
-        </div>
-        <div className="cw-scene-hint">Geser untuk memutar · Cubit / gulir untuk zoom</div>
+            }
+          >
+            {sheetTab === 'detail' ? detail : sheetTab === 'lokasi' ? list : tracker}
+          </MobileSheet>
+        )}
+        <div className="cw-hint">Geser untuk memutar · Cubit / gulir untuk zoom</div>
       </section>
       <nav className="cw-dock" aria-label="Navigasi dunia koperasi">
         <Link href="/beranda" aria-label="Kembali ke Beranda">

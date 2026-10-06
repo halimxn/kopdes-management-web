@@ -52,6 +52,35 @@ export function getWorldModel(data: Workspace, now: Date) {
 }
 export type WorldModel = ReturnType<typeof getWorldModel>;
 
+export type MeetingStep = {
+  row: Item;
+  /** Jam mulai WIB "HH:MM"; rapat tanpa jam dianggap 09:00 seperti aturan rapat aktif. */
+  time: string;
+  end: string;
+  state: 'selesai' | 'berlangsung' | 'nanti';
+};
+/** Rapat hari ini berurutan jam mulai beserta keadaannya terhadap waktu sekarang. */
+export function meetingTimeline(meetings: Item[], now: Date): MeetingStep[] {
+  const date = today(now);
+  return meetings
+    .map((row) => {
+      const time = String(row.data.time || '09:00');
+      const start = Date.parse(`${date}T${time}:00+07:00`);
+      const finish = start + Number(row.data.duration || 60) * 60000;
+      const end = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Jakarta',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).format(finish);
+      const state: MeetingStep['state'] =
+        now.getTime() >= finish ? 'selesai' : now.getTime() >= start ? 'berlangsung' : 'nanti';
+      return { row, time, end, state, start };
+    })
+    .sort((a, b) => a.start - b.start)
+    .map(({ row, time, end, state }) => ({ row, time, end, state }));
+}
+
 /**
  * Gerai dengan pilihan lahan menempati lahan itu lebih dulu, sehingga posisinya tidak bergeser
  * saat gerai lain dihapus. Pilihan ganda dimenangkan gerai yang dibuat lebih dulu; sisanya,

@@ -1,5 +1,13 @@
 # Changelog
 
+## Paket 3 — UI kartu ala video — 6 Oktober 2026
+
+- CooperativeWorld dipecah ke ui/: WorldHeader (pencarian, pemilih zona, chip Suasana, jam), KpiCards, DetailCard (eyebrow, pill status, meter, kunci–nilai), ListCard (tab Lokasi/Tugas/Rapat), TodayTracker (langkah rapat hari ini pengganti shipment tracker), MobileSheet. world.css ditulis ulang: token kartu 14 px, teks minimal 11 px, pill bertulisan.
+- Objek terpilih mendapat label biru berstatus dan kotak sorot di scene. Fokus kamera digeser ke area yang tidak tertutup kartu kanan atau lembar bawah; animasi kamera berbasis waktu.
+- < 1024 px: lembar bawah ringkas/setengah/penuh (seret atau klik) dengan tab Detail/Daftar/Hari ini; memilih zona menciutkan lembar sehingga zona gerai terlihat di ponsel. KPI menjadi chip geser.
+- Perbaiki garis berkedip (z-fighting) pintu dok gudang dan peringatan hidrasi jam header.
+- 271 tes/44 berkas, typecheck, lint dan build lulus. Diperiksa di browser: desktop 1280 (kawasan, gudang, lahan), tablet 768, ponsel 375 (lembar, daftar, pilih lahan). Belum diperiksa: 360 dan 1440, perangkat fisik.
+
 ## Paket 2 — peta baru — 6 Oktober 2026
 
 - Kawasan 62 × 50: jalan utama berpagar dengan gerbang dan pos jaga, parkir antre truk, gudang 24 × 10 dengan empat dok bermarka kuning, area staging dan forklift, jalan dalam, kantor lebih besar, taman, parkir mobil, boulevard dengan tujuh lahan 6,4 × 5,4. Kardus/forklift adalah pemandangan.

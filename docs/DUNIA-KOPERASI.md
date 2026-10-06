@@ -45,14 +45,19 @@ Sumber aktual: objects/primitives.ts (palet), lighting.ts (cahaya per jam/cuaca)
 
 ## Komposisi kartu seperti video
 
-1. Header putih 66 px desktop / 58 px ponsel: identitas dunia, pencarian lokasi, profil koperasi, waktu WIB, pengaturan dan manajer.
-2. Tiga ringkasan kiri atas: gerai, tugas terbuka, rapat hari ini. Data dari catatan yang dimuat; loading/error memakai tanda —.
-3. Panel kanan desktop sekitar 292 px: ikon, judul, status, isi, tautan sumber. Isi bergulir, panel bisa ditutup. Ponsel memakai panel bawah terbatas.
-4. Kontrol kamera dekat panel: zoom, putar seperempat putaran, reset. Geser/cubit/gulir melalui OrbitControls.
-5. Cuaca dan ringkasan kegiatan kiri bawah desktop. Tugas/rapat/kegiatan menggantikan shipment tracker video dengan isi koperasi.
-6. Dock bawah: Beranda, Kawasan, Kantor, Karakter, Suasana. AppShell tidak menggandakan sidebar pada halaman dunia.
+Desktop ≥ 1024 px memakai kartu mengambang seperti video; layar lebih kecil memakai lembar bawah.
 
-Kartu radius sekitar 11 px, border putih halus, bayangan ringan; ikon biru pada permukaan biru pucat; font Inter. Style dibatasi .cooperative-world dan cw-*. Tidak menggunakan backdrop blur setelah ditemukan mengganggu ketajaman render. Ponsel menyederhanakan header dan menyembunyikan ringkasan bawah agar lingkungan tetap terlihat.
+1. **Header** putih 64 px (58 px < 1024): logo, pencarian (memfilter kartu Daftar), pemilih zona berlencana biru, chip **Suasana** (ikon cuaca + waktu, membuka pengaturan), jam WIB, profil manajer. Ponsel < 600 px: logo saja, chip suasana ikon saja.
+2. **Tiga KPI** kiri atas (196 px): ikon dalam kotak biru pucat, label, angka 24 px, catatan sumber (mis. "2 sedang dikerjakan", "Berikutnya 13:00 WIB"). Memuat/galat memakai tanda —. < 1024 px menjadi chip geser tanpa catatan.
+3. **Kartu detail** kanan atas (320 px): eyebrow biru kapital (mis. `GUDANG · 4 DOK`, `LAHAN 03 · BOULEVARD GERAI`), judul 18 px, subjudul, tombol tutup; pill status bertulisan + keterangan; ubin meter dengan progress, baris kunci–nilai, tombol utama biru. Isi bergulir.
+4. **Kartu Daftar** kanan bawah, pengganti Docks/Forklifts/Trucks: tab Lokasi / Tugas / Rapat dengan hitungan; baris ikon + judul + keterangan + pill status + panah. Lokasi memilih objek dan menerbangkan kamera; Tugas/Rapat membuka catatan asli.
+5. **Pelacak "Jadwal hari ini"** kiri bawah, pengganti Shipment Tracking: langkah rapat hari ini (Selesai / Berlangsung / Nanti, jam WIB) dan kartu rapat berikutnya; tanpa rapat menampilkan tautan Tugas/Kegiatan. Saat domain Pengiriman tersedia, pola langkah yang sama dipakai untuk tahap pengiriman. Disembunyikan 1024–1279 px agar tidak bertabrakan dengan dock.
+6. **Label mengambang** di objek terpilih berubah biru dengan status (mis. "Gudang koperasi · 4 dok"), ditambah kotak sorot biru (garis tepi + alas transparan) di scene.
+7. **Kontrol kamera** di kiri kartu kanan: zoom, putar, reset. Fokus kamera digeser ke tengah area yang tidak tertutup kartu kanan atau lembar bawah (`occlusion`).
+8. **Dock** Beranda, Kawasan, Kantor, Karakter, Suasana; ≥ 1280 px berada di kanan pelacak.
+9. **Lembar bawah** (< 1024 px): pegangan seret/klik untuk posisi ringkas → setengah → penuh, baris ringkasan (objek terpilih + rapat berikutnya/tugas terbuka), tab Detail / Daftar / Hari ini. Memilih zona menciutkan lembar agar scene terlihat; memilih objek membukanya setengah.
+
+Token di `world.css`: kartu putih radius 14 px, border `#e6ebf5`, bayangan `0 8px 24px rgba(30,50,100,.08)`, Inter, angka tabular, teks minimal 11 px. Pill: hijau aktif/berlangsung, biru info/proses, kuning persiapan, abu kosong/selesai, merah galat. Tanpa backdrop blur.
 
 ## Exterior
 
@@ -97,7 +102,8 @@ Semua berkas dunia berada pada src/features/cooperative-world/:
 
 | Berkas | Peran |
 |---|---|
-| CooperativeWorld.tsx | Kartu, dock, scene/detail, preferensi dan pintasan |
+| CooperativeWorld.tsx | State, tata letak desktop/lembar bawah, dock, preferensi |
+| ui/WorldHeader, KpiCards, DetailCard, ListCard, TodayTracker, MobileSheet | Komponen kartu ala video |
 | WorldScene.tsx | WebGL, kamera, raycast, proyeksi penanda, animasi, disposal |
 | layout.ts | Koordinat lahan, kantor, stasiun interior, posisi karakter, bidang pandang kamera |
 | objects/primitives.ts | Palet dan bentuk dasar; geometri/material dipakai bersama lalu dibuang saat scene dibongkar |
