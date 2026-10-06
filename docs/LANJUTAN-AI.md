@@ -13,7 +13,7 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 
 ## Skill proyek
 
-`.claude/skills/`: hemat-token, dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code (yang terakhir merujuk `.agents/skills/clean-code`). Pakai sesuai pekerjaan; hemat-token di setiap sesi panjang.
+`.claude/skills/`: hemat-token, dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code (merujuk `.agents/skills/clean-code`), serta pihak ketiga caveman, grill-me/grilling, 3d-graphics (sumber dan lisensi di `.claude/skills/SUMBER.md`). Pakai sesuai pekerjaan; hemat-token di setiap sesi panjang.
 
 ## Urutan melanjutkan
 
