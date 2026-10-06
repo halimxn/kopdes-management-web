@@ -1,5 +1,10 @@
 # Changelog
 
+## Paket 10 — penutup (tanpa personal.css) — 6 Oktober 2026
+
+- QA contoh development di 360/768/1024/1440: tanpa luapan horizontal; 74 draw call/122 ribu segitiga di 1440. Perbaiki tombol Tur yang tak terlihat (spesifisitas CSS).
+- CHECKLIST dan STATUS diperbarui. Perapian personal.css ditunda atas arahan pemilik karena revisi tampilan 3D berikutnya.
+
 ## Paket 9 — ide tambahan — 6 Oktober 2026
 
 - Tur hari ini, pencarian Enter yang menerbangkan kamera, tab linimasa Hari ini, tindakan cepat ke halaman asli.

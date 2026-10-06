@@ -13,18 +13,21 @@ Implementasi, bukti pemeriksaan dan penerimaan dibedakan. STATUS adalah keadaan 
 - [x] Cuaca simulasi/waktu WIB/pakaian; preferensi lokal tervalidasi.
 - [x] Tes adapter/UI, typecheck, lint dan production build. Cakupan aktual di STATUS.
 - [x] QA lokal kosong exterior/interior 360/768/1024/1440, tanpa luapan; penanda masuk kantor/bubble/pratinjau rapat-gym.
-- [ ] Map lebih luas dengan jalur, parkir, plaza dan ruang interaksi; detail rencana di DUNIA-KOPERASI.
-- [ ] Default siang terang dan kontrol waktu/cuaca terlihat serta berfungsi setelah reload.
-- [ ] Mobil manajer/van/truk boks, jalur gerak dan interaksi dengan label simulasi.
-- [ ] Manajer berpindah saat patroli jarang; bubble pertanyaan sesekali mengikuti kepala.
-- [ ] Zona gym jelas dan karakter beraksi di sana sesuai kegiatan, rapat duduk di kursi.
+- [x] Kawasan 62 × 50: jalan, gerbang, parkir truk/mobil, gudang empat dok, kantor, taman, boulevard tujuh lahan; pemilih zona dan kamera mulus (paket 2).
+- [x] Siang lebih terang, malam terbaca, chip Suasana di header; pilihan tersimpan setelah reload (paket 1/3). Bawaan waktu tetap Otomatis WIB.
+- [x] Truk boks dari data Pengiriman di dok/antre dengan kartu; dua mobil suasana bergerak berlabel simulasi (paket 6).
+- [x] Manajer berjalan ke briefing, meja staf dengan tugas lewat tenggat, atau dok; bubble otomatis 7 detik tiap 2,5 menit (paket 8).
+- [x] Interior kantor bersekat: ruang rapat (duduk), meja seksi, pantry, arsip, area kegiatan; maskot ke gym saat kegiatan hari ini (paket 7).
 - [ ] Penerimaan pemilik atas kualitas dan kemiripan final dengan video.
 - [ ] Semua interaksi/state, raycast objek langsung, semua cuaca/waktu, keyboard/reduced-motion dan fallback WebGL.
 - [ ] Semua target sentuh/kontras, perangkat fisik, WebGL perangkat rendah dan benchmark performa.
 - [ ] UAT pemetaan/sinkronisasi dengan data nyata dan paginasi.
-- [ ] Slot lahan permanen/editor lingkungan dan preferensi/layout lintas perangkat.
-- [ ] Suplier, jadwal pengiriman dan kendaraan ekspedisi; masih rencana.
-- [ ] Karakter pegawai nyata atau AI chat; belum tersedia.
+- [x] Slot lahan permanen lewat kolom Gerai (paket 2).
+- [ ] Editor lingkungan dan preferensi/layout lintas perangkat.
+- [x] Pengiriman, Mutasi stok atomik (migrasi 8 dijalankan pemilik), kategori Suplier/Ekspedisi, gudang dan rak dari data Barang (paket 4–6).
+- [x] Karakter dari catatan Tim dengan jadwal teruji dan keterangan bukan kehadiran (paket 7–8).
+- [ ] AI chat; belum tersedia.
+- [x] QA contoh development 360/768/1024/1440 tanpa luapan; 74 draw call di 1440 (paket 10).
 
 ## Fitur operasional tersedia
 
@@ -50,4 +53,4 @@ Implementasi, bukti pemeriksaan dan penerimaan dibedakan. STATUS adalah keadaan 
 - [ ] Editor blok bebas, kolaborasi real-time, PWA/offline dan unggah berkas.
 - [ ] Baseline/jalur kritis, penjadwalan otomatis dependensi dan impor CSV buku.
 
-SQL cloud tetap memerlukan penjelasan berkas, dampak, proyek tujuan dan persetujuan pemilik. Tidak ada migrasi baru atau reset pada paket dunia. Program 90 hari bukan instruksi aktif.
+SQL cloud tetap memerlukan penjelasan berkas, dampak, proyek tujuan dan persetujuan pemilik. Migrasi 8 (pengiriman/mutasi) dijalankan pemilik 6 Oktober 2026. Program 90 hari bukan instruksi aktif.

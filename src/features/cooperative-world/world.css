@@ -1437,13 +1437,13 @@
 }
 
 /* ---------- Ide tambahan: tur dan linimasa ---------- */
-.cooperative-world .cw-tour-button {
+.cooperative-world .cw-crumbs .cw-tour-button {
   padding: 4px 12px;
   background: var(--cw-blue);
   color: white;
   font-weight: 600;
 }
-.cooperative-world .cw-tour-button:hover {
+.cooperative-world .cw-crumbs .cw-tour-button:hover {
   background: #2b55d6;
   color: white;
 }
