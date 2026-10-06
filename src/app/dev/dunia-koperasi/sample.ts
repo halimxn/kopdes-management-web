@@ -29,7 +29,11 @@ export function sampleWorkspace(): Workspace {
     organization: [row('org', { title: 'Contoh Koperasi', manager: 'Contoh Manajer' })],
     units: [
       row('unit-1', { title: 'Contoh Gerai Sembako', kind: 'sembako', status: 'aktif', slot: '2' }),
-      row('unit-2', { title: 'Contoh Apotek', kind: 'apotek', status: 'persiapan', slot: '5' }),
+      row('unit-2', { title: 'Contoh Apotek', kind: 'apotek', status: 'aktif' }),
+      row('unit-3', { title: 'Contoh Klinik Desa', kind: 'klinik', status: 'siap buka' }),
+      row('unit-4', { title: 'Contoh Simpan Pinjam', kind: 'simpan pinjam', status: 'aktif' }),
+      row('unit-5', { title: 'Contoh Cold Storage', kind: 'cold storage', status: 'aktif' }),
+      row('unit-6', { title: 'Contoh Gerai Kuliner', kind: 'kuliner', status: 'persiapan' }),
     ],
     'inventory-items': items.map(([title, rack, stock, minimum, measurement], index) =>
       row(`item-${index}`, {

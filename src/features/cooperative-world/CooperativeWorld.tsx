@@ -109,11 +109,12 @@ export function CooperativeWorld({
   const [selected, setSelected] = useState('kawasan');
   const [panelOpen, setPanelOpen] = useState(true);
   const [query, setQuery] = useState('');
-  const [zone, setZone] = useState<WorldZone>('semua');
+  // Bawaan dekat seperti video: kavling logistik; zoom keluar tetap tersedia.
+  const [zone, setZone] = useState<WorldZone>('gudang');
   // Titik khusus saat memilih lahan dari daftar; zona dipakai bila kosong.
   const [spot, setSpot] = useState<readonly [number, number] | null>(null);
   const [recenter, setRecenter] = useState(0);
-  const [zoom, setZoom] = useState(worldZones.semua.zoom);
+  const [zoom, setZoom] = useState(worldZones.gudang.zoom);
   const [rotation, setRotation] = useState(0);
   const [rehearsal, setRehearsal] = useState<CharacterActivity | 'otomatis'>('otomatis');
   const [sheet, setSheet] = useState<SheetSnap>('ringkas');
@@ -264,9 +265,7 @@ export function CooperativeWorld({
         .includes(text);
     if ('kantor koperasi'.includes(text)) return select('koperasi');
     if ('gudang koperasi'.includes(text)) return chooseZone('gudang');
-    const plot = model.plots.find(
-      (item) => has(item.unit?.data.title) || `lahan ${item.id.split('-')[1]}`.includes(text),
-    );
+    const plot = model.plots.find((item) => has(item.unit?.data.title) || has(item.name));
     if (plot) {
       if (location !== 'luar') enter('luar');
       return select(plot.id, true);
@@ -401,9 +400,7 @@ export function CooperativeWorld({
               : selected === 'staging'
                 ? 'Area staging'
                 : selectedPlot
-                  ? String(
-                      selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`,
-                    )
+                  ? String(selectedPlot.unit?.data.title || selectedPlot.name)
                   : selected === 'gudang'
                     ? worldZones.gudang.title
                     : selected === 'lingkungan'

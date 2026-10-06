@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { addDays, today } from '@/lib/date';
 import type { Workspace } from '../workspace/useWorkspace';
-import { landPositions } from './layout';
+import { allBuildings, lots } from './district';
 import type { Item } from '../records/schemas';
 
 export const worldPreferencesSchema = z.object({
@@ -167,29 +167,57 @@ export function meetingTimeline(meetings: Item[], now: Date): MeetingStep[] {
     .map(({ row, time, end, state }) => ({ row, time, end, state }));
 }
 
+/** Bangunan distrik yang bisa diisi Gerai: unit KDMP berjenis tetap, lalu kavling gerai tambahan. */
+const unitBuildings = allBuildings().filter((b) => b.id !== 'kantor' && b.id !== 'gudang');
+const extraBuildings = unitBuildings.filter((b) => !b.kinds.length);
+const matchesKind = (unit: Item, kinds: string[]) => {
+  const kind = String(unit.data.kind || '').toLowerCase();
+  return kinds.some((word) => kind.includes(word));
+};
+
 /**
- * Gerai dengan pilihan lahan menempati lahan itu lebih dulu, sehingga posisinya tidak bergeser
- * saat gerai lain dihapus. Pilihan ganda dimenangkan gerai yang dibuat lebih dulu; sisanya,
- * termasuk "otomatis", mengisi lahan kosong sesuai urutan dibuat.
+ * Gerai menempati bangunan sesuai Jenis (sembako, apotek, klinik, simpan pinjam, cold storage);
+ * jenis lain mengisi kavling gerai tambahan menurut kolom Lahan (1–3) lalu urutan dibuat.
+ * Gerai berjenis logistik menjadi catatan gudang. Bangunan tanpa gerai tampil sebagai rencana.
+ * Gerai lebih banyak dari kavling tetap ada di daftar Gerai (overflow).
  */
 export function placeUnits(units: Item[]) {
-  const slots: (Item | undefined)[] = landPositions.map(() => undefined);
+  const taken = new Map<string, Item>();
   const waiting: Item[] = [];
+  let warehouseUnit: Item | undefined;
   for (const unit of units) {
-    const index = Number(unit.data.slot) - 1;
-    if (Number.isInteger(index) && index >= 0 && index < slots.length && !slots[index])
-      slots[index] = unit;
+    if (!warehouseUnit && matchesKind(unit, allBuildings().find((b) => b.id === 'gudang')!.kinds)) {
+      warehouseUnit = unit;
+      continue;
+    }
+    const fixed = unitBuildings.find(
+      (b) => b.kinds.length && !taken.has(b.id) && matchesKind(unit, b.kinds),
+    );
+    if (fixed) taken.set(fixed.id, unit);
     else waiting.push(unit);
   }
-  for (let i = 0; i < slots.length && waiting.length; i++)
-    if (!slots[i]) slots[i] = waiting.shift();
+  const rest: Item[] = [];
+  for (const unit of waiting) {
+    const chosen = extraBuildings[Number(unit.data.slot) - 1];
+    if (chosen && !taken.has(chosen.id)) taken.set(chosen.id, unit);
+    else rest.push(unit);
+  }
+  for (const building of extraBuildings)
+    if (!taken.has(building.id) && rest.length) taken.set(building.id, rest.shift()!);
   return {
-    plots: landPositions.map((position, index) => ({
-      id: `lahan-${index + 1}`,
-      position,
-      unit: slots[index],
+    plots: unitBuildings.map((building) => ({
+      id: building.id,
+      name: building.name,
+      lotName: lots.find((lot) => lot.buildings.includes(building))!.name,
+      building,
+      position: [building.rect.x + building.rect.w / 2, building.rect.z + building.rect.d / 2] as [
+        number,
+        number,
+      ],
+      unit: taken.get(building.id),
     })),
-    overflow: waiting.length,
+    warehouseUnit,
+    overflow: rest.length,
   };
 }
 export function getWorldHour(time: WorldPreferences['time'], now: Date) {

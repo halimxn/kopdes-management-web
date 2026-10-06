@@ -6,20 +6,32 @@ export type Vec3 = [number, number, number];
 
 // Palet dunia mengikuti video acuan: biru-putih dengan aksen kardus, marka dan pohon.
 // Tabel nilai dan perannya ada di docs/DUNIA-KOPERASI.md bagian "Blueprint visual v3".
+// v4: warna dasar disampel dari frame video (tanah, jalan, dinding, biru dalam); aksen unit pastel.
 export const palette = {
-  blue: '#3866f6',
-  blueDeep: '#2f58e6',
-  navy: '#2443a6',
+  blue: '#2f6be8',
+  blueDeep: '#1f58d8',
+  navy: '#1454cc',
   white: '#fafcff',
-  wall: '#eef1f8',
-  rib: '#d2dae8',
-  glass: '#a7c8e9',
-  glassDark: '#26354f',
-  ground: '#e9eefb',
-  asphalt: '#d3dbee',
+  wall: '#ececfc',
+  wallShade: '#d6dcf3',
+  rib: '#d0d8ee',
+  glass: '#a9c6f5',
+  glassDark: '#24324f',
+  ground: '#e4ecfc',
+  /** Tanah kavling, paving halaman, aspal, trotoar. */
+  lot: '#e8eefc',
+  yard: '#d7dff5',
+  asphalt: '#c6d1ee',
+  sidewalk: '#f3f6fe',
   green: '#4cc47f',
   greenLight: '#8fe0ac',
-  grass: '#d3efdd',
+  grass: '#cdeedd',
+  /** Atap pastel per unit, senada biru-lavender. */
+  pastelLavender: '#b4a8f4',
+  pastelPeach: '#f7c39b',
+  pastelMint: '#8fdcbc',
+  pastelSky: '#8fcdee',
+  pastelLilac: '#c9b8f6',
   trunk: '#8a7a66',
   wood: '#dfc59c',
   ink: '#2d3b56',

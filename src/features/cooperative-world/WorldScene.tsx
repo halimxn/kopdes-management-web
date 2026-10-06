@@ -177,7 +177,7 @@ export function WorldScene({
     const background = new THREE.Color('#eef3fc');
     scene.background = background;
     // Kawasan: tanah tak berujung memudar ke warna langit sehingga tepi tanah tidak terlihat saat zoom keluar.
-    const fog = location === 'luar' ? new THREE.Fog(background, 158, 225) : null;
+    const fog = location === 'luar' ? new THREE.Fog(background, 240, 340) : null;
     scene.fog = fog;
     const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 1, 420);
     const cameraOffset = (turn: number) =>
@@ -205,13 +205,14 @@ export function WorldScene({
     controls.minPolarAngle = 0.45;
     controls.maxPolarAngle = 1.18;
     controls.enablePan = true;
-    controls.maxTargetRadius = location === 'luar' ? 30 : 10;
+    controls.maxTargetRadius = location === 'luar' ? 80 : 10;
     const ambient = new THREE.HemisphereLight('#f5f9ff', '#aeb8cf', 2.8);
     scene.add(ambient);
     const sun = new THREE.DirectionalLight('#fff7e8', 3.8);
     sun.castShadow = settings.shadows;
     if (settings.shadows) sun.shadow.mapSize.set(settings.shadowMapSize, settings.shadowMapSize);
-    const shadowExtent = location === 'luar' ? 38 : 22;
+    // Distrik luas: bayangan dihitung di sekitar titik fokus kamera dan ikut bergeser (lihat draw).
+    const shadowExtent = location === 'luar' ? 46 : 22;
     Object.assign(sun.shadow.camera, {
       left: -shadowExtent,
       right: shadowExtent,
@@ -223,7 +224,8 @@ export function WorldScene({
     sun.position.set(-14, 28, 14);
     sun.shadow.bias = -0.0005;
     sun.shadow.normalBias = 0.04;
-    scene.add(sun);
+    scene.add(sun, sun.target);
+    const sunOffset = new THREE.Vector3(-14, 28, 14);
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(2000, 2000),
       new THREE.MeshStandardMaterial({
@@ -367,7 +369,11 @@ export function WorldScene({
       model.plots.forEach((plot) =>
         positions.set(
           plot.id,
-          new THREE.Vector3(plot.position[0], plot.unit ? 3.1 : 0.6, plot.position[1]),
+          new THREE.Vector3(
+            plot.position[0],
+            plot.unit ? plot.building.height + 1.6 : 0.9,
+            plot.position[1],
+          ),
         ),
       );
     } else if (location === 'gudang') {
@@ -405,6 +411,10 @@ export function WorldScene({
           view.current.moving = false;
       }
       controls.update();
+      if (location === 'luar') {
+        sun.target.position.copy(controls.target);
+        sun.position.copy(controls.target).add(sunOffset);
+      }
       const state = motion.current,
         light = getLighting(state.hour, state.weather);
       background.set(light.sky);
@@ -506,8 +516,8 @@ export function WorldScene({
       if (!reduced.matches)
         for (const car of cars) {
           car.group.position.x += car.speed * Math.min(delta, 0.06);
-          if (car.group.position.x > 36) car.group.position.x = -36;
-          if (car.group.position.x < -36) car.group.position.x = 36;
+          if (car.group.position.x > 84) car.group.position.x = -76;
+          if (car.group.position.x < -76) car.group.position.x = 84;
         }
       // Forklift suasana bolak-balik staging ? rak luar; diam di titik awal saat gerak minimal.
       if (yardForklift) {

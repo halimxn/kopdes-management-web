@@ -1,5 +1,6 @@
 // Rute truk dan jalur forklift: fungsi murni tanpa Three.js agar teruji dan aman dimuat
 // di komponen React mana pun (WorldScene dimuat dinamis karena WebGL).
+import { docks } from './district';
 import { gate, roads, site, truckBays, warehouse } from './layout';
 import type { TruckSpot } from './world-model';
 
@@ -13,8 +14,9 @@ export function truckPose(spot: TruckSpot): Point {
   if (spot.place === 'dok') return [warehouse.docks[spot.index], dockStop()];
   return truckBays[spot.index];
 }
+/** Truk berhenti dengan belakang boks di tepi lantai dok yang ditinggikan. */
 function dockStop() {
-  return warehouse.center[1] + warehouse.size[2] / 2 + 0.85 + truckRear;
+  return docks.wallZ + docks.platformDepth + truckRear;
 }
 
 export type TruckRoute = {
@@ -28,29 +30,31 @@ export type TruckRoute = {
 };
 
 /**
- * Rute skematis truk di dalam kawasan: jalan utama → gerbang → petak antre/dok.
- * Ini gambaran alur bongkar muat, bukan pelacakan GPS. Truk antre menuju dok pilihan
- * (kolom Pintu dok) atau dok kosong pertama yang tidak dipakai truk lain.
+ * Rute skematis truk di distrik: masuk dari ujung timur Jalan Raya (tidak melewati area
+ * warga) → gerbang barang → jalur manuver → petak antre/dok. Gambaran alur bongkar muat,
+ * bukan pelacakan GPS. Truk antre menuju dok pilihan (kolom Pintu dok) atau dok kosong pertama.
  */
 export function truckRoute(spot: TruckSpot, spots: TruckSpot[]): TruckRoute {
-  const lane = roads.main.z + 1.2;
+  const lane = roads.main.z - roads.main.width / 4;
+  const yard = roads.yardLane;
   const entry: Point[] = [
-    [site.minX - 1, lane],
+    [site.maxX + 8, lane],
     [gate.x, lane],
+    [gate.x, yard],
   ];
   const dockZ = dockStop();
-  const doorZ = warehouse.center[1] + warehouse.size[2] / 2 + 0.6;
+  const doorZ = docks.wallZ + docks.platformDepth / 2;
   if (spot.place === 'dok') {
     const x = warehouse.docks[spot.index];
     return {
-      done: [...entry, [gate.x, roads.inner.z], [x, roads.inner.z], [x, dockZ]],
+      done: [...entry, [x, yard], [x, dockZ]],
       ahead: [],
       target: [x, doorZ],
       dock: spot.index,
     };
   }
   const [bx, bz] = truckBays[spot.index];
-  const done: Point[] = [...entry, [gate.x, -5], [bx, -5], [bx, bz]];
+  const done: Point[] = [...entry, [bx, yard], [bx, bz]];
   const used = new Set(spots.filter((row) => row.place === 'dok').map((row) => row.index));
   const wanted = Number(String(spot.delivery.data.dock || '').replace('D', '')) - 1;
   const free = warehouse.docks.map((_, index) => index).filter((index) => !used.has(index));
@@ -61,10 +65,8 @@ export function truckRoute(spot: TruckSpot, spots: TruckSpot[]): TruckRoute {
     done,
     ahead: [
       [bx, bz],
-      [bx, -5],
-      [gate.x, -5],
-      [gate.x, roads.inner.z],
-      [x, roads.inner.z],
+      [bx, yard],
+      [x, yard],
       [x, dockZ],
     ],
     target: [x, doorZ],

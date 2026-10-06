@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { WorldIcon } from './WorldIcon';
 import type { StockState } from './DetailCard';
 import { rackIds, type MeetingStep, type WorldModel } from '../world-model';
-import { landPositions } from '../layout';
 
 type Props = {
   model: WorldModel;
@@ -64,7 +63,7 @@ export function KpiCards({ model, timeline, unavailable, loading, warehouse, sto
       icon: <WorldIcon kind="gerai" size={34} />,
       label: 'Gerai tercatat',
       value: value(model.units.length),
-      unit: `/ ${landPositions.length} lahan`,
+      unit: `/ ${model.plots.length} bangunan`,
       note: loading ? 'Memuat data…' : unavailable ? 'Data belum tersedia' : 'Terhubung ke Gerai',
     },
     {

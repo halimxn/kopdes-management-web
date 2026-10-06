@@ -30,21 +30,22 @@ const row = (
   created = '2026-10-01T00:00:00Z',
 ): Item => ({ id, data, created_at: created, updated_at: created });
 describe('pemetaan dunia koperasi', () => {
-  it('menyediakan tujuh lahan kosong tanpa mengarang unit atau identitas', () => {
+  it('menyediakan bangunan unit kosong (rencana) tanpa mengarang unit atau identitas', () => {
     const result = getWorldModel({}, new Date('2026-10-04T05:00:00Z'));
-    expect(result.plots).toHaveLength(7);
+    expect(result.plots).toHaveLength(8);
     expect(result.plots.every((plot) => !plot.unit)).toBe(true);
     expect(result.manager).toBe('Manajer');
     expect(result.activity).toBe('idle');
   });
-  it('penempatan stabil terhadap urutan respons dan melaporkan gerai di luar tujuh slot', () => {
+  it('penempatan stabil terhadap urutan respons dan melaporkan gerai di luar kavling', () => {
     const units = Array.from({ length: 9 }, (_, i) => row(`unit-${i}`, { title: `Gerai ${i}` }));
     const first = getWorldModel({ units }, new Date());
     const reversed = getWorldModel({ units: [...units].reverse() }, new Date());
     expect(first.plots.map((plot) => plot.unit?.id)).toEqual(
       reversed.plots.map((plot) => plot.unit?.id),
     );
-    expect(first.overflow).toBe(2);
+    // Tanpa Jenis, gerai hanya mengisi tiga kavling gerai tambahan; sisanya overflow.
+    expect(first.overflow).toBe(6);
     expect(first.units).toHaveLength(9);
   });
   it('rapat aktif berdasarkan waktu Jakarta dan durasi, bukan seluruh hari', () => {
@@ -111,40 +112,47 @@ describe('fondasi render dunia', () => {
   });
 });
 
-describe('slot lahan gerai', () => {
-  const unit = (id: string, slot: string | undefined, created: string) =>
-    row(id, { title: id, ...(slot ? { slot } : {}) }, created);
-  it('gerai dengan pilihan lahan tetap di lahannya walau gerai lain dihapus', () => {
-    const a = unit('a', undefined, '2026-10-01T00:00:00Z');
-    const b = unit('b', '5', '2026-10-02T00:00:00Z');
-    const c = unit('c', 'otomatis', '2026-10-03T00:00:00Z');
-    const before = getWorldModel({ units: [a, b, c] }, new Date());
-    expect(before.plots.map((plot) => plot.unit?.id ?? null)).toEqual([
-      'a',
-      'c',
-      null,
-      null,
-      'b',
-      null,
-      null,
-    ]);
-    const after = getWorldModel({ units: [b, c] }, new Date());
-    expect(after.plots[4].unit?.id).toBe('b');
-    expect(after.plots[0].unit?.id).toBe('c');
+describe('bangunan gerai menurut jenis', () => {
+  const unit = (id: string, kind: string, slot: string | undefined, created: string) =>
+    row(id, { title: id, kind, ...(slot ? { slot } : {}) }, created);
+  const at = (model: ReturnType<typeof getWorldModel>, id: string) =>
+    model.plots.find((plot) => plot.id === id)?.unit?.id ?? null;
+  it('gerai menempati bangunan sesuai jenisnya; jenis logistik menjadi catatan gudang', () => {
+    const model = getWorldModel(
+      {
+        units: [
+          unit('s', 'Sembako', undefined, '2026-10-01T00:00:00Z'),
+          unit('a', 'apotek desa', undefined, '2026-10-02T00:00:00Z'),
+          unit('k', 'Klinik', undefined, '2026-10-03T00:00:00Z'),
+          unit('g', 'logistik', undefined, '2026-10-04T00:00:00Z'),
+        ],
+      },
+      new Date(),
+    );
+    expect(at(model, 'sembako')).toBe('s');
+    expect(at(model, 'apotek')).toBe('a');
+    expect(at(model, 'klinik')).toBe('k');
+    expect(model.warehouseUnit?.id).toBe('g');
+    expect(at(model, 'simpan-pinjam')).toBeNull();
   });
-  it('pilihan ganda dimenangkan gerai paling awal, sisanya mengisi lahan kosong', () => {
-    const units = [
-      unit('lama', '2', '2026-10-01T00:00:00Z'),
-      unit('baru', '2', '2026-10-02T00:00:00Z'),
-      unit('aneh', '9', '2026-10-03T00:00:00Z'),
-    ];
-    const model = getWorldModel({ units }, new Date());
-    expect(model.plots[1].unit?.id).toBe('lama');
-    expect(model.plots[0].unit?.id).toBe('baru');
-    expect(model.plots[2].unit?.id).toBe('aneh');
-    expect(model.overflow).toBe(0);
+  it('jenis lain mengisi kavling gerai tambahan menurut kolom Lahan lalu urutan dibuat', () => {
+    const model = getWorldModel(
+      {
+        units: [
+          unit('x', 'kuliner', undefined, '2026-10-01T00:00:00Z'),
+          unit('y', 'bengkel', '3', '2026-10-02T00:00:00Z'),
+          unit('s2', 'sembako', undefined, '2026-10-03T00:00:00Z'),
+        ],
+      },
+      new Date(),
+    );
+    expect(at(model, 'gerai-3')).toBe('y');
+    expect(at(model, 'gerai-1')).toBe('x');
+    // Sembako kedua tidak menggeser yang pertama: mengisi kavling tambahan berikutnya.
+    expect(at(model, 'sembako')).toBe('s2');
   });
 });
+
 
 describe('jadwal rapat hari ini', () => {
   it('mengurutkan rapat dan menandai selesai, berlangsung, nanti menurut WIB', () => {

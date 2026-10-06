@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { today } from '@/lib/date';
 import { recordHref } from '../../workspace/workspace-navigation';
-import { landPositions, warehouse, worldStations, worldZones, type WorldZone } from '../layout';
+import { warehouse, worldStations, worldZones, type WorldZone } from '../layout';
 import { truckRoute } from '../truck-routes';
 import { WorldIcon } from './WorldIcon';
 import {
@@ -164,7 +164,6 @@ export function DetailCard(props: Props) {
   const { selected, location, zone, model, timeline, unavailable, onSelect, onClose } = props;
   const plot = model.plots.find((item) => item.id === selected);
   const station = worldStations.find((item) => item.id === selected);
-  const plotNumber = plot ? plot.id.split('-')[1] : '';
   const count = (value: number) => (unavailable ? '—' : value);
   const inventory = model.inventory;
   const rackId = selected.startsWith('rak-') ? (selected.slice(4) as RackId) : null;
@@ -252,11 +251,11 @@ export function DetailCard(props: Props) {
                         }
                       : plot
                         ? {
-                            eyebrow: `Lahan ${plotNumber.padStart(2, '0')} · Boulevard gerai`,
-                            title: plot.unit ? String(plot.unit.data.title) : `Lahan ${plotNumber}`,
+                            eyebrow: `${plot.lotName} · ${plot.unit ? 'gerai' : 'rencana'}`,
+                            title: plot.unit ? String(plot.unit.data.title) : plot.name,
                             subtitle: plot.unit
                               ? 'Terhubung ke catatan gerai'
-                              : 'Bidang tersedia untuk gerai baru',
+                              : 'Belum ada catatan gerai untuk bangunan ini',
                             icon: <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={40} />,
                           }
                         : station
@@ -593,12 +592,12 @@ export function DetailCard(props: Props) {
               <span
                 className={`cw-pill ${plot.unit ? (plot.unit.data.status === 'aktif' ? 'is-green' : 'is-amber') : 'is-muted'}`}
               >
-                {plot.unit ? String(plot.unit.data.status || 'rencana') : 'Lahan kosong'}
+                {plot.unit ? String(plot.unit.data.status || 'rencana') : 'Belum buka'}
               </span>
               <small>
-                {plot.unit?.data.slot && plot.unit.data.slot !== 'otomatis'
-                  ? 'Lahan dipilih'
-                  : 'Penempatan otomatis'}
+                {plot.building.kinds.length
+                  ? `Jenis: ${plot.building.kinds[0]}`
+                  : 'Kavling gerai tambahan'}
               </small>
             </div>
             {plot.unit ? (
@@ -612,8 +611,9 @@ export function DetailCard(props: Props) {
               />
             ) : (
               <p className="cw-note">
-                Tambahkan unit pada halaman Gerai dan pilih lahan ini di kolom “Lahan di Dunia
-                Koperasi”. Bangunan muncul setelah data dimuat ulang.
+                {plot.building.kinds.length
+                  ? `Tambahkan gerai berjenis “${plot.building.kinds[0]}” di halaman Gerai; bangunan berdiri sesuai statusnya (rencana: pondasi, persiapan: rangka).`
+                  : 'Gerai berjenis lain menempati kavling ini menurut kolom Lahan (1–3) lalu urutan dibuat.'}
               </p>
             )}
             <Link
@@ -665,13 +665,13 @@ export function DetailCard(props: Props) {
           <>
             <div className="cw-status-line">
               <span className={`cw-pill is-${props.status.tone}`}>{props.status.label}</span>
-              <small>{landPositions.length} lahan · 1 gudang · 1 kantor</small>
+              <small>{model.plots.length} bangunan gerai · gudang · kantor</small>
             </div>
             <div className="cw-meters">
               <Meter
                 label="Gerai terisi"
-                value={count(Math.min(model.units.length, landPositions.length))}
-                total={landPositions.length}
+                value={count(model.plots.filter((plot) => plot.unit).length)}
+                total={model.plots.length}
                 tone="green"
               />
               <Meter

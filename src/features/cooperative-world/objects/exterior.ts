@@ -1,266 +1,357 @@
 import * as THREE from 'three';
 import type { WorldModel } from '../world-model';
-import { officePosition, officeSize, park, plotSize, roads, site } from '../layout';
+import {
+  cityBlocks,
+  farmPlots,
+  lots,
+  sidewalk,
+  streets,
+  type DistrictBuilding,
+  type Lot,
+  type Rect,
+} from '../district';
+import { officePosition, officeSize, park } from '../layout';
 import { box, mergeStatic, mergeTransparent, palette, sign } from './primitives';
-import { bench, fence, markingRect, streetLamp, tree } from './props';
-import { building } from './office';
+import { bench, fence, streetLamp, tree } from './props';
+import {
+  clinicBuilding,
+  coldStorageBuilding,
+  counterBuilding,
+  officeBuilding,
+  pharmacyBuilding,
+  plannedLot,
+  shopBuilding,
+} from './district-buildings';
 import { createLogisticsYard, createWarehouse } from './warehouse';
 
-const asphalt = palette.asphalt;
-const sidewalk = '#f7f9fe';
 /** Warna tanah kota, juga dipakai lantai tak berujung di WorldScene. */
-export const cityGround = '#e2e8f5';
+export const cityGround = '#dfe6f7';
 
-/**
- * Blok kota di luar pagar (utara dan barat, di belakang kawasan dari sudut kamera) memberi
- * kedalaman seperti video. Rendah di timur/selatan agar tidak menutupi kawasan.
- */
-function cityBlocks(parent: THREE.Object3D) {
-  const blocks: [number, number, number, number, number][] = [];
-  for (let x = -44, i = 0; x <= 44; x += 9.5, i++)
-    blocks.push([x, -31.5, 7, 5.5, 3 + ((i * 5) % 5)]);
-  for (let z = -20, i = 0; z <= 26; z += 9.2, i++)
-    blocks.push([-38.5, z, 5.5, 7, 2.5 + ((i * 3) % 4)]);
-  for (let z = -18, i = 0; z <= 26; z += 11, i++) blocks.push([38, z, 5, 7.5, 1.2 + (i % 2) * 0.6]);
-  for (let x = -26, i = 0; x <= 30; x += 14, i++) blocks.push([x, 31, 9, 4.5, 1 + (i % 2) * 0.5]);
-  // Tanah kota sedikit di bawah tanah kawasan agar tepi kawasan tetap terbaca.
-  box(parent, [130, 0.1, 120], [0, -0.13, 0], cityGround, 0);
-  for (const [x, z, w, d, h] of blocks) {
-    box(parent, [w, h, d], [x, h / 2, z], '#edf1fa', 0.05);
-    box(parent, [w + 0.12, 0.2, d + 0.12], [x, h + 0.1, z], '#dbe3f3', 0.03);
-    for (let y = 1; y < h - 0.4; y += 1.3) {
-      box(parent, [w - 0.8, 0.55, 0.05], [x, y, z + d / 2 + 0.03], '#a9c4f2', 0);
-      box(parent, [0.05, 0.55, d - 0.8], [x + w / 2 + 0.03, y, z], '#a9c4f2', 0);
-    }
+const flat = (parent: THREE.Object3D, r: Rect, y: number, h: number, color: string, round = 0) =>
+  box(parent, [r.w, h, r.d], [r.x + r.w / 2, y + h / 2, r.z + r.d / 2], color, round);
+
+/** Jalan berlajur: aspal, marka tengah putus-putus, garis lajur, trotoar bersudut membulat. */
+function createStreets(parent: THREE.Object3D) {
+  for (const s of streets) {
+    const r = s.rect;
+    const walk =
+      s.axis === 'x'
+        ? { x: r.x, z: r.z - sidewalk, w: r.w, d: r.d + sidewalk * 2 }
+        : { x: r.x - sidewalk, z: r.z, w: r.w + sidewalk * 2, d: r.d };
+    flat(parent, walk, -0.02, 0.14, palette.sidewalk, 0.06);
   }
-  // Jalan kota di luar pagar barat dan utara.
-  box(parent, [5, 0.03, 70], [-33.5, -0.06, 0], asphalt, 0);
-  box(parent, [100, 0.03, 4], [0, -0.06, -27.5], asphalt, 0);
+  for (const s of streets) {
+    const r = s.rect;
+    flat(parent, r, 0, 0.14, palette.asphalt, 0);
+    const along = s.axis === 'x' ? r.w : r.d;
+    const offsets = s.lanes === 4 ? [0, -r.d / 4, r.d / 4] : [0];
+    for (const [i, offset] of offsets.entries())
+      for (let t = 2; t < along - 2; t += 4.5) {
+        const color = i === 0 ? '#ffffff' : '#e9eefb';
+        if (s.axis === 'x')
+          box(parent, [2.2, 0.02, 0.14], [r.x + t + 1.1, 0.15, r.z + r.d / 2 + offset], color, 0);
+        else box(parent, [0.14, 0.02, 2.2], [r.x + r.w / 2, 0.15, r.z + t + 1.1], color, 0);
+      }
+  }
+  // Zebra cross di setiap persimpangan, di keempat sisi.
+  const across = streets.filter((s) => s.axis === 'x');
+  const down = streets.filter((s) => s.axis === 'z');
+  for (const a of across)
+    for (const b of down) {
+      const ax = a.rect,
+        bz = b.rect;
+      if (bz.x + bz.w < ax.x || bz.x > ax.x + ax.w || ax.z + ax.d < bz.z || ax.z > bz.z + bz.d)
+        continue;
+      for (const side of [-1, 1]) {
+        const z = side < 0 ? ax.z - 1.4 : ax.z + ax.d + 1.4;
+        if (z > bz.z && z < bz.z + bz.d)
+          for (let x = bz.x + 0.5; x < bz.x + bz.w - 0.3; x += 1)
+            box(parent, [0.55, 0.03, 2.2], [x + 0.25, 0.155, z], '#ffffff', 0);
+        const x = side < 0 ? bz.x - 1.4 : bz.x + bz.w + 1.4;
+        if (x > ax.x && x < ax.x + ax.w)
+          for (let zz = ax.z + 0.5; zz < ax.z + ax.d - 0.3; zz += 1)
+            box(parent, [2.2, 0.03, 0.55], [x, 0.155, zz + 0.25], '#ffffff', 0);
+      }
+    }
 }
 
-function emptyPlot(parent: THREE.Object3D, id: string, x: number, z: number) {
-  const g = new THREE.Group();
-  g.userData.selection = id;
-  parent.add(g);
-  const [w, d] = plotSize;
-  box(g, [w, 0.055, d], [x, 0.015, z], '#d5e4dd');
-  for (let i = 0; i < 9; i++)
-    for (const side of [-1, 1])
+/** Celah gerbang pada sisi pagar: kembali potongan pagar di luar gerbang. */
+function fenceSegments(lot: Lot, side: Lot['gates'][number]['side']) {
+  const f = lot.fence;
+  const horiz = side === 'utara' || side === 'selatan';
+  const start = horiz ? f.x : f.z;
+  const end = horiz ? f.x + f.w : f.z + f.d;
+  const openings = lot.gates
+    .filter((g) => g.side === side)
+    .map((g) => [g.from, g.to])
+    .sort((a, b) => a[0] - b[0]);
+  const parts: [number, number][] = [];
+  let at = start;
+  for (const [from, to] of openings) {
+    if (from > at) parts.push([at, from]);
+    at = to;
+  }
+  if (end > at) parts.push([at, end]);
+  return parts;
+}
+
+/** Kavling: tanah, pagar kaca bergerbang, jalur rumput berpohon di luar pagar, halaman, taman, parkir. */
+function createLot(parent: THREE.Object3D, panels: THREE.Object3D, lot: Lot) {
+  const f = lot.fence;
+  flat(
+    parent,
+    { x: f.x - 1.4, z: f.z - 1.4, w: f.w + 2.8, d: f.d + 2.8 },
+    0,
+    0.1,
+    palette.grass,
+    0.4,
+  );
+  flat(parent, f, 0.02, 0.1, lot.id === 'lahan' ? '#e4f3e6' : palette.lot, 0.2);
+  for (const side of ['utara', 'selatan', 'barat', 'timur'] as const)
+    for (const [a, b] of fenceSegments(lot, side)) {
+      const z = side === 'utara' ? f.z : f.z + f.d;
+      const x = side === 'barat' ? f.x : f.x + f.w;
+      if (side === 'utara' || side === 'selatan') fence(parent, [a, z], [b, z], panels);
+      else fence(parent, [x, a], [x, b], panels);
+    }
+  for (const gate of lot.gates) {
+    const horiz = gate.side === 'utara' || gate.side === 'selatan';
+    const at =
+      gate.side === 'utara'
+        ? f.z
+        : gate.side === 'selatan'
+          ? f.z + f.d
+          : gate.side === 'barat'
+            ? f.x
+            : f.x + f.w;
+    for (const p of [gate.from, gate.to])
+      box(parent, [0.5, 1.7, 0.5], horiz ? [p, 0.85, at] : [at, 0.85, p], palette.blue, 0.12);
+  }
+  // Pohon berbaris di jalur rumput sepanjang sisi selatan dan timur (sisi yang dilihat kamera).
+  for (let x = f.x + 2.5; x < f.x + f.w - 1.5; x += 5.5)
+    if (!lot.gates.some((g) => g.side === 'selatan' && x > g.from - 1.5 && x < g.to + 1.5))
+      tree(parent, x, f.z + f.d + 0.75, 0.85 + ((x * 7) % 3) * 0.08);
+  for (let z = f.z + 2.5; z < f.z + f.d - 1.5; z += 5.5)
+    if (!lot.gates.some((g) => g.side === 'timur' && z > g.from - 1.5 && z < g.to + 1.5))
+      tree(parent, f.x + f.w + 0.75, z, 0.85);
+  for (const y of lot.yards) flat(parent, y, 0.12, 0.04, palette.yard, 0.1);
+  for (const g of lot.gardens) {
+    flat(parent, g, 0.12, 0.06, palette.grass, 0.4);
+    box(parent, [g.w - 2, 0.07, 1.1], [g.x + g.w / 2, 0.16, g.z + g.d / 2], '#f2efe6', 0.2);
+    for (const [dx, dz] of [
+      [0.2, 0.2],
+      [0.8, 0.2],
+      [0.2, 0.8],
+      [0.8, 0.8],
+    ])
+      tree(parent, g.x + g.w * dx, g.z + g.d * dz, 1.05);
+    bench(parent, g.x + g.w * 0.5, g.z + g.d * 0.3);
+  }
+  for (const p of lot.parking) {
+    flat(parent, p.rect, 0.12, 0.04, palette.yard, 0.1);
+    const color = p.kind === 'truk' ? palette.marking : '#ffffff';
+    if (p.kind === 'truk') {
+      const bw = p.rect.w / p.bays;
+      for (let i = 0; i <= p.bays; i++)
+        box(
+          parent,
+          [0.12, 0.02, p.rect.d],
+          [p.rect.x + i * bw, 0.17, p.rect.z + p.rect.d / 2],
+          color,
+          0,
+        );
+      continue;
+    }
+    // Parkir mobil dua baris saling berhadapan dengan lorong di tengah.
+    const perRow = Math.ceil(p.bays / 2);
+    const bw = p.rect.w / perRow;
+    const rowDepth = p.rect.d * 0.36;
+    for (const row of [0, 1]) {
+      const z0 = row ? p.rect.z + p.rect.d - rowDepth : p.rect.z;
+      for (let i = 0; i <= perRow; i++)
+        box(parent, [0.1, 0.02, rowDepth], [p.rect.x + i * bw, 0.17, z0 + rowDepth / 2], color, 0);
       box(
-        g,
-        [0.38, 0.025, 0.05],
-        [x - w / 2 + 0.35 + i * 0.71, 0.06, z + (side * d) / 2],
-        '#ffffff',
+        parent,
+        [p.rect.w, 0.02, 0.1],
+        [p.rect.x + p.rect.w / 2, 0.17, row ? z0 : z0 + rowDepth],
+        color,
         0,
       );
-  for (const side of [-1, 1]) {
-    box(g, [0.05, 0.025, d], [x + (side * w) / 2, 0.06, z], '#ffffff', 0);
-    box(g, [0.08, 0.45, 0.08], [x + side * (w / 2 - 0.15), 0.22, z + d / 2 - 0.2], '#a3b9aa');
+    }
   }
-  box(g, [0.7, 0.05, 0.11], [x, 0.07, z], '#94b09f');
-  box(g, [0.11, 0.05, 0.7], [x, 0.07, z], '#94b09f');
-  return g;
 }
 
-/** Jalan lurus searah sumbu X dengan marka putus-putus dan trotoar di kedua sisi. */
-function roadX(
-  parent: THREE.Object3D,
-  z: number,
-  width: number,
-  fromX = site.minX,
-  toX = site.maxX,
-) {
-  const length = toX - fromX,
-    cx = (fromX + toX) / 2;
-  box(parent, [length, 0.03, width], [cx, 0.005, z], asphalt, 0);
-  for (let x = fromX + 1; x < toX - 1; x += 3)
-    box(parent, [1.5, 0.015, 0.1], [x + 0.75, 0.025, z], '#f9fbff', 0);
-  for (const side of [-1, 1])
-    box(parent, [length, 0.1, 0.6], [cx, 0.05, z + side * (width / 2 + 0.3)], sidewalk, 0.02);
+/**
+ * Mobil parkir sebagai suasana (bukan data): warna pastel senada, terisi sebagian petak
+ * agar parkir tampak hidup seperti video tanpa memadati.
+ */
+function parkedCars(parent: THREE.Object3D) {
+  const colors = ['#f4f6fb', '#9fb8f5', '#c9b8f6', '#8fdcbc', '#f7c39b', '#f4f6fb'];
+  let n = 0;
+  for (const lot of lots)
+    for (const p of lot.parking.filter((q) => q.kind === 'mobil')) {
+      const perRow = Math.ceil(p.bays / 2);
+      const bw = p.rect.w / perRow;
+      const rowDepth = p.rect.d * 0.36;
+      for (const row of [0, 1])
+        for (let i = 0; i < perRow; i++) {
+          if ((i * 3 + row * 5 + n) % 4 === 0 || (i + row) % 3 === 2) continue;
+          const x = p.rect.x + (i + 0.5) * bw;
+          const z = row ? p.rect.z + p.rect.d - rowDepth / 2 : p.rect.z + rowDepth / 2;
+          const color = colors[(i + row * 2 + n) % colors.length];
+          box(parent, [1.6, 0.62, 3.2], [x, 0.55, z], color, 0.22);
+          box(parent, [1.42, 0.5, 1.7], [x, 1.08, z + (row ? 0.25 : -0.25)], color, 0.2);
+          box(
+            parent,
+            [1.44, 0.34, 1.5],
+            [x, 1.1, z + (row ? 0.25 : -0.25)],
+            palette.glassDark,
+            0.08,
+          );
+        }
+      n++;
+    }
 }
-function roadZ(parent: THREE.Object3D, x: number, width: number, fromZ: number, toZ: number) {
-  const length = toZ - fromZ,
-    cz = (fromZ + toZ) / 2;
-  box(parent, [width, 0.03, length], [x, 0.006, cz], asphalt, 0);
-  for (let z = fromZ + 1; z < toZ - 1; z += 3)
-    box(parent, [0.1, 0.015, 1.5], [x, 0.026, z + 0.75], '#f9fbff', 0);
+
+/** Lahan pertanian kosong: petak rumput pastel berbatas, alur tanam samar, jalan setapak. */
+function createFarm(parent: THREE.Object3D) {
+  for (const p of farmPlots) {
+    flat(parent, p, 0.12, 0.08, '#d4efda', 0.3);
+    for (let i = 1; i < 8; i++)
+      box(parent, [p.w - 1.6, 0.03, 0.3], [p.x + p.w / 2, 0.22, p.z + (i * p.d) / 8], '#c2e6cb', 0);
+    for (const [dx, dz] of [
+      [0.04, 0.06],
+      [0.96, 0.06],
+    ])
+      box(parent, [0.12, 0.9, 0.12], [p.x + p.w * dx, 0.55, p.z + p.d * dz], '#a3b9aa', 0);
+  }
+}
+
+/**
+ * Kota di sekitar distrik: setiap blok berisi dua sampai empat bangunan dengan ukuran,
+ * tinggi dan jarak berbeda (tidak kaku), atap lavender pucat, pita jendela biru, pohon di sela.
+ */
+function createCity(parent: THREE.Object3D) {
+  for (const [bi, b] of cityBlocks.entries()) {
+    flat(parent, b, 0, 0.12, palette.sidewalk, 0.3);
+    const count = 2 + (bi % 3);
+    const along = b.w >= b.d;
+    const span = (along ? b.w : b.d) - 1.5;
+    let at = 0.75;
+    for (let i = 0; i < count; i++) {
+      const share = (span / count) * (0.75 + ((bi * 7 + i * 3) % 5) * 0.1);
+      const size = Math.min(share, span - at + 0.75) - 1.2;
+      if (size < 2.5) break;
+      const depth = (along ? b.d : b.w) * (0.55 + ((bi + i) % 3) * 0.12);
+      const h = Math.max(1.8, b.h * (0.55 + ((bi * 5 + i * 7) % 6) * 0.12));
+      const cx = along ? b.x + at + size / 2 : b.x + (b.w - depth) / 2 + depth / 2;
+      const cz = along ? b.z + (b.d - depth) / 2 + depth / 2 : b.z + at + size / 2;
+      const w = along ? size : depth;
+      const d = along ? depth : size;
+      box(parent, [w, h, d], [cx, h / 2 + 0.12, cz], '#f3f5fd', 0.25);
+      box(
+        parent,
+        [w + 0.2, 0.22, d + 0.2],
+        [cx, h + 0.2, cz],
+        (bi + i) % 2 ? '#dfe3fa' : '#e6e1fb',
+        0.12,
+      );
+      for (let y = 1.1; y < h - 0.5; y += 1.2) {
+        box(parent, [w - 0.7, 0.5, 0.05], [cx, y, cz + d / 2 + 0.03], '#b7cdf6', 0);
+        box(parent, [0.05, 0.5, d - 0.7], [cx + w / 2 + 0.03, y, cz], '#a9c1f0', 0);
+      }
+      at += size + 1.2 + ((bi + i) % 2) * 0.8;
+      if (i < count - 1 && (bi + i) % 2 === 0)
+        tree(
+          parent,
+          along ? b.x + at - 0.9 : b.x + b.w * 0.8,
+          along ? b.z + b.d * 0.85 : b.z + at - 0.9,
+          0.8,
+        );
+    }
+  }
+}
+
+/** Bangunan unit dari data Gerai: jadi bila status siap uji ke atas, bertahap bila rencana/persiapan. */
+function unitBuilding(
+  parent: THREE.Object3D,
+  b: DistrictBuilding,
+  title: string | null,
+  status: string,
+  id: string,
+) {
+  if (!title) return plannedLot(parent, b, id, 'kosong');
+  if (status === 'rencana') return plannedLot(parent, b, id, 'pondasi');
+  if (status === 'persiapan') return plannedLot(parent, b, id, 'rangka');
+  if (b.style === 'loket') return counterBuilding(parent, b, title, id);
+  if (b.style === 'apotek') return pharmacyBuilding(parent, b, title, id);
+  if (b.style === 'klinik') return clinicBuilding(parent, b, title, id);
+  if (b.style === 'pendingin') return coldStorageBuilding(parent, b, id);
+  return shopBuilding(
+    parent,
+    b,
+    title,
+    id,
+    b.id === 'sembako' ? palette.pastelPeach : palette.pastelLilac,
+  );
 }
 
 export function createExterior(parent: THREE.Group, model: WorldModel) {
   const scenery = new THREE.Group();
   parent.add(scenery);
-  const width = site.maxX - site.minX,
-    depth = site.maxZ - site.minZ;
-  box(scenery, [width + 2, 0.3, depth + 2], [0, -0.22, 0], '#d6deef', 0.15);
-  box(scenery, [width, 0.08, depth], [0, -0.03, 0], palette.ground, 0);
-
-  // Jalan: utama di utara, jalan dalam, boulevard gerai, jalan gerbang dan penghubung.
-  roadX(scenery, roads.main.z, roads.main.width);
-  roadX(scenery, roads.inner.z, roads.inner.width, site.minX + 2, site.maxX - 2);
-  roadX(scenery, roads.boulevard.z, roads.boulevard.width);
-  const innerEdge = roads.inner.z - roads.inner.width / 2;
-  roadZ(scenery, roads.gate.x, roads.gate.width, roads.main.z + roads.main.width / 2, innerEdge);
-  roadZ(
-    scenery,
-    -3,
-    roads.gate.width,
-    roads.inner.z + roads.inner.width / 2,
-    roads.boulevard.z - roads.boulevard.width / 2,
-  );
-  // Pagar kaca keliling dengan bukaan gerbang, dan jalur rumput di kaki pagar (seperti video).
   const panels = new THREE.Group();
-  const fenceZ = roads.main.z + roads.main.width / 2 + 0.9;
-  const south = site.maxZ - 0.6;
-  fence(scenery, [site.minX + 1, fenceZ], [roads.gate.x - 2.6, fenceZ], panels);
-  fence(scenery, [roads.gate.x + 2.6, fenceZ], [site.maxX - 1, fenceZ], panels);
-  for (const x of [site.minX + 0.6, site.maxX - 0.6]) {
-    fence(scenery, [x, fenceZ], [x, roads.boulevard.z - 2.6], panels);
-    fence(scenery, [x, roads.boulevard.z + 2.6], [x, south], panels);
-  }
-  fence(scenery, [site.minX + 0.6, south], [site.maxX - 0.6, south], panels);
-  box(scenery, [width - 2, 0.04, 1.1], [0, 0.012, fenceZ + 0.75], palette.grass, 0);
-  box(scenery, [width - 2, 0.04, 1.1], [0, 0.012, south - 0.75], palette.grass, 0);
-  for (const x of [site.minX + 1.35, site.maxX - 1.35])
-    box(
-      scenery,
-      [1.1, 0.04, south - fenceZ - 3],
-      [x, 0.012, (south + fenceZ) / 2],
-      palette.grass,
-      0,
-    );
-  cityBlocks(scenery);
-
-  createLogisticsYard(scenery);
-
-  // Plaza depan kantor dan taman titik kumpul.
-  const [ox, oz] = officePosition;
-  box(
-    scenery,
-    [officeSize.width + 3, 0.05, 2.2],
-    [ox, 0.02, oz + officeSize.depth / 2 + 1.6],
-    '#eef1f8',
-    0,
-  );
-  const [px, pz] = park.center;
-  const [pw, pd] = park.size;
-  box(scenery, [pw, 0.06, pd], [px, 0.02, pz], '#cfe9d6', 0.04);
-  box(scenery, [pw, 0.07, 1.1], [px, 0.03, pz], '#f2efe6', 0);
-  box(scenery, [1.1, 0.07, pd], [px, 0.03, pz], '#f2efe6', 0);
-  box(scenery, [3, 0.12, 3], [px, 0.06, pz], '#eef1f8', 0.3);
-  for (const [dx, dz] of [
-    [-5.5, -2.2],
-    [5.5, -2.2],
-    [-5.5, 2.2],
-    [5.5, 2.2],
-  ])
-    tree(scenery, px + dx, pz + dz, 1.1);
-  bench(scenery, px - 2.6, pz - 1.4);
-  bench(scenery, px + 2.6, pz + 1.9);
-  // Parkir mobil kecil di timur taman: hanya marka.
-  for (let i = 0; i < 4; i++) markingRect(scenery, 22 + i * 2.2, 7.2, 2, 4.4, palette.white, 0.07);
-
-  // Pohon ditanam berbaris teratur: tepi boulevard, kaki pagar barat/timur dan utara.
-  const busy = (x: number) => Math.abs(x - roads.gate.x) < 3.5 || Math.abs(x + 3) < 3;
-  for (let x = site.minX + 2; x <= site.maxX - 2; x += 4)
-    if (!busy(x)) tree(scenery, x, roads.boulevard.z - roads.boulevard.width / 2 - 1.1, 0.85);
-  for (let x = site.minX + 3; x <= site.maxX - 3; x += 5)
-    if (Math.abs(x - roads.gate.x) > 4) tree(scenery, x, site.minZ + 0.9, 0.9);
-  for (const z of [-6, -1, 4, 9]) {
-    tree(scenery, site.minX + 1.4, z, 0.95);
-    tree(scenery, site.maxX - 1.4, z, 0.95);
-  }
+  createStreets(scenery);
+  for (const lot of lots) createLot(scenery, panels, lot);
+  createFarm(scenery);
+  createCity(scenery);
+  parkedCars(scenery);
+  createLogisticsYard(scenery, model);
   for (const [x, , z] of lampHeads()) streetLamp(scenery, x - 0.22, z);
   mergeStatic(scenery);
-  mergeTransparent(panels, '#dfe8f8', 0.38);
+  mergeTransparent(panels, '#dfe8f8', 0.36);
   scenery.add(panels);
   noticeBoard(parent);
-
   // Objek yang dapat diklik digabung per objek agar raycast tetap mengenali pilihannya.
-  mergeStatic(building(parent, ox, oz, 'Koperasi', true));
+  const office = lots.flatMap((l) => l.buildings).find((b) => b.id === 'kantor')!;
+  mergeStatic(officeBuilding(parent, office));
   mergeStatic(createWarehouse(parent));
-  for (const plot of model.plots) {
-    const [x, z] = plot.position;
-    const status = String(plot.unit?.data.status || '');
+  for (const plot of model.plots)
     mergeStatic(
-      !plot.unit
-        ? emptyPlot(parent, plot.id, x, z)
-        : status === 'rencana' || status === 'persiapan'
-          ? construction(
-              parent,
-              plot.id,
-              x,
-              z,
-              status === 'rencana' ? 'pondasi' : 'rangka',
-              String(plot.unit.data.title),
-            )
-          : building(parent, x, z, String(plot.unit.data.title), false, plot.id),
+      unitBuilding(
+        parent,
+        plot.building,
+        plot.unit ? String(plot.unit.data.title) : null,
+        String(plot.unit?.data.status || ''),
+        plot.id,
+      ),
     );
-  }
 }
 
-/** Posisi kepala lampu jalan [x, y, z]; dipakai untuk tiang dan cahaya malam. */
+/** Posisi kepala lampu jalan [x, y, z] di trotoar Jalan Raya; dipakai tiang dan cahaya malam. */
 export function lampHeads(): [number, number, number][] {
-  return [
-    ...[-26, -12, 4, 18, 28].map(
-      (x) => [x + 0.22, 3.12, roads.boulevard.z + 2.3] as [number, number, number],
-    ),
-    ...[-26, -8, 8, 24].map(
-      (x) => [x + 0.22, 3.12, roads.inner.z + 2.3] as [number, number, number],
-    ),
-  ];
+  const raya = streets.find((s) => s.id === 'raya')!.rect;
+  return [-50, -30, -12, 14, 32, 52].flatMap((x) => [
+    [x + 0.22, 3.12, raya.z - sidewalk / 2] as [number, number, number],
+    [x + 0.22, 3.12, raya.z + raya.d + sidewalk / 2] as [number, number, number],
+  ]);
 }
 
-/**
- * Gerai belum jadi tampil bertahap sesuai status catatan Gerai: rencana = pondasi,
- * persiapan = rangka. Status siap uji ke atas memakai bangunan lengkap.
- */
-function construction(
-  parent: THREE.Object3D,
-  id: string,
-  x: number,
-  z: number,
-  stage: 'pondasi' | 'rangka',
-  title: string,
-) {
-  const g = new THREE.Group();
-  g.userData.selection = id;
-  parent.add(g);
-  box(g, [4.4, 0.25, 3.2], [x, 0.13, z], '#c9cfd9', 0.03);
-  const corners = [-1.9, 0, 1.9].flatMap((dx) => [-1.3, 1.3].map((dz) => [x + dx, z + dz]));
-  for (const [cx, cz] of corners)
-    box(
-      g,
-      stage === 'pondasi' ? [0.1, 0.8, 0.1] : [0.18, 2.3, 0.18],
-      [cx, stage === 'pondasi' ? 0.65 : 1.4, cz],
-      stage === 'pondasi' ? '#8a6f55' : '#9aa6bb',
-      0,
-    );
-  if (stage === 'rangka') {
-    for (const dz of [-1.3, 1.3]) box(g, [4, 0.16, 0.16], [x, 2.5, z + dz], '#9aa6bb', 0);
-    for (const dx of [-1.9, 1.9]) box(g, [0.16, 0.16, 2.8], [x + dx, 2.5, z], '#9aa6bb', 0);
-    box(g, [4, 2.2, 0.1], [x, 1.35, z - 1.3], palette.white, 0);
-  } else box(g, [1, 0.5, 0.8], [x + 1.2, 0.5, z + 0.6], palette.cardboard, 0.05);
-  box(g, [0.08, 1, 0.08], [x - 1.6, 0.6, z + 1.9], palette.ink, 0);
-  sign(g, title, [x - 0.4, 1.15, z + 1.92], 2.6, palette.navy);
-  return g;
-}
-
-/** Papan pengumuman di taman: isi dari keputusan rapat dan dokumen (lihat kartu detail). */
+/** Papan pengumuman di taman administrasi: isi dari keputusan rapat dan dokumen. */
 function noticeBoard(parent: THREE.Object3D) {
   const [px, pz] = park.center;
   const g = new THREE.Group();
   g.userData.selection = 'papan';
   parent.add(g);
-  const z = pz - park.size[1] / 2 + 0.6;
-  for (const dx of [-1.2, 1.2]) box(g, [0.12, 2.2, 0.12], [px + 5 + dx, 1.1, z], palette.ink, 0);
-  box(g, [2.8, 1.5, 0.12], [px + 5, 1.8, z], palette.navy, 0.04);
-  box(g, [2.5, 1.2, 0.04], [px + 5, 1.8, z + 0.07], palette.white, 0);
-  sign(g, 'PENGUMUMAN', [px + 5, 2.25, z + 0.1], 2.2, palette.navy);
-  for (const dy of [0, -0.3]) box(g, [1.8, 0.08, 0.02], [px + 5, 1.75 + dy, z + 0.1], '#c9d3e6', 0);
+  const z = pz + park.size[1] / 2 - 1.2;
+  for (const dx of [-1.2, 1.2]) box(g, [0.12, 2.2, 0.12], [px + dx, 1.1, z], palette.ink, 0);
+  box(g, [2.8, 1.5, 0.12], [px, 1.8, z], palette.navy, 0.08);
+  box(g, [2.5, 1.2, 0.04], [px, 1.8, z + 0.07], palette.white, 0);
+  sign(g, 'PENGUMUMAN', [px, 2.25, z + 0.1], 2.2, palette.navy);
+  for (const dy of [0, -0.3]) box(g, [1.8, 0.08, 0.02], [px, 1.75 + dy, z + 0.1], '#c9d3e6', 0);
   mergeStatic(g);
 }
 
-/** Cahaya malam: kepala lampu jalan dan jendela kantor. Disembunyikan siang hari. */
+/** Cahaya malam: kepala lampu jalan dan pita jendela kantor. Disembunyikan siang hari. */
 export function createNightLights(parent: THREE.Object3D) {
   const g = new THREE.Group();
   g.visible = false;
@@ -273,16 +364,16 @@ export function createNightLights(parent: THREE.Object3D) {
     g.add(mesh);
   }
   const [ox, oz] = officePosition;
-  // Pita jendela kantor dua lantai (lihat building di office.ts).
+  // Pita jendela kantor (lihat officeBuilding): lantai 1 kiri/kanan pintu, lantai 2 penuh.
   const half = officeSize.width / 2;
   const panes: [number, number, number][] = [
-    [0, 2.75, officeSize.width - 0.9],
-    [-(half + 0.5) / 2, 1.25, half - 1.4],
-    [(half + 0.5) / 2, 1.25, half - 1.4],
+    [0, 4.3, officeSize.width - 1.6],
+    [-(half + 0.8) / 2, 1.6, half - 2.4],
+    [(half + 0.8) / 2, 1.6, half - 2.4],
   ];
   for (const [x, y, width] of panes) {
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, 0.85), glow);
-    mesh.position.set(ox + x, y, oz + officeSize.depth / 2 + 0.12);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, 1.2), glow);
+    mesh.position.set(ox + x, y, oz + officeSize.depth / 2 + 0.14);
     g.add(mesh);
   }
   return g;

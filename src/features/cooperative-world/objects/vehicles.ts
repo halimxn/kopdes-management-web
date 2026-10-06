@@ -86,8 +86,8 @@ export type AmbientCar = { group: THREE.Group; speed: number; z: number };
 /** Kendaraan suasana di jalan utama. Simulasi lingkungan, bukan kendaraan atau pengiriman tercatat. */
 export function createAmbientCars(parent: THREE.Object3D): AmbientCar[] {
   const lanes = [
-    { z: roads.main.z + 1.2, speed: 3.2, start: -24, kind: 'truk' as const },
-    { z: roads.main.z - 1.2, speed: -4, start: 12, kind: 'mobil' as const },
+    { z: roads.main.z + roads.main.width / 4, speed: 3.6, start: -40, kind: 'truk' as const },
+    { z: roads.main.z - roads.main.width / 4, speed: -4.4, start: 20, kind: 'mobil' as const },
   ];
   return lanes.map((lane, index) => {
     const g = new THREE.Group();

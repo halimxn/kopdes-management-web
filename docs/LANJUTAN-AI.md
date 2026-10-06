@@ -29,9 +29,9 @@ Keputusan: distrik kota grid berjalan berlajur + zebra cross; kavling berpagar r
 
 - [x] 1. (DISETUJUI pemilik; catatan: blok kota putih jangan kaku/seragam, ukuran/tinggi/jarak bervariasi, beberapa bangunan kecil per blok) Pasang skill Three.js ringan dari GitHub; denah distrik ala video (tampak atas + sketsa isometrik) → BERHENTI untuk persetujuan pemilik.
 - [ ] 2. Sub-langkah, commit masing-masing:
-  - [ ] 2a. world-model: unit Gerai dipetakan ke bangunan district menurut Jenis (tes); layout.ts menunjuk nilai district (gudang, kantor, petak truk, gerbang, zona kamera); aplikasi tetap terkompilasi.
-  - [ ] 2b. Lingkungan dari district.ts: tanah, jalan bertrotoar bersudut bulat, kavling berpagar, parkir, taman/pohon, lahan, blok kota bervariasi.
-  - [ ] 2c. Bangunan per gaya: gudang WH-04 (dari rect), cold storage WH-03 baru, kantor, loket simpan pinjam, toko, apotek, klinik; kavling rencana bertahap.
+  - [x] 2a. world-model: unit Gerai dipetakan ke bangunan district menurut Jenis (tes); layout.ts menunjuk nilai district (gudang, kantor, petak truk, gerbang, zona kamera); aplikasi tetap terkompilasi.
+  - [x] 2b. Lingkungan dari district.ts: tanah, jalan bertrotoar bersudut bulat, kavling berpagar, parkir, taman/pohon, lahan, blok kota bervariasi.
+  - [x] 2c. (draf; dipoles di 2d) Bangunan per gaya: gudang WH-04 (dari rect), cold storage WH-03 baru, kantor, loket simpan pinjam, toko, apotek, klinik; kavling rencana bertahap.
   - [ ] 2d. Palet video + pastel, sudut membulat, bayangan biru, AO Tinggi/bayangan kontak, kamera dekat.
   Palet, kavling, jalan, pagar, parkir, gudang WH-04, cold storage WH-03, bangunan membulat, AO.
 - [ ] 3. Kartu transparan, pemilih zona ala video, bar chart, klik pergi ke tempat.

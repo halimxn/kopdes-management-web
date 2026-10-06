@@ -1,10 +1,11 @@
 import * as THREE from 'three';
-import { containerSpot, gate, truckBays, warehouse } from '../layout';
+import { allBuildings, docks, logisticsYard } from '../district';
+import { gate, warehouse } from '../layout';
+import type { WorldModel } from '../world-model';
 import { badge, box, gable, palette, sign } from './primitives';
 import {
   cardboardPallet,
   charger,
-  container,
   dashedLineX,
   forklift,
   markingRect,
@@ -34,35 +35,51 @@ function roofSlope(parent: THREE.Object3D, side: 1 | -1) {
   return { slope, length };
 }
 
-/** Pintu dok: kusen biru, ambang terang, pintu gulung setengah terbuka, palet di ambang, nomor. */
+/**
+ * Pintu dok di atas lantai dok yang ditinggikan (video WH-04/WH-03): kusen biru, ambang terang,
+ * pintu gulung setengah terbuka, palet di ambang, nomor dok, bantalan karet di muka lantai dok.
+ */
 function dockDoor(parent: THREE.Object3D, x: number, front: number, index: number) {
-  const top = plinth + 3.55;
+  const sill = docks.platformHeight;
+  const top = sill + 3.3;
   for (const side of [-1, 1])
     box(
       parent,
-      [0.32, 3.55, 0.32],
-      [x + side * 1.56, plinth + 1.775, front + 0.16],
+      [0.34, 3.3, 0.34],
+      [x + side * 1.56, sill + 1.65, front + 0.16],
       palette.blue,
-      0.03,
+      0.06,
     );
-  box(parent, [3.44, 0.36, 0.32], [x, top + 0.18, front + 0.16], palette.blue, 0.03);
+  box(parent, [3.46, 0.38, 0.34], [x, top + 0.19, front + 0.16], palette.blue, 0.06);
   // Ambang pintu: bagian dalam gudang yang terang (bukan lubang gelap) seperti video.
-  box(parent, [2.8, 3.5, 0.06], [x, plinth + 1.75, front + 0.04], '#cdd5e3', 0);
+  box(parent, [2.8, 3.25, 0.06], [x, sill + 1.62, front + 0.04], '#cdd5e3', 0);
   // Pintu gulung terangkat: panel abu bergaris.
-  box(parent, [2.8, 1.05, 0.06], [x, top - 0.52, front + 0.1], '#b4bfd1', 0);
+  box(parent, [2.8, 1.0, 0.06], [x, top - 0.5, front + 0.1], '#b4bfd1', 0);
   for (const dy of [-0.3, 0, 0.3])
-    box(parent, [2.8, 0.03, 0.03], [x, top - 0.52 + dy, front + 0.145], '#9aa7bd', 0);
-  // Perata dok dan bantalan karet; truk dari data berhenti tepat di depannya (truckPose).
-  box(parent, [2.7, 0.22, 0.6], [x, 0.12, front + 0.55], '#a3aec2', 0.02);
+    box(parent, [2.8, 0.03, 0.03], [x, top - 0.5 + dy, front + 0.145], '#9aa7bd', 0);
+  // Bantalan karet di muka lantai dok; truk dari data berhenti tepat di depannya (truckPose).
   for (const side of [-1, 1])
-    box(parent, [0.22, 0.42, 0.26], [x + side * 1.3, 0.62, front + 0.43], palette.tyre, 0.03);
+    box(
+      parent,
+      [0.26, 0.5, 0.24],
+      [x + side * 1.25, sill - 0.35, front + docks.platformDepth + 0.1],
+      palette.tyre,
+      0.05,
+    );
+  box(
+    parent,
+    [2.4, 0.06, 0.5],
+    [x, sill + 0.03, front + docks.platformDepth - 0.25],
+    '#9aa6bb',
+    0.02,
+  );
   // Palet di ambang pintu: pemandangan, bukan stok tercatat.
   const goods = new THREE.Group();
-  goods.position.set(x - 0.3 + (index % 2) * 0.6, 0.23, front + 0.45);
-  goods.scale.setScalar(0.86);
+  goods.position.set(x - 0.3 + (index % 2) * 0.6, sill, front + 0.75);
+  goods.scale.setScalar(0.82);
   parent.add(goods);
-  cardboardPallet(goods, 0, 0, 2, index === 2);
-  badge(parent, String(index + 1), [x, top + 0.78, front + 0.06], 0.78);
+  cardboardPallet(goods, 0, 0, index % 2 ? 1 : 2, index === 2);
+  badge(parent, String(index + 1), [x, top + 0.75, front + 0.06], 0.72);
 }
 
 /**
@@ -113,53 +130,99 @@ export function createWarehouse(parent: THREE.Object3D) {
   return g;
 }
 
-/** Halaman dok, staging, rak luar, pengisian forklift, gerbang dan petak antre. Pemandangan statis. */
-export function createLogisticsYard(parent: THREE.Object3D) {
-  const [cx, cz] = warehouse.center;
-  const [w, , d] = warehouse.size;
-  const front = cz + d / 2;
-  const apronZ = front + warehouse.apronDepth / 2 + 0.7;
-  box(parent, [w + 4, 0.04, warehouse.apronDepth + 1.4], [cx, 0.012, apronZ - 0.7], '#e2e8f4', 0);
-  for (const x of warehouse.docks)
-    markingRect(parent, x, apronZ + 0.3, 3.1, warehouse.apronDepth - 1.4);
-  dashedLineX(parent, cx - w / 2 - 1.5, cx + w / 2 + 1.5, front + 1.75);
-  box(
-    parent,
-    [w + 4, 0.02, 0.1],
-    [cx, 0.035, front + warehouse.apronDepth + 0.6],
-    palette.marking,
-    0,
-  );
-  // Staging: bantalan bergaris kuning berisi palet kardus dan kemasan biru.
-  const [sx, sz] = warehouse.staging;
-  markingRect(parent, sx, sz, 5, 7.5);
-  for (const dz of [-2.4, 0, 2.4]) markingRect(parent, sx, sz + dz, 4.4, 2, '#f7d77a', 0.05);
-  cardboardPallet(parent, sx - 1.2, sz - 2.4, 2);
-  cardboardPallet(parent, sx + 1.2, sz - 2.4, 1);
-  cardboardPallet(parent, sx - 1.2, sz, 2, true);
-  cardboardPallet(parent, sx + 1.2, sz, 1);
-  cardboardPallet(parent, sx + 1.2, sz + 2.4, 2, true);
-  const [rx, rz] = warehouse.outdoorRack;
-  palletRack(parent, rx, rz, 2);
-  // Area pengisian daya forklift di barat gudang: bantalan hijau, lemari pengisi, forklift berjajar.
-  const fx = cx - w / 2 - 2.9;
-  box(parent, [4.2, 0.03, 4.8], [fx, 0.02, cz - 1.2], '#d4f0de', 0);
-  markingRect(parent, fx, cz - 1.2, 4.2, 4.8, '#8fd6a8', 0.06);
-  for (const [i, dz] of [-3.0, -1.6, -0.2].entries()) {
-    charger(parent, fx - 1.6, cz + dz - 0.3);
-    if (i < 2) forklift(parent, fx + 0.4, cz + dz - 0.3, -Math.PI / 2);
+/**
+ * Halaman logistik bersama gudang dan cold storage: lantai dok ditinggikan bertepi kuning,
+ * petak dok, garis kuning putus-putus, staging berisi kardus sebanyak barang yang belum
+ * punya rak (data Barang), rak palet luar, area cas forklift, gerbang berpalang dan pos jaga.
+ */
+export function createLogisticsYard(parent: THREE.Object3D, model: WorldModel) {
+  const wallZ = docks.wallZ;
+  const edge = wallZ + docks.platformDepth;
+  // Lantai dok cold storage hanya bila bangunannya sudah berdiri (gerai berjenis cold storage).
+  const cold = model.plots.find((plot) => plot.id === 'cold-storage');
+  const coldBuilt =
+    Boolean(cold?.unit) && !['rencana', 'persiapan'].includes(String(cold?.unit?.data.status));
+  for (const b of allBuildings().filter(
+    (item) => item.id === 'gudang' || (coldBuilt && item.id === 'cold-storage'),
+  )) {
+    const x = b.rect.x + b.rect.w / 2;
+    box(
+      parent,
+      [b.rect.w, docks.platformHeight, docks.platformDepth],
+      [x, docks.platformHeight / 2, wallZ + docks.platformDepth / 2],
+      '#c9d2ec',
+      0.08,
+    );
+    box(
+      parent,
+      [b.rect.w, 0.04, 0.22],
+      [x, docks.platformHeight + 0.02, edge - 0.12],
+      palette.marking,
+      0,
+    );
+    box(
+      parent,
+      [b.rect.w, 0.16, 0.04],
+      [x, docks.platformHeight - 0.1, edge + 0.01],
+      palette.marking,
+      0,
+    );
+    // Tangga kecil di ujung barat lantai dok.
+    for (let i = 0; i < 3; i++)
+      box(
+        parent,
+        [0.9, docks.platformHeight * ((i + 1) / 4), 0.5],
+        [b.rect.x - 0.5, (docks.platformHeight * ((i + 1) / 4)) / 2, edge - 0.35 - i * 0.5],
+        '#d3dbef',
+        0.03,
+      );
   }
-  // Gerbang masuk berpalang merah-putih dan pos jaga berkaca.
-  for (const side of [-1, 1])
-    box(parent, [0.45, 1.6, 0.45], [gate.x + side * 2.2, 0.8, gate.z], palette.navy, 0.04);
-  box(parent, [4, 0.12, 0.12], [gate.x - 0.1, 1.05, gate.z], '#f4f6fa', 0);
-  for (let i = 0; i < 4; i++)
-    box(parent, [0.45, 0.13, 0.14], [gate.x - 1.6 + i * 1, 1.05, gate.z], '#e2534f', 0);
+  for (const x of [...docks.gudang, ...(coldBuilt ? docks.pendingin : [])])
+    markingRect(parent, x, edge + 3.4, 3.4, 6.6);
+  const lane = logisticsYard.lane;
+  dashedLineX(parent, lane.x + 0.5, lane.x + lane.w - 0.5, lane.z + lane.d);
+  // Staging: kardus muncul hanya bila ada barang tanpa rak dan tanpa gerai (maks. 8 palet).
+  const st = logisticsYard.staging;
+  markingRect(parent, st.x + st.w / 2, st.z + st.d / 2, st.w, st.d);
+  const waiting = Math.min(8, model.inventory.staging.length);
+  for (let i = 0; i < waiting; i++)
+    cardboardPallet(
+      parent,
+      st.x + 2 + (i % 4) * 4,
+      st.z + 2 + Math.floor(i / 4) * 3.4,
+      1 + (i % 2),
+      i % 3 === 2,
+    );
+  const rack = new THREE.Group();
+  rack.position.set(
+    logisticsYard.rack.x + logisticsYard.rack.w / 2,
+    0,
+    logisticsYard.rack.z + logisticsYard.rack.d / 2,
+  );
+  rack.rotation.y = Math.PI / 2;
+  parent.add(rack);
+  palletRack(rack, -1.6, 0, 2);
+  palletRack(rack, 1.6, 0, 2);
+  // Area cas forklift: bantalan hijau pastel, lemari pengisi, dua forklift parkir.
+  const ch = logisticsYard.charging;
+  box(parent, [ch.w, 0.05, ch.d], [ch.x + ch.w / 2, 0.15, ch.z + ch.d / 2], '#d4f0de', 0.1);
+  markingRect(parent, ch.x + ch.w / 2, ch.z + ch.d / 2, ch.w, ch.d, '#8fd6a8', 0.06);
+  for (const [i, dz] of [1.6, 3.8, 6].entries()) {
+    charger(parent, ch.x + 0.6, ch.z + dz);
+    if (i < 2) forklift(parent, ch.x + 2.6, ch.z + dz, -Math.PI / 2);
+  }
+  // Gerbang barang berpalang merah-putih dan pos jaga berkaca.
+  box(parent, [7, 0.12, 0.12], [gate.x, 1.05, gate.z], '#f4f6fa', 0);
+  for (let i = 0; i < 7; i++)
+    box(
+      parent,
+      [0.5, 0.13, 0.14],
+      [gate.x - 3 + i, 1.05, gate.z],
+      i % 2 ? '#f4f6fa' : '#e2534f',
+      0,
+    );
   const [px, pz] = gate.guardPost;
-  box(parent, [2.2, 2, 2], [px, 1, pz], palette.white, 0.05);
-  box(parent, [2.6, 0.2, 2.4], [px, 2.1, pz], palette.blue, 0.04);
-  box(parent, [1.4, 0.7, 0.06], [px, 1.3, pz + 1.02], palette.glass, 0);
-  // Petak antre truk: hanya marka; truk muncul dari data Pengiriman.
-  for (const [x, z] of truckBays) markingRect(parent, x, z, 2.6, 7.4, palette.white, 0.07);
-  container(parent, containerSpot[0], containerSpot[1]);
+  box(parent, [2.4, 2.2, 2.2], [px, 1.1, pz], palette.white, 0.2);
+  box(parent, [2.9, 0.24, 2.7], [px, 2.32, pz], palette.blue, 0.1);
+  box(parent, [1.6, 0.8, 0.06], [px, 1.4, pz + 1.12], palette.glass, 0);
 }

@@ -1,91 +1,123 @@
 // Semua koordinat dunia (X ke timur, Z ke selatan; satuan scene) dikumpulkan di sini
 // agar tata letak bisa diubah tanpa menyentuh mesh. Kamera melihat dari tenggara.
+// Kawasan luar mengikuti district.ts (denah v4); nilai di bawah turunan dari sana.
+import { allBuildings, docks, logisticsYard, lots, streets } from './district';
 
-/** Batas tanah kawasan. */
-export const site = { minX: -31, maxX: 31, minZ: -25, maxZ: 25 };
+/** Batas distrik (kavling + jalan); kota di luarnya hanya pemandangan. Lihat district.ts. */
+export const site = { minX: -66, maxX: 74, minZ: -56, maxZ: 74 };
 
-/** Jalan: utama di utara (truk suplier masuk), jalan dalam, boulevard gerai, dan jalan gerbang. */
+const building = (id: string) => allBuildings().find((b) => b.id === id)!.rect;
+const gudang = building('gudang');
+const kantor = building('kantor');
+const raya = streets.find((s) => s.id === 'raya')!.rect;
+const logistik = lots.find((l) => l.id === 'logistik')!;
+const truckParking = logistik.parking[0].rect;
+const garden = lots.find((l) => l.id === 'administrasi')!.gardens[0];
+
+/** Jalan Raya: lajur masuk truk dari timur di sisi utara jalan. */
 export const roads = {
-  main: { z: -21.5, width: 5 },
-  inner: { z: 0.5, width: 3.6 },
-  boulevard: { z: 13.5, width: 3.6 },
-  gate: { x: -20, width: 3.6 },
+  main: { z: raya.z + raya.d / 2, width: raya.d },
+  /** Jalur manuver truk di depan dok (dalam kavling logistik). */
+  yardLane: logisticsYard.lane.z + logisticsYard.lane.d / 2,
 };
 
-export const gate = { x: roads.gate.x, z: -18.4, guardPost: [-16.6, -16.4] as [number, number] };
+/** Gerbang barang kavling logistik (ke Jalan Raya). */
+const goodsGate = logistik.gates[0];
+export const gate = {
+  x: (goodsGate.from + goodsGate.to) / 2,
+  z: logistik.fence.z + logistik.fence.d,
+  guardPost: [goodsGate.from - 2.4, logistik.fence.z + logistik.fence.d - 2] as [number, number],
+};
 
-/** Parkir antre truk di barat laut, tiga petak membujur utara-selatan. */
-export const truckBays: readonly [number, number][] = [
-  [-28, -11.5],
-  [-25.2, -11.5],
-  [-22.4, -11.5],
-].map(([x, z]) => [x - 1.2, z] as [number, number]);
+/** Parkir antre truk di halaman logistik, tiga petak membujur utara-selatan. */
+export const truckBays: readonly [number, number][] = [0, 1, 2].map(
+  (i) =>
+    [truckParking.x + (truckParking.w / 3) * (i + 0.5), truckParking.z + truckParking.d / 2] as [
+      number,
+      number,
+    ],
+);
 
-/** Gudang: dinding depan menghadap selatan; dok bongkar muat di depan dinding itu. */
+/** Gudang logistik gaya WH-04: dinding dok menghadap selatan. */
 export const warehouse = {
-  center: [3, -13] as [number, number],
+  center: [gudang.x + gudang.w / 2, gudang.z + gudang.d / 2] as [number, number],
   /** Lebar, tinggi dinding, kedalaman. Atap pelana menambah `roofRise` di bubungan. */
-  size: [24, 5.4, 10] as [number, number, number],
+  size: [gudang.w, 5.4, gudang.d] as [number, number, number],
   roofRise: 1.8,
   /** Pusat X empat pintu dok. */
-  docks: [-6, -1, 4, 9],
+  docks: docks.gudang,
   apronDepth: 6,
-  staging: [17.5, -12.5] as [number, number],
-  /** Rak palet luar di timur staging (pemandangan). */
-  outdoorRack: [23.5, -13.4] as [number, number],
+  staging: [
+    logisticsYard.staging.x + logisticsYard.staging.w / 2,
+    logisticsYard.staging.z + logisticsYard.staging.d / 2,
+  ] as [number, number],
+  outdoorRack: [
+    logisticsYard.rack.x + logisticsYard.rack.w / 2,
+    logisticsYard.rack.z + logisticsYard.rack.d / 2,
+  ] as [number, number],
 };
 
-/** Kontainer peti kemas di utara petak antre truk (pemandangan, aksen warna video). */
-export const containerSpot: [number, number] = [-27, -16.75];
-
 /**
- * Jalur forklift suasana: staging → rak luar, bolak-balik. Tidak melintasi dok
- * sehingga tidak bertabrakan dengan truk dari data Pengiriman.
+ * Jalur forklift suasana di halaman logistik: staging → depan cold storage, bolak-balik
+ * di sisi selatan jalur manuver sehingga tidak bertabrakan dengan truk di dok.
  */
 export const yardForkliftPath: [number, number][] = [
-  [17.5, -7.6],
-  [23.5, -7.6],
-  [23.5, -11.4],
+  [warehouse.staging[0], logisticsYard.staging.z - 0.8],
+  [44, logisticsYard.staging.z - 0.8],
+  [44, -13],
 ];
 
-export const officePosition: [number, number] = [-12, 7.2];
-export const officeSize = { width: 8, height: 4, depth: 5.4 };
+export const officePosition: [number, number] = [kantor.x + kantor.w / 2, kantor.z + kantor.d / 2];
+export const officeSize = { width: kantor.w, height: 6.6, depth: kantor.d };
 
-/** Taman dan titik kumpul di timur kantor. */
-export const park = { center: [10, 7.2] as [number, number], size: [16, 7.4] as [number, number] };
+/** Taman administrasi dan papan pengumuman. */
+export const park = {
+  center: [garden.x + garden.w / 2, garden.z + garden.d / 2] as [number, number],
+  size: [garden.w, garden.d] as [number, number],
+};
 
-/** Tujuh lahan gerai di selatan boulevard; urutan menentukan nomor lahan 1–7. */
-export const landPositions: readonly [number, number][] = [-24, -16, -8, 0, 8, 16, 24].map(
-  (x) => [x, 19.6] as [number, number],
-);
-export const plotSize: [number, number] = [6.4, 5.4];
+/** Zoom terjauh di kawasan: seluruh distrik dan sedikit kota (1280 px). */
+export const minWorldZoom = 0.2;
 
-/** Zoom terjauh di kawasan: seluruh kawasan dan sedikit blok kota (1280 px). */
-export const minWorldZoom = 0.38;
-
-export type WorldZone = 'semua' | 'kantor' | 'gudang' | 'gerai';
+export type WorldZone = 'semua' | 'gudang' | 'kantor' | 'kesehatan' | 'gerai' | 'lahan';
+const lotCenter = (id: (typeof lots)[number]['id']) => {
+  const f = lots.find((l) => l.id === id)!.fence;
+  return [f.x + f.w / 2, f.z + f.d / 2] as [number, number];
+};
 export const worldZones: Record<
   WorldZone,
   { title: string; subtitle: string; target: [number, number]; zoom: number }
 > = {
-  semua: { title: 'Semua kawasan', subtitle: 'Tampilan lengkap', target: [0, 0], zoom: 0.42 },
-  kantor: {
-    title: 'Kantor koperasi',
-    subtitle: 'Kantor dan taman',
-    target: [officePosition[0] + 4, officePosition[1] - 1],
-    zoom: 1.1,
-  },
+  semua: { title: 'Semua kawasan', subtitle: 'Seluruh distrik', target: [4, 6], zoom: 0.24 },
   gudang: {
-    title: 'Gudang koperasi',
-    subtitle: 'Dok bongkar muat',
-    target: [warehouse.center[0] - 2, warehouse.center[1] + 5],
-    zoom: 0.95,
+    title: 'Logistik & cold storage',
+    subtitle: 'Gudang, dok, halaman truk',
+    target: [lotCenter('logistik')[0] - 2, lotCenter('logistik')[1] + 2],
+    zoom: 0.62,
+  },
+  kantor: {
+    title: 'Administrasi',
+    subtitle: 'Kantor dan simpan pinjam',
+    target: lotCenter('administrasi'),
+    zoom: 0.62,
+  },
+  kesehatan: {
+    title: 'Layanan kesehatan',
+    subtitle: 'Klinik dan apotek',
+    target: lotCenter('kesehatan'),
+    zoom: 0.66,
   },
   gerai: {
-    title: 'Boulevard gerai',
-    subtitle: 'Tujuh lahan',
-    target: [0, landPositions[0][1] - 1],
-    zoom: 0.8,
+    title: 'Gerai niaga',
+    subtitle: 'Sembako dan gerai tambahan',
+    target: lotCenter('niaga'),
+    zoom: 0.62,
+  },
+  lahan: {
+    title: 'Lahan pertanian',
+    subtitle: 'Enam petak',
+    target: lotCenter('lahan'),
+    zoom: 0.42,
   },
 };
 

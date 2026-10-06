@@ -128,9 +128,9 @@ export function ListCard({
     },
     ...model.plots.map((plot) => ({
       id: plot.id,
-      title: plot.unit ? String(plot.unit.data.title) : `Lahan gerai ${plot.id.split('-')[1]}`,
-      note: `Lahan ${plot.id.split('-')[1].padStart(2, '0')} · ${plot.unit ? plot.unit.data.kind || 'Gerai' : 'Belum ada bangunan'}`,
-      pill: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
+      title: plot.unit ? String(plot.unit.data.title) : plot.name,
+      note: `${plot.lotName} · ${plot.unit ? plot.unit.data.kind || 'Gerai' : 'Belum buka'}`,
+      pill: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Rencana',
       tone: plot.unit ? (plot.unit.data.status === 'aktif' ? 'green' : 'amber') : 'muted',
       icon: <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={30} />,
     })),
@@ -389,7 +389,8 @@ export function ListCard({
           ))}
         {tab === 'lokasi' && model.overflow > 0 && (
           <p className="cw-empty">
-            {model.overflow} gerai lain ada di daftar Gerai; kawasan ini memiliki tujuh lahan.
+            {model.overflow} gerai lain ada di daftar Gerai; distrik ini memiliki{' '}
+            {model.plots.length} bangunan gerai.
           </p>
         )}
       </div>
