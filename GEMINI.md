@@ -1,4 +1,6 @@
-Aturan utama proyek ada di AGENTS.md; skill proyek di .agents/skills. Bagian di bawah dikelola oleh graphify (graphify gemini install).
+@./AGENTS.md
+
+Aturan utama proyek di atas (AGENTS.md) dimuat lewat impor. Skill proyek di .agents/skills. Bagian di bawah dikelola oleh graphify (graphify gemini install).
 
 ## graphify
 
