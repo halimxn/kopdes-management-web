@@ -380,7 +380,7 @@ export const options: Record<string, string[]> = {
   'checklist.status': ['rencana', 'proses', 'selesai'],
   'units.status': ['rencana', 'persiapan', 'siap uji', 'siap buka', 'aktif'],
   'units.slot': ['otomatis', '1', '2', '3', '4', '5', '6', '7'],
-  'inventory-items.rack': ['belum ditentukan', 'A', 'B', 'C', 'D', 'E', 'F'],
+  'inventory-items.rack': ['belum ditentukan', 'A', 'B', 'C', 'D', 'E', 'F', 'C1', 'C2', 'C3'],
   'deliveries.status': ['dipesan', 'dikirim', 'tiba', 'diperiksa', 'selesai', 'dibatalkan'],
   'deliveries.dock': ['belum ditentukan', 'D1', 'D2', 'D3', 'D4'],
   'stock-movements.kind': ['masuk', 'keluar', 'koreksi tambah', 'koreksi kurang'],

@@ -20,6 +20,8 @@ import {
   officeSize,
   park,
   warehouse,
+  coldInterior,
+  shopInterior,
   warehouseInterior,
   worldStations,
   yardForkliftPath,
@@ -33,14 +35,18 @@ import {
   type QualityChoice,
 } from './render-quality';
 import {
+  coldRackIds,
   isBelowMinimum,
   rackIds,
+  roomKind,
   type CharacterActivity,
   type WorldLocation,
   type WorldModel,
   type WorldPreferences,
 } from './world-model';
 import { createWarehouseInterior } from './objects/warehouse-interior';
+import { createColdStorageInterior } from './objects/cold-storage-interior';
+import { createShopInterior } from './objects/shop-interior';
 import { briefingSpot, createNpcs, updateNpcs, walkToward } from './npc/movement';
 import { npcActivityNames, type ManagerPlan, type NpcPlan } from './npc/schedule';
 import type { CharacterPose } from './objects/characters';
@@ -153,6 +159,9 @@ export function WorldScene({
     const node = host.current;
     if (!node) return;
     const settings = qualitySettings[tier];
+    const room = roomKind(location);
+    const shopPlot =
+      room === 'gerai' ? model.plots.find((plot) => plot.id === location.slice(6)) : undefined;
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -178,7 +187,11 @@ export function WorldScene({
         ? 'Lingkungan koperasi 3D. Geser untuk memutar, cubit untuk memperbesar.'
         : location === 'gudang'
           ? 'Interior gudang 3D. Pilih rak melalui penanda atau daftar.'
-          : 'Interior koperasi 3D. Pilih meja melalui penanda atau panel.',
+          : location === 'pendingin'
+            ? 'Interior cold storage 3D. Pilih rak pendingin melalui penanda atau daftar.'
+            : room === 'gerai'
+              ? 'Interior gerai 3D. Pilih rak atau loket melalui penanda.'
+              : 'Interior koperasi 3D. Pilih meja melalui penanda atau panel.',
     );
     node.prepend(renderer.domElement);
     // Hanya development: memeriksa anggaran draw call dari konsol (window.__cwRenderInfo).
@@ -282,16 +295,42 @@ export function WorldScene({
       yardForklift = createYardForklift(world);
     }
     if (location === 'gudang') createWarehouseInterior(world, model.inventory);
+    if (location === 'pendingin') createColdStorageInterior(world, model.inventory);
+    // Gerai: barang berkolom Gerai = gerai ini mengisi rak/lemari.
+    if (shopPlot)
+      createShopInterior(
+        world,
+        shopPlot.building.style,
+        shopPlot.id,
+        model.inventory.atUnits.filter((item) => item.data.unit_id === shopPlot.unit?.id),
+      );
     if (location === 'dalam') {
       createInterior(world);
       mergeStatic(world);
     }
     const color = { biru: palette.blue, lavender: '#a18ae0', hijau: '#51aa8a' }[outfit];
-    const spots = characterSpots[location];
+    const spots = characterSpots[roomKind(location)];
     // Maskot manajer; karakter Tim berasal dari catatan Tim (tidak ada karakter karangan).
     const manager = createCharacter(world, spots[0], color);
     manager.group.userData.selection = 'karakter';
-    const npcs = createNpcs(world, model.staff);
+    const allNpcs = createNpcs(world, model.staff);
+    // Staf Tim gerai yang dimasuki berdiri di balik loket (maks. tiga); sisanya tetap terjadwal.
+    const pinned = shopPlot?.unit
+      ? allNpcs
+          .filter(
+            (actor) =>
+              model.staff.find((row) => row.id === actor.id)?.data.unit_id === shopPlot.unit?.id,
+          )
+          .slice(0, shopInterior.staff.length)
+      : [];
+    pinned.forEach((actor, index) => {
+      const [x, z] = shopInterior.staff[index];
+      actor.character.base.set(x, 0.1, z);
+      actor.character.group.position.copy(actor.character.base);
+      actor.character.group.rotation.y = 0;
+      actor.character.group.visible = true;
+    });
+    const npcs = allNpcs.filter((actor) => !pinned.includes(actor));
     let npcSnap = true;
     const talk = { key: '', since: 0 };
     const raycaster = new THREE.Raycaster();
@@ -366,7 +405,7 @@ export function WorldScene({
       renderer.setSize(width, height);
       composer?.setSize(width, height);
       const aspect = width / height;
-      const span = cameraSpan[location][aspect < 1 ? 'portrait' : 'landscape'];
+      const span = cameraSpan[roomKind(location)][aspect < 1 ? 'portrait' : 'landscape'];
       const cover = covered.current;
       const sheet =
         cover.sheet === 'ringkas'
@@ -420,6 +459,18 @@ export function WorldScene({
           ),
         ),
       );
+    } else if (location === 'pendingin') {
+      for (const id of coldRackIds) {
+        const [x, z] = coldInterior.racks[id];
+        positions.set(`rak-${id}`, new THREE.Vector3(x, coldInterior.rackSize[1] + 0.7, z));
+      }
+    } else if (shopPlot) {
+      positions.set(
+        shopPlot.id,
+        new THREE.Vector3(shopInterior.counter[0], 2.2, shopInterior.counter[1]),
+      );
+      if (['toko', 'apotek'].includes(shopPlot.building.style))
+        positions.set(`isi-${shopPlot.id}`, new THREE.Vector3(0, 3.1, -3.9));
     } else if (location === 'gudang') {
       for (const id of rackIds) {
         const [x, z] = warehouseInterior.racks[id];
@@ -503,10 +554,10 @@ export function WorldScene({
           boss.kind === 'dok'
             ? [warehouse.docks[0] - 2.4, front + 1.6, Math.PI / 2, 'idle']
             : [spots[0][0], spots[0][2], 0, 'idle'];
-      } else {
+      } else if (location === 'gudang') {
         const [sx, sz] = warehouseInterior.staging;
         goal = [sx + 2.4, sz - 1, -Math.PI / 2, 'idle'];
-      }
+      } else goal = [spots[0][0], spots[0][2], Math.PI * 0.85, 'idle'];
       if (npcSnap || reduced.matches) manager.base.set(goal[0], manager.base.y, goal[1]);
       const arrived =
         npcSnap || reduced.matches || walkToward(manager, goal[0], goal[1], Math.min(delta, 0.25));
@@ -522,6 +573,8 @@ export function WorldScene({
       const talking = Boolean(talk.key) && !reduced.matches && elapsed - talk.since < 4;
       markerRefs.current.get('karakter')?.classList.toggle('is-chatting', talking);
       positions.set('karakter', manager.group.position.clone().add(new THREE.Vector3(0, 2.4, 0)));
+      for (const actor of pinned)
+        animateCharacter(actor.character, elapsed, 'idle', reduced.matches);
       const chatting = updateNpcs(
         npcs,
         npcPlans.current,
@@ -726,71 +779,109 @@ export function WorldScene({
     status: string;
     alert?: boolean;
   }[] =
-    location === 'gudang'
-      ? [
-          ...rackIds.map((id) => {
-            const items = model.inventory.racks[id];
-            const lowItems = items.filter(isBelowMinimum).length;
-            return {
-              id: `rak-${id}`,
-              label: `Rak ${id}`,
-              occupied: items.length > 0,
-              status: lowItems ? `${lowItems} di bawah minimum` : `${items.length} barang`,
-              alert: lowItems > 0,
-            };
-          }),
-          ...(model.inventory.staging.length
+    location === 'pendingin'
+      ? coldRackIds.map((id) => {
+          const items = model.inventory.coldRacks[id];
+          const lowItems = items.filter(isBelowMinimum).length;
+          return {
+            id: `rak-${id}`,
+            label: `Rak ${id}`,
+            occupied: items.length > 0,
+            status: lowItems ? `${lowItems} di bawah minimum` : `${items.length} barang`,
+            alert: lowItems > 0,
+          };
+        })
+      : location.startsWith('gerai:')
+        ? model.plots
+            .filter((plot) => `gerai:${plot.id}` === location)
+            .flatMap((plot) => [
+              {
+                id: plot.id,
+                label:
+                  plot.building.style === 'klinik'
+                    ? 'Pendaftaran'
+                    : plot.building.style === 'loket'
+                      ? 'Loket layanan'
+                      : 'Kasir',
+                occupied: true,
+                status: String(plot.unit?.data.status || ''),
+              },
+              ...(['toko', 'apotek'].includes(plot.building.style)
+                ? [
+                    {
+                      id: `isi-${plot.id}`,
+                      label: plot.building.style === 'apotek' ? 'Lemari obat' : 'Rak barang',
+                      occupied: true,
+                      status: `${model.inventory.atUnits.filter((item) => item.data.unit_id === plot.unit?.id).length} barang`,
+                    },
+                  ]
+                : []),
+            ])
+        : location === 'gudang'
+          ? [
+              ...rackIds.map((id) => {
+                const items = model.inventory.racks[id];
+                const lowItems = items.filter(isBelowMinimum).length;
+                return {
+                  id: `rak-${id}`,
+                  label: `Rak ${id}`,
+                  occupied: items.length > 0,
+                  status: lowItems ? `${lowItems} di bawah minimum` : `${items.length} barang`,
+                  alert: lowItems > 0,
+                };
+              }),
+              ...(model.inventory.staging.length
+                ? [
+                    {
+                      id: 'staging',
+                      label: 'Area staging',
+                      occupied: true,
+                      status: `${model.inventory.staging.length} belum ber-rak`,
+                    },
+                  ]
+                : []),
+            ]
+          : location === 'luar'
             ? [
+                { id: 'koperasi', label: 'Kantor koperasi', occupied: true, status: 'Masuk' },
                 {
-                  id: 'staging',
-                  label: 'Area staging',
+                  id: 'gudang',
+                  label: 'Gudang koperasi',
                   occupied: true,
-                  status: `${model.inventory.staging.length} belum ber-rak`,
+                  status: low ? `${low} di bawah minimum` : `${warehouse.docks.length} dok`,
+                  alert: low > 0,
                 },
+                {
+                  id: 'papan',
+                  label: 'Papan pengumuman',
+                  occupied: true,
+                  status: `${model.notices.decisions.length + model.notices.documents.length} info`,
+                  alert: model.notices.documents.length > 0,
+                },
+                ...model.trucks.map((spot) => ({
+                  id: `kirim-${spot.delivery.id}`,
+                  label: String(spot.delivery.data.title),
+                  occupied: true,
+                  status:
+                    spot.place === 'dok'
+                      ? `${spot.delivery.data.status} · D${spot.index + 1}`
+                      : 'dikirim · antre',
+                })),
+                ...model.plots.map((plot, i) => ({
+                  id: plot.id,
+                  label: plot.unit
+                    ? String(plot.unit.data.title)
+                    : `Lahan ${String(i + 1).padStart(2, '0')}`,
+                  occupied: Boolean(plot.unit),
+                  status: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
+                })),
               ]
-            : []),
-        ]
-      : location === 'luar'
-        ? [
-            { id: 'koperasi', label: 'Kantor koperasi', occupied: true, status: 'Masuk' },
-            {
-              id: 'gudang',
-              label: 'Gudang koperasi',
-              occupied: true,
-              status: low ? `${low} di bawah minimum` : `${warehouse.docks.length} dok`,
-              alert: low > 0,
-            },
-            {
-              id: 'papan',
-              label: 'Papan pengumuman',
-              occupied: true,
-              status: `${model.notices.decisions.length + model.notices.documents.length} info`,
-              alert: model.notices.documents.length > 0,
-            },
-            ...model.trucks.map((spot) => ({
-              id: `kirim-${spot.delivery.id}`,
-              label: String(spot.delivery.data.title),
-              occupied: true,
-              status:
-                spot.place === 'dok'
-                  ? `${spot.delivery.data.status} · D${spot.index + 1}`
-                  : 'dikirim · antre',
-            })),
-            ...model.plots.map((plot, i) => ({
-              id: plot.id,
-              label: plot.unit
-                ? String(plot.unit.data.title)
-                : `Lahan ${String(i + 1).padStart(2, '0')}`,
-              occupied: Boolean(plot.unit),
-              status: plot.unit ? String(plot.unit.data.status || 'rencana') : 'Kosong',
-            })),
-          ]
-        : worldStations.map((station) => ({
-            id: station.id,
-            label: station.title,
-            occupied: true,
-            status: 'Buka',
-          }));
+            : worldStations.map((station) => ({
+                id: station.id,
+                label: station.title,
+                occupied: true,
+                status: 'Buka',
+              }));
   return (
     <div className="cw-scene" ref={host}>
       {failed && (

@@ -432,3 +432,16 @@ describe('animasi kedatangan truk', () => {
     expect(drive.at(-1)).toEqual(truckPose(spots[0]));
   });
 });
+
+describe('rak pendingin cold storage', () => {
+  it('barang berak C1–C3 masuk cold storage, bukan staging atau rak gudang', () => {
+    const summary = summarizeInventory([
+      row('a', { title: 'Ikan', rack: 'C1' }),
+      row('b', { title: 'Beras', rack: 'A' }),
+      row('c', { title: 'Kopi', rack: 'belum ditentukan' }),
+    ]);
+    expect(summary.coldRacks.C1.map((item) => item.id)).toEqual(['a']);
+    expect(summary.racks.A.map((item) => item.id)).toEqual(['b']);
+    expect(summary.staging.map((item) => item.id)).toEqual(['c']);
+  });
+});

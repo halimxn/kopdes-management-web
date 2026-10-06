@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { today } from '@/lib/date';
 import { recordHref } from '../../workspace/workspace-navigation';
 import {
+  coldRackIds,
   deliverySteps,
   isBelowMinimum,
   rackIds,
@@ -141,9 +142,59 @@ export function ListCard({
       icon: <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={30} />,
     })),
   ];
-  const places = (location === 'gudang' ? rackPlaces : sitePlaces).filter(
-    (item) => !query || matches(`${item.title} ${item.note}`, query),
-  );
+  // Cold storage: rak pendingin C1–C3; gerai: loket dan rak barang gerai itu.
+  const coldPlaces = coldRackIds.map((id) => {
+    const items = inventory.coldRacks[id];
+    const lowItems = items.filter(isBelowMinimum).length;
+    return {
+      id: `rak-${id}`,
+      title: `Rak pendingin ${id}`,
+      note: stockReady ? `${items.length} barang` : 'Isi mengikuti daftar Barang',
+      pill: !stockReady
+        ? '—'
+        : lowItems
+          ? `${lowItems} minimum`
+          : items.length
+            ? 'Cukup'
+            : 'Kosong',
+      tone: !stockReady ? 'muted' : lowItems ? 'amber' : items.length ? 'green' : 'muted',
+      icon: <WorldIcon kind="rak" size={30} />,
+    };
+  });
+  const shop = model.plots.find((plot) => `gerai:${plot.id}` === location);
+  const shopPlaces = shop
+    ? [
+        {
+          id: shop.id,
+          title: shop.unit ? String(shop.unit.data.title) : shop.name,
+          note: String(shop.unit?.data.kind || shop.name),
+          pill: String(shop.unit?.data.status || 'rencana'),
+          tone: shop.unit?.data.status === 'aktif' ? 'green' : 'amber',
+          icon: <WorldIcon kind="gerai" size={30} />,
+        },
+        ...(['toko', 'apotek'].includes(shop.building.style)
+          ? [
+              {
+                id: `isi-${shop.id}`,
+                title: shop.building.style === 'apotek' ? 'Lemari obat' : 'Rak barang',
+                note: 'Barang ditempatkan di gerai ini',
+                pill: `${inventory.atUnits.filter((item) => item.data.unit_id === shop.unit?.id).length} barang`,
+                tone: 'blue',
+                icon: <WorldIcon kind="palet" size={30} />,
+              },
+            ]
+          : []),
+      ]
+    : [];
+  const places = (
+    location === 'gudang'
+      ? rackPlaces
+      : location === 'pendingin'
+        ? coldPlaces
+        : shop
+          ? shopPlaces
+          : sitePlaces
+  ).filter((item) => !query || matches(`${item.title} ${item.note}`, query));
   const stock = stockReady
     ? [...inventory.items]
         .filter((row) => !query || matches(`${row.data.title} ${row.data.sku || ''}`, query))
@@ -172,7 +223,11 @@ export function ListCard({
   const tasks = model.tasks.filter((row) => !query || matches(String(row.data.title), query));
   const meetings = timeline.filter((step) => !query || matches(String(step.row.data.title), query));
   const tabs: { id: ListTab; label: string; count: number }[] = [
-    { id: 'lokasi', label: location === 'gudang' ? 'Rak' : 'Lokasi', count: places.length },
+    {
+      id: 'lokasi',
+      label: location === 'gudang' || location === 'pendingin' ? 'Rak' : 'Lokasi',
+      count: places.length,
+    },
     { id: 'dok', label: 'Dok', count: model.trucks.length },
     { id: 'hari', label: 'Hari ini', count: events.length },
     { id: 'tim', label: 'Tim', count: team.length },

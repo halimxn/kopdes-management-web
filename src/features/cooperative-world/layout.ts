@@ -207,6 +207,38 @@ export const warehouseInterior = {
   staging: [-5, 4.4] as [number, number],
 };
 
+/** Interior cold storage (koordinat lokal): dinding belakang Z −6, tiga rak pendingin C1–C3. */
+export const coldInterior = {
+  size: [18, 12] as [number, number],
+  rackSize: [4.4, 3, 1.3] as [number, number, number],
+  racks: { C1: [-5.5, -3.6], C2: [0, -3.6], C3: [5.5, -3.6] } as Record<
+    'C1' | 'C2' | 'C3',
+    [number, number]
+  >,
+  /** Area penerimaan di dekat pintu dok (depan kanan). */
+  receiving: [4.5, 2.8] as [number, number],
+};
+
+/** Interior gerai (koordinat lokal) dipakai semua jenis: rak/lemari di belakang, loket di depan. */
+export const shopInterior = {
+  size: [14, 10] as [number, number],
+  /** Rak barang di dinding belakang dan dua rak tengah; urutan mengisi barang gerai. */
+  shelves: [
+    [-4, -3.9],
+    [0, -3.9],
+    [4, -3.9],
+    [-2.6, -0.6],
+    [2.6, -0.6],
+  ] as [number, number][],
+  counter: [3.4, 2.6] as [number, number],
+  /** Posisi staf (maks. tiga) di balik loket. */
+  staff: [
+    [3.4, 1.4],
+    [1.6, 1.4],
+    [5.2, 1.4],
+  ] as [number, number][],
+};
+
 /** Posisi awal maskot: [manajer, karakter 2, karakter 3]. */
 export const characterSpots = {
   luar: [
@@ -224,6 +256,16 @@ export const characterSpots = {
     [3, 0.1, 1.2],
     [0.5, 0.1, 4.8],
   ],
+  pendingin: [
+    [-2.5, 0.1, 2.6],
+    [0, 0.1, 0],
+    [0, 0.1, 0],
+  ],
+  gerai: [
+    [-4.5, 0.1, 3],
+    [0, 0.1, 0],
+    [0, 0.1, 0],
+  ],
 } as const satisfies Record<string, readonly (readonly [number, number, number])[]>;
 
 /** Setengah tinggi bidang pandang kamera ortografis pada zoom 1. */
@@ -231,4 +273,6 @@ export const cameraSpan = {
   luar: { portrait: 20, landscape: 13.2 },
   dalam: { portrait: 13, landscape: 9.5 },
   gudang: { portrait: 13, landscape: 9.5 },
+  pendingin: { portrait: 11, landscape: 8 },
+  gerai: { portrait: 10, landscape: 7.2 },
 };

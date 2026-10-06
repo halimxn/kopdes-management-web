@@ -209,8 +209,18 @@ export function CooperativeWorld({
   }
   function enter(next: WorldLocation) {
     setLocation(next);
-    setSelected(next === 'luar' ? 'kawasan' : next === 'gudang' ? 'gudang' : 'rapat');
-    if (next === 'gudang') setZone('gudang');
+    setSelected(
+      next === 'luar'
+        ? 'kawasan'
+        : next === 'gudang'
+          ? 'gudang'
+          : next === 'pendingin'
+            ? 'cold-storage'
+            : next.startsWith('gerai:')
+              ? next.slice(6)
+              : 'rapat',
+    );
+    if (next === 'gudang' || next === 'pendingin') setZone('gudang');
     setSpot(null);
     // Interior gudang lebih lebar dari kantor; zoom awal lebih jauh agar enam rak terlihat.
     setZoom(next === 'luar' ? worldZones[zone].zoom : 0.8);
@@ -503,7 +513,11 @@ export function CooperativeWorld({
           timeline={timeline}
           unavailable={unavailable}
           loading={loading}
-          warehouse={location === 'gudang' || (location === 'luar' && zone === 'gudang')}
+          warehouse={
+            location === 'gudang' ||
+            location === 'pendingin' ||
+            (location === 'luar' && zone === 'gudang')
+          }
           stockState={stockState}
         />
         <div className="cw-crumbs">
@@ -514,7 +528,15 @@ export function CooperativeWorld({
           {location !== 'luar' && (
             <>
               <ChevronRight size={13} />
-              <span>{location === 'gudang' ? 'Gudang koperasi' : 'Kantor koperasi'}</span>
+              <span>
+                {location === 'gudang'
+                  ? 'Gudang koperasi'
+                  : location === 'pendingin'
+                    ? 'Cold storage'
+                    : location.startsWith('gerai:')
+                      ? model.plots.find((plot) => `gerai:${plot.id}` === location)?.name || 'Gerai'
+                      : 'Kantor koperasi'}
+              </span>
             </>
           )}
           <Button className="cw-tour-button" onClick={() => runTour(tour === null ? 0 : null)}>

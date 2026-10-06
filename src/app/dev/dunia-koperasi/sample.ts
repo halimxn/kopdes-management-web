@@ -14,7 +14,8 @@ const row = (id: string, data: Record<string, unknown>): Item => ({
 
 export function sampleWorkspace(): Workspace {
   const date = today();
-  const items: [string, string, number, number, string][] = [
+  // [judul, rak, stok, minimum, satuan, gerai?] — rak C1–C3 = cold storage; gerai = barang di gerai.
+  const items: [string, string, number, number, string, string?][] = [
     ['Contoh beras 5 kg', 'A', 40, 20, 'karung'],
     ['Contoh minyak 1 L', 'A', 6, 24, 'botol'],
     ['Contoh gula 1 kg', 'A', 30, 20, 'pak'],
@@ -24,6 +25,14 @@ export function sampleWorkspace(): Workspace {
     ['Contoh air mineral', 'D', 50, 24, 'dus'],
     ['Contoh sabun', 'D', 2, 12, 'pak'],
     ['Contoh kopi sachet', 'belum ditentukan', 20, 10, 'renceng'],
+    ['Contoh ikan beku', 'C1', 14, 10, 'kg'],
+    ['Contoh sayur segar', 'C1', 4, 8, 'ikat'],
+    ['Contoh daging ayam', 'C2', 22, 10, 'kg'],
+    ['Contoh susu UHT', 'belum ditentukan', 30, 12, 'kotak', 'unit-1'],
+    ['Contoh mi instan', 'belum ditentukan', 6, 20, 'dus', 'unit-1'],
+    ['Contoh minyak goreng gerai', 'belum ditentukan', 18, 10, 'botol', 'unit-1'],
+    ['Contoh paracetamol', 'belum ditentukan', 40, 20, 'strip', 'unit-2'],
+    ['Contoh vitamin C', 'belum ditentukan', 5, 10, 'botol', 'unit-2'],
   ];
   return {
     organization: [row('org', { title: 'Contoh Koperasi', manager: 'Contoh Manajer' })],
@@ -35,7 +44,7 @@ export function sampleWorkspace(): Workspace {
       row('unit-5', { title: 'Contoh Cold Storage', kind: 'cold storage', status: 'aktif' }),
       row('unit-6', { title: 'Contoh Gerai Kuliner', kind: 'kuliner', status: 'persiapan' }),
     ],
-    'inventory-items': items.map(([title, rack, stock, minimum, measurement], index) =>
+    'inventory-items': items.map(([title, rack, stock, minimum, measurement, unit], index) =>
       row(`item-${index}`, {
         title,
         sku: `CTH-${index + 1}`,
@@ -43,6 +52,7 @@ export function sampleWorkspace(): Workspace {
         book_quantity: stock,
         minimum_quantity: minimum,
         measurement,
+        ...(unit ? { unit_id: unit } : {}),
       }),
     ),
     'work-items': [
@@ -63,6 +73,7 @@ export function sampleWorkspace(): Workspace {
       row('st-1', {
         title: 'Contoh Ani',
         role: 'Kasir',
+        unit_id: 'unit-1',
         status: 'aktif',
         section: 'layanan anggota',
         outfit: 'hijau',

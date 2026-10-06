@@ -13,8 +13,15 @@ export const worldPreferencesSchema = z.object({
   quality: z.enum(['otomatis', 'tinggi', 'sedang', 'hemat']).default('otomatis'),
 });
 export type WorldPreferences = z.infer<typeof worldPreferencesSchema>;
-/** luar: kawasan; dalam: interior kantor; gudang: interior gudang. */
-export type WorldLocation = 'luar' | 'dalam' | 'gudang';
+/**
+ * luar: distrik; dalam: interior kantor; gudang: interior gudang logistik; pendingin: interior
+ * cold storage; gerai:<id bangunan>: interior gerai (sembako, apotek, klinik, simpan pinjam, …).
+ */
+export type WorldLocation = 'luar' | 'dalam' | 'gudang' | 'pendingin' | `gerai:${string}`;
+export type RoomKind = 'luar' | 'dalam' | 'gudang' | 'pendingin' | 'gerai';
+/** Jenis ruang untuk tabel kamera/posisi; gerai mana yang dimasuki dibaca dari `gerai:<id>`. */
+export const roomKind = (location: WorldLocation): RoomKind =>
+  location.startsWith('gerai:') ? 'gerai' : (location as RoomKind);
 export type CharacterActivity = 'idle' | 'work' | 'meeting' | 'gym';
 
 export function getWorldModel(data: Workspace, now: Date) {
@@ -120,6 +127,9 @@ export function placeTrucks(deliveries: Item[], docks = 4, queue = 3): TruckSpot
 
 export const rackIds = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
 export type RackId = (typeof rackIds)[number];
+/** Rak pendingin di cold storage (kolom Rak barang C1–C3). */
+export const coldRackIds = ['C1', 'C2', 'C3'] as const;
+export type ColdRackId = (typeof coldRackIds)[number];
 
 /** Stok buku di bawah batas minimum; batas 0 atau kosong berarti tidak dipantau. */
 export function isBelowMinimum(item: Item) {
@@ -137,15 +147,20 @@ export function summarizeInventory(items: Item[]) {
     RackId,
     Item[]
   >;
+  const coldRacks = Object.fromEntries(coldRackIds.map((id) => [id, [] as Item[]])) as Record<
+    ColdRackId,
+    Item[]
+  >;
   const staging: Item[] = [];
   const atUnits: Item[] = [];
   for (const item of items) {
-    const rack = String(item.data.rack || '') as RackId;
-    if (rackIds.includes(rack)) racks[rack].push(item);
+    const rack = String(item.data.rack || '');
+    if (rackIds.includes(rack as RackId)) racks[rack as RackId].push(item);
+    else if (coldRackIds.includes(rack as ColdRackId)) coldRacks[rack as ColdRackId].push(item);
     else if (item.data.unit_id) atUnits.push(item);
     else staging.push(item);
   }
-  return { items, racks, staging, atUnits, low: items.filter(isBelowMinimum) };
+  return { items, racks, coldRacks, staging, atUnits, low: items.filter(isBelowMinimum) };
 }
 export type InventorySummary = ReturnType<typeof summarizeInventory>;
 

@@ -12,6 +12,8 @@ import { StockBar } from './Charts';
 import {
   deliverySteps,
   isBelowMinimum,
+  coldRackIds,
+  type ColdRackId,
   type CharacterActivity,
   type MeetingStep,
   type RackId,
@@ -174,7 +176,14 @@ export function DetailCard(props: Props) {
   const count = (value: number) => (unavailable ? '—' : value);
   const inventory = model.inventory;
   const rackId = selected.startsWith('rak-') ? (selected.slice(4) as RackId) : null;
-  const rackItems = rackId ? inventory.racks[rackId] || [] : [];
+  // Rak gudang A–F atau rak pendingin C1–C3 (cold storage).
+  const coldRack = rackId ? (coldRackIds as readonly string[]).includes(rackId) : false;
+  const rackItems = rackId
+    ? (coldRack ? inventory.coldRacks[rackId as ColdRackId] : inventory.racks[rackId]) || []
+    : [];
+  const shopGoods = selected.startsWith('isi-')
+    ? model.plots.find((row) => row.id === selected.slice(4))
+    : undefined;
   const stockReady = props.stockState === 'aktif';
   const person = selected.startsWith('staf-')
     ? props.plans.find((plan) => `staf-${plan.staff.id}` === selected)
@@ -215,107 +224,116 @@ export function DetailCard(props: Props) {
             subtitle: String(item.data.sku || 'Tanpa SKU'),
             icon: <WorldIcon kind={isBelowMinimum(item) ? 'kardus-minimum' : 'kardus'} size={40} />,
           }
-        : selected === 'lingkungan'
+        : shopGoods
           ? {
-              eyebrow: 'Pengaturan',
-              title: 'Suasana & karakter',
-              subtitle: 'Cuaca, waktu dan grafis',
-              icon: <WorldIcon kind="suasana" size={40} />,
+              eyebrow: `${shopGoods.name} · rak`,
+              title: shopGoods.building.style === 'apotek' ? 'Lemari obat' : 'Rak barang',
+              subtitle: 'Barang yang kolom Gerai-nya menunjuk gerai ini',
+              icon: <WorldIcon kind="palet" size={40} />,
             }
-          : selected === 'karakter'
+          : selected === 'lingkungan'
             ? {
-                eyebrow: 'Maskot',
-                title: 'Maskot koperasi',
-                subtitle: activityNames[props.activity],
-                icon: <WorldIcon kind="orang" size={40} />,
+                eyebrow: 'Pengaturan',
+                title: 'Suasana & karakter',
+                subtitle: 'Cuaca, waktu dan grafis',
+                icon: <WorldIcon kind="suasana" size={40} />,
               }
-            : selected === 'gudang'
+            : selected === 'karakter'
               ? {
-                  eyebrow:
-                    location === 'gudang'
-                      ? 'Gudang · interior'
-                      : `Gudang · ${warehouse.docks.length} dok`,
-                  title: worldZones.gudang.title,
-                  subtitle: 'Bongkar muat dan stok',
-                  icon: <WorldIcon kind="gudang" size={40} />,
+                  eyebrow: 'Maskot',
+                  title: 'Maskot koperasi',
+                  subtitle: activityNames[props.activity],
+                  icon: <WorldIcon kind="orang" size={40} />,
                 }
-              : selected === 'papan'
+              : selected === 'gudang'
                 ? {
-                    eyebrow: 'Taman · papan',
-                    title: 'Papan pengumuman',
-                    subtitle: 'Keputusan rapat dan masa berlaku dokumen',
-                    icon: <WorldIcon kind="papan" size={40} />,
+                    eyebrow:
+                      location === 'gudang'
+                        ? 'Gudang · interior'
+                        : `Gudang · ${warehouse.docks.length} dok`,
+                    title: worldZones.gudang.title,
+                    subtitle: 'Bongkar muat dan stok',
+                    icon: <WorldIcon kind="gudang" size={40} />,
                   }
-                : person
+                : selected === 'papan'
                   ? {
-                      eyebrow: `Tim · ${person.staff.data.section || 'seksi belum ditentukan'}`,
-                      title: String(person.staff.data.title),
-                      subtitle: String(person.staff.data.role || 'Peran belum diisi'),
-                      icon: <WorldIcon kind="orang" size={40} />,
+                      eyebrow: 'Taman · papan',
+                      title: 'Papan pengumuman',
+                      subtitle: 'Keputusan rapat dan masa berlaku dokumen',
+                      icon: <WorldIcon kind="papan" size={40} />,
                     }
-                  : delivery
+                  : person
                     ? {
-                        eyebrow: `Pengiriman · ${delivery.data.direction === 'keluar' ? 'keluar' : 'masuk'}`,
-                        title: String(delivery.data.title),
-                        subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
-                        icon: <WorldIcon kind="truk" size={40} />,
+                        eyebrow: `Tim · ${person.staff.data.section || 'seksi belum ditentukan'}`,
+                        title: String(person.staff.data.title),
+                        subtitle: String(person.staff.data.role || 'Peran belum diisi'),
+                        icon: <WorldIcon kind="orang" size={40} />,
                       }
-                    : selected.startsWith('kendaraan-suasana') || selected === 'forklift-suasana'
+                    : delivery
                       ? {
-                          eyebrow:
-                            selected === 'forklift-suasana' ? 'Halaman gudang' : 'Jalan utama',
-                          title: selected === 'forklift-suasana' ? 'Forklift' : 'Kendaraan lewat',
-                          subtitle: 'Simulasi lingkungan',
-                          icon: (
-                            <WorldIcon
-                              kind={selected === 'forklift-suasana' ? 'forklift' : 'truk'}
-                              size={40}
-                            />
-                          ),
+                          eyebrow: `Pengiriman · ${delivery.data.direction === 'keluar' ? 'keluar' : 'masuk'}`,
+                          title: String(delivery.data.title),
+                          subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
+                          icon: <WorldIcon kind="truk" size={40} />,
                         }
-                      : rackId
+                      : selected.startsWith('kendaraan-suasana') || selected === 'forklift-suasana'
                         ? {
-                            eyebrow: 'Gudang · rak',
-                            title: `Rak ${rackId}`,
-                            subtitle: stockReady
-                              ? `${rackItems.length} barang tercatat`
-                              : 'Isi mengikuti daftar Barang',
-                            icon: <WorldIcon kind="rak" size={40} />,
+                            eyebrow:
+                              selected === 'forklift-suasana' ? 'Halaman gudang' : 'Jalan utama',
+                            title: selected === 'forklift-suasana' ? 'Forklift' : 'Kendaraan lewat',
+                            subtitle: 'Simulasi lingkungan',
+                            icon: (
+                              <WorldIcon
+                                kind={selected === 'forklift-suasana' ? 'forklift' : 'truk'}
+                                size={40}
+                              />
+                            ),
                           }
-                        : selected === 'staging'
+                        : rackId
                           ? {
-                              eyebrow: 'Gudang · staging',
-                              title: 'Area staging',
-                              subtitle: 'Barang tanpa rak dan tanpa gerai',
-                              icon: <WorldIcon kind="palet" size={40} />,
+                              eyebrow: coldRack ? 'Cold storage · rak pendingin' : 'Gudang · rak',
+                              title: `Rak ${rackId}`,
+                              subtitle: stockReady
+                                ? `${rackItems.length} barang tercatat`
+                                : 'Isi mengikuti daftar Barang',
+                              icon: <WorldIcon kind="rak" size={40} />,
                             }
-                          : plot
+                          : selected === 'staging'
                             ? {
-                                eyebrow: `${plot.lotName} · ${plot.unit ? 'gerai' : 'rencana'}`,
-                                title: plot.unit ? String(plot.unit.data.title) : plot.name,
-                                subtitle: plot.unit
-                                  ? 'Terhubung ke catatan gerai'
-                                  : 'Belum ada catatan gerai untuk bangunan ini',
-                                icon: <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={40} />,
+                                eyebrow: 'Gudang · staging',
+                                title: 'Area staging',
+                                subtitle: 'Barang tanpa rak dan tanpa gerai',
+                                icon: <WorldIcon kind="palet" size={40} />,
                               }
-                            : station
+                            : plot
                               ? {
-                                  eyebrow: 'Kantor · interior',
-                                  title: station.title,
-                                  subtitle: 'Pilih area untuk membuka catatan',
-                                  icon: <WorldIcon kind="kantor" size={40} />,
+                                  eyebrow: `${plot.lotName} · ${plot.unit ? 'gerai' : 'rencana'}`,
+                                  title: plot.unit ? String(plot.unit.data.title) : plot.name,
+                                  subtitle: plot.unit
+                                    ? 'Terhubung ke catatan gerai'
+                                    : 'Belum ada catatan gerai untuk bangunan ini',
+                                  icon: (
+                                    <WorldIcon kind={plot.unit ? 'gerai' : 'lahan'} size={40} />
+                                  ),
                                 }
-                              : {
-                                  eyebrow:
-                                    location === 'dalam'
-                                      ? 'Kantor · interior'
-                                      : zone === 'semua'
-                                        ? 'Dunia koperasi'
-                                        : `Zona · ${worldZones[zone].title}`,
-                                  title: 'Kawasan koperasi',
-                                  subtitle: model.title,
-                                  icon: <WorldIcon kind="kawasan" size={40} />,
-                                };
+                              : station
+                                ? {
+                                    eyebrow: 'Kantor · interior',
+                                    title: station.title,
+                                    subtitle: 'Pilih area untuk membuka catatan',
+                                    icon: <WorldIcon kind="kantor" size={40} />,
+                                  }
+                                : {
+                                    eyebrow:
+                                      location === 'dalam'
+                                        ? 'Kantor · interior'
+                                        : zone === 'semua'
+                                          ? 'Dunia koperasi'
+                                          : `Zona · ${worldZones[zone].title}`,
+                                    title: 'Kawasan koperasi',
+                                    subtitle: model.title,
+                                    icon: <WorldIcon kind="kawasan" size={40} />,
+                                  };
   const truckSpot = delivery
     ? model.trucks.find((row) => row.delivery.id === delivery.id)
     : undefined;
@@ -451,6 +469,20 @@ export function DetailCard(props: Props) {
             <Link className="cw-secondary" href="/stok-opname">
               Mulai stok opname <ArrowRight size={14} />
             </Link>
+          </>
+        ) : shopGoods ? (
+          <>
+            <StockList
+              items={inventory.atUnits.filter((row) => row.data.unit_id === shopGoods.unit?.id)}
+              state={props.stockState}
+              empty="Belum ada barang yang ditempatkan di gerai ini. Isi kolom Gerai pada Barang."
+            />
+            <Link className="cw-primary" href="/barang">
+              Atur barang <ArrowRight size={15} />
+            </Link>
+            <Button className="cw-secondary" onClick={() => props.onEnter('luar')}>
+              Kembali ke kawasan <ArrowRight size={14} />
+            </Button>
           </>
         ) : selected === 'lingkungan' ? (
           <>
@@ -764,6 +796,23 @@ export function DetailCard(props: Props) {
               {plot.unit ? 'Buka catatan gerai' : 'Tambahkan gerai'}
               <ArrowRight size={15} />
             </Link>
+            {plot.unit && !['rencana', 'persiapan'].includes(String(plot.unit.data.status)) ? (
+              location === 'luar' ? (
+                <Button
+                  className="cw-secondary"
+                  onClick={() =>
+                    props.onEnter(plot.id === 'cold-storage' ? 'pendingin' : `gerai:${plot.id}`)
+                  }
+                >
+                  {plot.id === 'cold-storage' ? 'Masuk cold storage' : 'Masuk gerai'}
+                  <ArrowRight size={14} />
+                </Button>
+              ) : (
+                <Button className="cw-secondary" onClick={() => props.onEnter('luar')}>
+                  Kembali ke kawasan <ArrowRight size={14} />
+                </Button>
+              )
+            ) : null}
           </>
         ) : station ? (
           <>

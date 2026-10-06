@@ -36,8 +36,8 @@ Keputusan: distrik kota grid berjalan berlajur + zebra cross; kavling berpagar r
   Palet, kavling, jalan, pagar, parkir, gudang WH-04, cold storage WH-03, bangunan membulat, AO.
 - [x] 3. Kartu transparan, pemilih zona ala video, bar chart, klik pergi ke tempat.
 - [x] 4. Animasi truk (belok, mundur ke dok), kendaraan suasana di grid, kamera halus.
-- [ ] 5. Interior cold storage.
-- [ ] 6. Interior gerai.
+- [x] 5. Interior cold storage.
+- [x] 6. Interior gerai.
 
 ## Paket selesai: perbaikan kecil v3.1 (keputusan pemilik 6 Oktober, hasil wawancara)
 
