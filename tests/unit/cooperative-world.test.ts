@@ -23,6 +23,7 @@ import {
   truckPose,
   truckRoute,
 } from '@/features/cooperative-world/truck-routes';
+import { allBuildings, validateDistrict } from '@/features/cooperative-world/district';
 const row = (
   id: string,
   data: Record<string, unknown>,
@@ -323,7 +324,10 @@ describe('rute truk dan forklift suasana', () => {
       ...[1, 2, 3, 4].map((n) => row(`d${n}`, { status: 'tiba' }, `2026-10-01T0${n}:00:00Z`)),
       row('q', { status: 'dikirim' }, '2026-10-01T09:00:00Z'),
     ]);
-    const route = truckRoute(full.find((spot) => spot.place === 'antre')!, full);
+    const route = truckRoute(
+      full.find((spot) => spot.place === 'antre')!,
+      full,
+    );
     expect(route.target).toBeNull();
     expect(route.ahead).toEqual([]);
   });
@@ -347,5 +351,25 @@ describe('rute truk dan forklift suasana', () => {
     expect(back.x).toBeCloseTo(4);
     expect(back.z).toBeCloseTo(0);
     expect(pathPose(path, 2 * (3 + 1), 2, 1)).toMatchObject({ x: 0, z: 0 });
+  });
+});
+
+describe('denah distrik v4', () => {
+  it('lolos aturan denah: pagar, jarak, gerbang ke jalan, klinik–apotek, jauh dari dok', () => {
+    expect(validateDistrict()).toEqual([]);
+  });
+  it('enam jenis unit KDMP punya bangunan tetap dan kantor selalu ada', () => {
+    const ids = allBuildings().map((b) => b.id);
+    for (const id of [
+      'kantor',
+      'simpan-pinjam',
+      'sembako',
+      'apotek',
+      'klinik',
+      'cold-storage',
+      'gudang',
+    ])
+      expect(ids).toContain(id);
+    expect(allBuildings().find((b) => b.id === 'kantor')?.kinds).toEqual([]);
   });
 });

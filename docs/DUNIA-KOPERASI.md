@@ -21,6 +21,10 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jika gaya berubah atas permin
 
 ![Komposisi UI dan lingkungan video](referensi-dunia/video-contact-sheet.jpg)
 
+## Distrik ala video v4 — denah menunggu persetujuan pemilik (6 Oktober 2026)
+
+Wawancara kedua: tata letak harus mengikuti video, bukan denah lama dan bukan zip. Data denah di  (fungsi murni,  teruji); gambar dibuat ulang dengan denah lolos validasi; SVG ditulis: [tampak atas](referensi-dunia/blueprint/denah-distrik.png) ([SVG](referensi-dunia/blueprint/denah-distrik.svg)), [sketsa isometrik](referensi-dunia/blueprint/denah-distrik-iso.png). Jalan kota grid (Raya 4 lajur, Koperasi, Utara, Barat, Timur, Lahan) bertrotoar; lima kavling berpagar: Logistik & cold storage (gudang WH-04 empat dok + cold storage WH-03 dua dok, lantai dok tinggi bertepi kuning, parkir 3 truk, cas forklift, staging kardus, gerbang barang ke Jalan Raya), Administrasi (kantor + simpan pinjam + parkir mobil + taman), Layanan kesehatan (klinik + apotek berdampingan, plaza, parkir), Gerai niaga (sembako + tiga kavling gerai tambahan, parkir), Lahan pertanian (enam petak kosong). Truk masuk dari timur Jalan Raya tanpa melewati area warga. Rincian keputusan dan urutan kerja di LANJUTAN-AI. Implementasi 3D dimulai setelah denah disetujui.
+
 ## Blueprint visual v3 — mengikuti video (6 Oktober 2026, berlaku)
 
 Arahan pemilik 6 Oktober: tampilan, aset dan aktivitas dibuat **semirip mungkin dengan video**, lalu diperbaiki. Bagian ini mengalahkan uraian gaya lama di bawahnya bila bertentangan. Fokus paket ini tampilan; menu web tambahan menyusul.
