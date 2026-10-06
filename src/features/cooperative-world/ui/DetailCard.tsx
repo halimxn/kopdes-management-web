@@ -199,70 +199,77 @@ export function DetailCard(props: Props) {
               subtitle: 'Bongkar muat dan stok',
               icon: <Warehouse size={22} />,
             }
-          : person
+          : selected === 'papan'
             ? {
-                eyebrow: `Tim · ${person.staff.data.section || 'seksi belum ditentukan'}`,
-                title: String(person.staff.data.title),
-                subtitle: String(person.staff.data.role || 'Peran belum diisi'),
-                icon: <Users size={22} />,
+                eyebrow: 'Taman · papan',
+                title: 'Papan pengumuman',
+                subtitle: 'Keputusan rapat dan masa berlaku dokumen',
+                icon: <BookOpen size={22} />,
               }
-            : delivery
+            : person
               ? {
-                  eyebrow: `Pengiriman · ${delivery.data.direction === 'keluar' ? 'keluar' : 'masuk'}`,
-                  title: String(delivery.data.title),
-                  subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
-                  icon: <Truck size={22} />,
+                  eyebrow: `Tim · ${person.staff.data.section || 'seksi belum ditentukan'}`,
+                  title: String(person.staff.data.title),
+                  subtitle: String(person.staff.data.role || 'Peran belum diisi'),
+                  icon: <Users size={22} />,
                 }
-              : selected === 'kendaraan-suasana'
+              : delivery
                 ? {
-                    eyebrow: 'Kendaraan',
-                    title: 'Mobil di jalan utama',
-                    subtitle: 'Simulasi lingkungan',
+                    eyebrow: `Pengiriman · ${delivery.data.direction === 'keluar' ? 'keluar' : 'masuk'}`,
+                    title: String(delivery.data.title),
+                    subtitle: String(delivery.data.vehicle || 'Kendaraan belum dicatat'),
                     icon: <Truck size={22} />,
                   }
-                : rackId
+                : selected === 'kendaraan-suasana'
                   ? {
-                      eyebrow: 'Gudang · rak',
-                      title: `Rak ${rackId}`,
-                      subtitle: stockReady
-                        ? `${rackItems.length} barang tercatat`
-                        : 'Isi mengikuti daftar Barang',
-                      icon: <Boxes size={22} />,
+                      eyebrow: 'Kendaraan',
+                      title: 'Mobil di jalan utama',
+                      subtitle: 'Simulasi lingkungan',
+                      icon: <Truck size={22} />,
                     }
-                  : selected === 'staging'
+                  : rackId
                     ? {
-                        eyebrow: 'Gudang · staging',
-                        title: 'Area staging',
-                        subtitle: 'Barang tanpa rak dan tanpa gerai',
+                        eyebrow: 'Gudang · rak',
+                        title: `Rak ${rackId}`,
+                        subtitle: stockReady
+                          ? `${rackItems.length} barang tercatat`
+                          : 'Isi mengikuti daftar Barang',
                         icon: <Boxes size={22} />,
                       }
-                    : plot
+                    : selected === 'staging'
                       ? {
-                          eyebrow: `Lahan ${plotNumber.padStart(2, '0')} · Boulevard gerai`,
-                          title: plot.unit ? String(plot.unit.data.title) : `Lahan ${plotNumber}`,
-                          subtitle: plot.unit
-                            ? 'Terhubung ke catatan gerai'
-                            : 'Bidang tersedia untuk gerai baru',
-                          icon: <Store size={22} />,
+                          eyebrow: 'Gudang · staging',
+                          title: 'Area staging',
+                          subtitle: 'Barang tanpa rak dan tanpa gerai',
+                          icon: <Boxes size={22} />,
                         }
-                      : station
+                      : plot
                         ? {
-                            eyebrow: 'Kantor · interior',
-                            title: station.title,
-                            subtitle: 'Pilih area untuk membuka catatan',
-                            icon: <Building2 size={22} />,
+                            eyebrow: `Lahan ${plotNumber.padStart(2, '0')} · Boulevard gerai`,
+                            title: plot.unit ? String(plot.unit.data.title) : `Lahan ${plotNumber}`,
+                            subtitle: plot.unit
+                              ? 'Terhubung ke catatan gerai'
+                              : 'Bidang tersedia untuk gerai baru',
+                            icon: <Store size={22} />,
                           }
-                        : {
-                            eyebrow:
-                              location === 'dalam'
-                                ? 'Kantor · interior'
-                                : zone === 'semua'
-                                  ? 'Dunia koperasi'
-                                  : `Zona · ${worldZones[zone].title}`,
-                            title: 'Kawasan koperasi',
-                            subtitle: model.title,
-                            icon: <Map size={22} />,
-                          };
+                        : station
+                          ? {
+                              eyebrow: 'Kantor · interior',
+                              title: station.title,
+                              subtitle: 'Pilih area untuk membuka catatan',
+                              icon: <Building2 size={22} />,
+                            }
+                          : {
+                              eyebrow:
+                                location === 'dalam'
+                                  ? 'Kantor · interior'
+                                  : zone === 'semua'
+                                    ? 'Dunia koperasi'
+                                    : `Zona · ${worldZones[zone].title}`,
+                              title: 'Kawasan koperasi',
+                              subtitle: model.title,
+                              icon: <Map size={22} />,
+                            };
   const date = today();
   const overdue = model.tasks.filter(
     (row) => row.data.due_date && String(row.data.due_date) < date,
@@ -416,6 +423,48 @@ export function DetailCard(props: Props) {
               Buka daftar barang <ArrowRight size={14} />
             </Link>
           </>
+        ) : selected === 'papan' ? (
+          <>
+            <h2 className="cw-section-title">Keputusan terbaru</h2>
+            {model.notices.decisions.length ? (
+              model.notices.decisions.map((row) => (
+                <Link key={row.id} className="cw-row" href={recordHref('decisions', row)}>
+                  <span className="cw-row-text">
+                    <strong>{String(row.data.title)}</strong>
+                    <small>{String(row.data.date || '')}</small>
+                  </span>
+                  <ChevronRight size={15} />
+                </Link>
+              ))
+            ) : (
+              <p className="cw-note">
+                {unavailable ? 'Data belum tersedia.' : 'Belum ada keputusan tercatat.'}
+              </p>
+            )}
+            <h2 className="cw-section-title">Dokumen perlu diperbarui</h2>
+            {model.notices.documents.length ? (
+              model.notices.documents.map((row) => {
+                const expired = String(row.data.expires_date) < today();
+                return (
+                  <Link key={row.id} className="cw-row" href={recordHref('documents', row)}>
+                    <span className="cw-row-text">
+                      <strong>{String(row.data.title)}</strong>
+                      <small>Berlaku sampai {String(row.data.expires_date)}</small>
+                    </span>
+                    <span className={`cw-pill ${expired ? 'is-red' : 'is-amber'}`}>
+                      {expired ? 'Kedaluwarsa' : '≤ 30 hari'}
+                    </span>
+                  </Link>
+                );
+              })
+            ) : (
+              <p className="cw-note">
+                {unavailable
+                  ? 'Data belum tersedia.'
+                  : 'Tidak ada dokumen yang habis dalam 30 hari.'}
+              </p>
+            )}
+          </>
         ) : person ? (
           <>
             <div className="cw-status-line">
@@ -435,6 +484,9 @@ export function DetailCard(props: Props) {
             </p>
             <Link className="cw-primary" href={recordHref('staff', person.staff)}>
               Buka catatan tim <ArrowRight size={15} />
+            </Link>
+            <Link className="cw-secondary" href="/tugas">
+              Lihat tugas <ArrowRight size={14} />
             </Link>
           </>
         ) : delivery ? (
@@ -457,6 +509,9 @@ export function DetailCard(props: Props) {
             <Link className="cw-primary" href={recordHref('deliveries', delivery)}>
               Buka catatan pengiriman <ArrowRight size={15} />
             </Link>
+            <Link className="cw-secondary" href="/pengiriman?bagian=stock-movements">
+              Catat mutasi stok <ArrowRight size={14} />
+            </Link>
           </>
         ) : selected === 'kendaraan-suasana' ? (
           <p className="cw-note">
@@ -477,6 +532,9 @@ export function DetailCard(props: Props) {
             />
             <Link className="cw-primary" href="/barang">
               Atur barang <ArrowRight size={15} />
+            </Link>
+            <Link className="cw-secondary" href="/stok-opname">
+              Mulai stok opname <ArrowRight size={14} />
             </Link>
           </>
         ) : plot ? (

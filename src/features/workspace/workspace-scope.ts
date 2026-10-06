@@ -3,7 +3,17 @@ import type { Entity } from '../records/schemas';
 export function pageEntities(slug: string): Entity[] {
   if (slug === 'riwayat-proyek') return pageEntities('proyek');
   const related: Record<string, Entity[]> = {
-    'dunia-koperasi': ['units', 'work-items', 'meetings', 'journal', 'inventory-items', 'deliveries', 'staff'],
+    'dunia-koperasi': [
+      'units',
+      'work-items',
+      'meetings',
+      'journal',
+      'inventory-items',
+      'deliveries',
+      'staff',
+      'decisions',
+      'documents',
+    ],
     pengiriman: [
       'deliveries',
       'stock-movements',

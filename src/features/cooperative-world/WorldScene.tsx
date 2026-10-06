@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Building2, Plus, MessageCircle, MapPin, Truck, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { animateCharacter, createCharacter } from './objects/characters';
-import { createExterior } from './objects/exterior';
+import { createExterior, createNightLights } from './objects/exterior';
 import { createInterior } from './objects/office';
 import { disposeSharedResources, mergeStatic, palette } from './objects/primitives';
 import {
@@ -14,11 +14,12 @@ import {
   officePosition,
   officeInterior,
   officeSize,
+  park,
   warehouse,
   warehouseInterior,
   worldStations,
 } from './layout';
-import { getLighting } from './lighting';
+import { dayPhase, getLighting } from './lighting';
 import {
   qualitySettings,
   readDeviceHints,
@@ -205,9 +206,11 @@ export function WorldScene({
     const world = new THREE.Group();
     scene.add(world);
     let cars: AmbientCar[] = [];
+    let nightLights: THREE.Object3D | null = null;
     if (location === 'luar') {
       createExterior(world, model);
       createTrucks(world, model.trucks);
+      nightLights = createNightLights(world);
       cars = createAmbientCars(world);
     }
     if (location === 'gudang') createWarehouseInterior(world, model.inventory);
@@ -306,6 +309,10 @@ export function WorldScene({
         'gudang',
         new THREE.Vector3(warehouse.center[0], warehouse.size[1] + 2, warehouse.center[1]),
       );
+      positions.set(
+        'papan',
+        new THREE.Vector3(park.center[0] + 5, 3.4, park.center[1] - park.size[1] / 2 + 0.6),
+      );
       for (const spot of model.trucks) {
         const [x, z] = truckPose(spot);
         positions.set(`kirim-${spot.delivery.id}`, new THREE.Vector3(x, 3.8, z));
@@ -359,6 +366,7 @@ export function WorldScene({
       sun.intensity = light.sun;
       sun.color.set(light.sunColor);
       renderer.toneMappingExposure = light.exposure;
+      if (nightLights) nightLights.visible = dayPhase(state.hour) === 'malam';
       // Manajer: rapat/gym dari aktivitas; selain itu mengikuti rencana (briefing, meja staf, dok).
       const boss = bossPlan.current;
       const [rx, rz] = officeInterior.manager;
@@ -563,6 +571,13 @@ export function WorldScene({
               occupied: true,
               status: low ? `${low} di bawah minimum` : `${warehouse.docks.length} dok`,
               alert: low > 0,
+            },
+            {
+              id: 'papan',
+              label: 'Papan pengumuman',
+              occupied: true,
+              status: `${model.notices.decisions.length + model.notices.documents.length} info`,
+              alert: model.notices.documents.length > 0,
             },
             ...model.trucks.map((spot) => ({
               id: `kirim-${spot.delivery.id}`,

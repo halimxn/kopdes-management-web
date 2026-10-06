@@ -1,5 +1,12 @@
 # Changelog
 
+## Paket 9 — ide tambahan — 6 Oktober 2026
+
+- Tur hari ini, pencarian Enter yang menerbangkan kamera, tab linimasa Hari ini, tindakan cepat ke halaman asli.
+- Lahan gerai bertahap (pondasi/rangka/bangunan) dari status Gerai, papan pengumuman dari Keputusan dan Dokumen (dimuat ke dunia), lampu dan jendela menyala saat malam.
+- Suasana libur/Jumat tidak dibuat agar tidak mengarang jadwal staf.
+- 291 tes/45 berkas, typecheck, lint dan build lulus. Diperiksa di browser dengan contoh: tur di kawasan 1280 px.
+
 ## Paket 8 — manajer dan interaksi karakter — 6 Oktober 2026
 
 - Briefing pagi 15 menit, manajer berjalan ke meja staf dengan tugas lewat tenggat atau ke dok saat truk tiba (fungsi murni teruji).

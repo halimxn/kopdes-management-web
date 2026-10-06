@@ -22,6 +22,8 @@ type Props = {
   onZone: (zone: WorldZone) => void;
   query: string;
   onQuery: (value: string) => void;
+  /** Enter di kolom cari: pilih lokasi/barang/karakter pertama yang cocok. */
+  onSearchGo: () => void;
   clock: string;
   /** Chip suasana: ikon cuaca dan ringkasan waktu, membuka pengaturan Suasana. */
   ambience: { icon: React.ReactNode; label: string };
@@ -36,6 +38,7 @@ export function WorldHeader({
   onZone,
   query,
   onQuery,
+  onSearchGo,
   clock,
   ambience,
   onAmbience,
@@ -58,6 +61,7 @@ export function WorldHeader({
           aria-label="Cari lokasi, tugas, atau rapat"
           value={query}
           onChange={(event) => onQuery(event.target.value)}
+          onKeyDown={(event) => event.key === 'Enter' && onSearchGo()}
           placeholder="Cari lahan, gerai, tugas, rapat…"
         />
       </label>

@@ -266,6 +266,8 @@ Kolom tambahan masuk data JSON yang ada; dua entitas baru menambah daftar entita
 
 Di luar lingkup: absensi pegawai sungguhan dan multiuser real-time.
 
+**Status paket 9 (6 Oktober):** 1 tur hari ini (4 zona × 6 detik, keterangan dari data, tombol hentikan); 2 Enter di pencarian memilih kantor/gudang, lahan/gerai, rak/barang, atau anggota Tim dan menerbangkan kamera; 3 tab **Hari ini** di kartu Daftar (rapat berjam, pengiriman dan kegiatan hari ini); 4 tindakan cepat (Mulai stok opname dari rak, Catat mutasi stok dari truk, Lihat tugas dari karakter) membuka halaman asli; 5 lahan gerai bertahap mengikuti status Gerai (rencana = pondasi, persiapan = rangka, siap uji ke atas = bangunan); 6 papan pengumuman di taman (3 keputusan terbaru, dokumen kedaluwarsa/≤ 30 hari; pin kuning bila ada dokumen); 7 malam: kepala lampu jalan dan jendela kantor menyala. Bagian "hari libur/Jumat siang kantor sepi" sengaja tidak dibuat karena berarti mengarang jadwal staf; jadwal hanya dari jam kerja Tim.
+
 ### Struktur kode dunia
 
 - `layout.ts`: koordinat zona, waypoint, jalur pejalan kaki/kendaraan.

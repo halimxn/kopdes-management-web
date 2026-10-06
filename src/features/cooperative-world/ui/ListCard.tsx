@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Boxes, Building2, ChevronRight, Plus, Store, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { today } from '@/lib/date';
 import { recordHref } from '../../workspace/workspace-navigation';
 import {
   isBelowMinimum,
@@ -14,7 +15,7 @@ import {
 import type { StockState } from './DetailCard';
 import { npcActivityNames, type NpcPlan } from '../npc/schedule';
 
-export type ListTab = 'lokasi' | 'tim' | 'stok' | 'tugas' | 'rapat';
+export type ListTab = 'lokasi' | 'hari' | 'tim' | 'stok' | 'tugas' | 'rapat';
 type Props = {
   model: WorldModel;
   timeline: MeetingStep[];
@@ -41,6 +42,33 @@ export function ListCard({
   stockState,
   onSelect,
 }: Props) {
+  // Linimasa hari ini: rapat berjam lebih dulu, lalu pengiriman dan kegiatan bertanggal hari ini.
+  const date = today();
+  const events = [
+    ...timeline.map((step) => ({
+      key: `m-${step.row.id}`,
+      time: step.time,
+      title: String(step.row.data.title),
+      kind: 'Rapat',
+      href: recordHref('meetings', step.row),
+    })),
+    ...model.deliveries
+      .filter((row) => row.data.planned_date === date || row.data.arrived_date === date)
+      .map((row) => ({
+        key: `d-${row.id}`,
+        time: 'hari ini',
+        title: String(row.data.title),
+        kind: `Pengiriman · ${row.data.status}`,
+        href: recordHref('deliveries', row),
+      })),
+    ...model.activities.map((row) => ({
+      key: `j-${row.id}`,
+      time: 'hari ini',
+      title: String(row.data.title),
+      kind: 'Kegiatan',
+      href: recordHref('journal', row),
+    })),
+  ].filter((event) => !query || matches(event.title, query));
   const team = plans.filter(
     (plan) => !query || matches(`${plan.staff.data.title} ${plan.staff.data.section}`, query),
   );
@@ -115,6 +143,7 @@ export function ListCard({
   const meetings = timeline.filter((step) => !query || matches(String(step.row.data.title), query));
   const tabs: { id: ListTab; label: string; count: number }[] = [
     { id: 'lokasi', label: location === 'gudang' ? 'Rak' : 'Lokasi', count: places.length },
+    { id: 'hari', label: 'Hari ini', count: events.length },
     { id: 'tim', label: 'Tim', count: team.length },
     { id: 'stok', label: 'Stok', count: stock.length },
     { id: 'tugas', label: 'Tugas', count: tasks.length },
@@ -152,6 +181,24 @@ export function ListCard({
               <ChevronRight size={15} />
             </Button>
           ))}
+        {tab === 'hari' &&
+          events.map((event) => (
+            <Link key={event.key} className="cw-row" href={event.href}>
+              <span className="cw-row-time">{event.time}</span>
+              <span className="cw-row-text">
+                <strong>{event.title}</strong>
+                <small>{event.kind}</small>
+              </span>
+              <ChevronRight size={15} />
+            </Link>
+          ))}
+        {tab === 'hari' && !events.length && (
+          <p className="cw-empty">
+            {unavailable
+              ? 'Data belum tersedia.'
+              : 'Belum ada rapat, pengiriman, atau kegiatan hari ini.'}
+          </p>
+        )}
         {tab === 'tim' &&
           team.map((plan) => (
             <Button

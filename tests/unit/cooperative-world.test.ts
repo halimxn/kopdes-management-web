@@ -5,6 +5,7 @@ import {
   meetingTimeline,
   summarizeInventory,
   placeTrucks,
+  noticeBoard,
   isBelowMinimum,
   worldPreferencesSchema,
 } from '@/features/cooperative-world/world-model';
@@ -267,5 +268,22 @@ describe('briefing dan rencana manajer', () => {
     expect(planManager(plans, { tasks: [], deliveries: [] }, at10, '2026-10-06').kind).toBe(
       'ruang',
     );
+  });
+});
+
+describe('papan pengumuman', () => {
+  it('keputusan terbaru dan dokumen yang habis dalam 30 hari', () => {
+    const decisions = ['2026-09-01', '2026-10-05', '2026-08-01', '2026-10-01'].map((date, i) =>
+      row(`k${i}`, { title: `K${i}`, date }),
+    );
+    const documents = [
+      row('lama', { title: 'Lama', expires_date: '2026-09-30' }),
+      row('dekat', { title: 'Dekat', expires_date: '2026-10-20' }),
+      row('jauh', { title: 'Jauh', expires_date: '2027-01-01' }),
+      row('tanpa', { title: 'Tanpa' }),
+    ];
+    const board = noticeBoard(decisions, documents, '2026-10-06');
+    expect(board.decisions.map((item) => item.id)).toEqual(['k1', 'k3', 'k0']);
+    expect(board.documents.map((item) => item.id)).toEqual(['lama', 'dekat']);
   });
 });

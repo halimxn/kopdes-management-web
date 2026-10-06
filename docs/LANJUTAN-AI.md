@@ -18,12 +18,13 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 ## Urutan melanjutkan
 
 1. Periksa Git, AGENTS, STATUS dan rencana v2.
-2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0–8 selesai; berikutnya **paket 9 — ide tambahan** (laporan harian kamera keliling, pencarian menggerakkan kamera, linimasa hari ini, tindakan cepat, kesiapan gerai bertahap di lahan, papan pengumuman, suasana libur/malam). Migrasi 8 sudah dijalankan pemilik di cloud. Pemilik meminta hemat token: kelompokkan perubahan, batasi screenshot. Pemilik meminta push GitHub setelah semua tahap selesai; commit lokal saja sampai saat itu.
+2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0–9 selesai; berikutnya **paket 10 — penutup**: uji performa/tampilan 360/768/1024/1440 dan ponsel, perapian personal.css (paket tersendiri, butuh cek visual semua halaman), STATUS/CHECKLIST, lalu push GitHub atas izin pemilik. Migrasi 8 sudah dijalankan pemilik di cloud. Pemilik meminta hemat token: kelompokkan perubahan, batasi screenshot. Pemilik meminta push GitHub setelah semua tahap selesai; commit lokal saja sampai saat itu.
 3. Sebelum tiap paket buat tag checkpoint; commit kecil per paket; PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 4. Akhir paket: perbarui bagian "Paket terakhir" di bawah, STATUS dan CHANGELOG.
 
 ## Paket terakhir
 
+- 6 Oktober, paket 9: tur, pencarian Enter, linimasa, tindakan cepat, gerai bertahap, papan pengumuman, cahaya malam. Tag lokal checkpoint/paket-9. Belum di-push.
 - 6 Oktober, paket 8: briefing, manajer keliling berbasis data, obrolan berpapasan, kardus bongkar, bubble otomatis; skill proyek. Tag lokal checkpoint/paket-8. Belum di-push.
 - 6 Oktober, paket 7: kantor bersekat, karakter Tim berjadwal dan bergerak, tab Tim. Tag lokal checkpoint/paket-7. Belum di-push.
 - 6 Oktober, paket 6: truk dari Pengiriman di dok/antre, pelacak pengiriman, mobil suasana berlabel. Tag lokal checkpoint/paket-6. Belum di-push.

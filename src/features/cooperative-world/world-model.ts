@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { today } from '@/lib/date';
+import { addDays, today } from '@/lib/date';
 import type { Workspace } from '../workspace/useWorkspace';
 import { landPositions } from './layout';
 import type { Item } from '../records/schemas';
@@ -50,12 +50,30 @@ export function getWorldModel(data: Workspace, now: Date) {
     inventory: summarizeInventory(data['inventory-items'] || []),
     deliveries: data.deliveries || [],
     staff: data.staff || [],
+    notices: noticeBoard(data.decisions || [], data.documents || [], date),
     trucks: placeTrucks(data.deliveries || []),
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),
   };
 }
 export type WorldModel = ReturnType<typeof getWorldModel>;
+
+/**
+ * Isi papan pengumuman: tiga keputusan terbaru dan dokumen yang kedaluwarsa atau akan
+ * kedaluwarsa dalam 30 hari. Hanya dari catatan; tanpa catatan papan kosong.
+ */
+export function noticeBoard(decisions: Item[], documents: Item[], date: string) {
+  const limit = addDays(date, 30);
+  return {
+    decisions: [...decisions]
+      .sort((a, b) => String(b.data.date).localeCompare(String(a.data.date)))
+      .slice(0, 3),
+    documents: documents
+      .filter((row) => row.data.expires_date && String(row.data.expires_date) <= limit)
+      .sort((a, b) => String(a.data.expires_date).localeCompare(String(b.data.expires_date)))
+      .slice(0, 3),
+  };
+}
 
 export const deliverySteps = ['dipesan', 'dikirim', 'tiba', 'diperiksa', 'selesai'] as const;
 export type TruckSpot = { delivery: Item; place: 'dok' | 'antre'; index: number };

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { WorldModel } from '../world-model';
 import { officePosition, officeSize, park, plotSize, roads, site } from '../layout';
-import { box, mergeStatic, palette } from './primitives';
+import { box, mergeStatic, palette, sign } from './primitives';
 import { bench, fence, markingRect, streetLamp, tree } from './props';
 import { building } from './office';
 import { createLogisticsYard, createWarehouse } from './warehouse';
@@ -122,19 +122,114 @@ export function createExterior(parent: THREE.Group, model: WorldModel) {
     tree(scenery, site.minX + 1, z);
     tree(scenery, site.maxX - 1, z);
   }
-  for (const x of [-26, -12, 4, 18, 28]) streetLamp(scenery, x, roads.boulevard.z + 2.3);
-  for (const x of [-26, -8, 8, 24]) streetLamp(scenery, x, roads.inner.z + 2.3);
+  for (const [x, , z] of lampHeads()) streetLamp(scenery, x - 0.22, z);
   mergeStatic(scenery);
+  noticeBoard(parent);
 
   // Objek yang dapat diklik digabung per objek agar raycast tetap mengenali pilihannya.
   mergeStatic(building(parent, ox, oz, 'Koperasi', true));
   mergeStatic(createWarehouse(parent));
   for (const plot of model.plots) {
     const [x, z] = plot.position;
+    const status = String(plot.unit?.data.status || '');
     mergeStatic(
-      plot.unit
-        ? building(parent, x, z, String(plot.unit.data.title), false, plot.id)
-        : emptyPlot(parent, plot.id, x, z),
+      !plot.unit
+        ? emptyPlot(parent, plot.id, x, z)
+        : status === 'rencana' || status === 'persiapan'
+          ? construction(
+              parent,
+              plot.id,
+              x,
+              z,
+              status === 'rencana' ? 'pondasi' : 'rangka',
+              String(plot.unit.data.title),
+            )
+          : building(parent, x, z, String(plot.unit.data.title), false, plot.id),
     );
   }
+}
+
+/** Posisi kepala lampu jalan [x, y, z]; dipakai untuk tiang dan cahaya malam. */
+export function lampHeads(): [number, number, number][] {
+  return [
+    ...[-26, -12, 4, 18, 28].map(
+      (x) => [x + 0.22, 3.12, roads.boulevard.z + 2.3] as [number, number, number],
+    ),
+    ...[-26, -8, 8, 24].map(
+      (x) => [x + 0.22, 3.12, roads.inner.z + 2.3] as [number, number, number],
+    ),
+  ];
+}
+
+/**
+ * Gerai belum jadi tampil bertahap sesuai status catatan Gerai: rencana = pondasi,
+ * persiapan = rangka. Status siap uji ke atas memakai bangunan lengkap.
+ */
+function construction(
+  parent: THREE.Object3D,
+  id: string,
+  x: number,
+  z: number,
+  stage: 'pondasi' | 'rangka',
+  title: string,
+) {
+  const g = new THREE.Group();
+  g.userData.selection = id;
+  parent.add(g);
+  box(g, [4.4, 0.25, 3.2], [x, 0.13, z], '#c9cfd9', 0.03);
+  const corners = [-1.9, 0, 1.9].flatMap((dx) => [-1.3, 1.3].map((dz) => [x + dx, z + dz]));
+  for (const [cx, cz] of corners)
+    box(
+      g,
+      stage === 'pondasi' ? [0.1, 0.8, 0.1] : [0.18, 2.3, 0.18],
+      [cx, stage === 'pondasi' ? 0.65 : 1.4, cz],
+      stage === 'pondasi' ? '#8a6f55' : '#9aa6bb',
+      0,
+    );
+  if (stage === 'rangka') {
+    for (const dz of [-1.3, 1.3]) box(g, [4, 0.16, 0.16], [x, 2.5, z + dz], '#9aa6bb', 0);
+    for (const dx of [-1.9, 1.9]) box(g, [0.16, 0.16, 2.8], [x + dx, 2.5, z], '#9aa6bb', 0);
+    box(g, [4, 2.2, 0.1], [x, 1.35, z - 1.3], palette.white, 0);
+  } else box(g, [1, 0.5, 0.8], [x + 1.2, 0.5, z + 0.6], palette.cardboard, 0.05);
+  box(g, [0.08, 1, 0.08], [x - 1.6, 0.6, z + 1.9], palette.ink, 0);
+  sign(g, title, [x - 0.4, 1.15, z + 1.92], 2.6, palette.navy);
+  return g;
+}
+
+/** Papan pengumuman di taman: isi dari keputusan rapat dan dokumen (lihat kartu detail). */
+function noticeBoard(parent: THREE.Object3D) {
+  const [px, pz] = park.center;
+  const g = new THREE.Group();
+  g.userData.selection = 'papan';
+  parent.add(g);
+  const z = pz - park.size[1] / 2 + 0.6;
+  for (const dx of [-1.2, 1.2]) box(g, [0.12, 2.2, 0.12], [px + 5 + dx, 1.1, z], palette.ink, 0);
+  box(g, [2.8, 1.5, 0.12], [px + 5, 1.8, z], palette.navy, 0.04);
+  box(g, [2.5, 1.2, 0.04], [px + 5, 1.8, z + 0.07], palette.white, 0);
+  sign(g, 'PENGUMUMAN', [px + 5, 2.25, z + 0.1], 2.2, palette.navy);
+  for (const dy of [0, -0.3]) box(g, [1.8, 0.08, 0.02], [px + 5, 1.75 + dy, z + 0.1], '#c9d3e6', 0);
+  mergeStatic(g);
+}
+
+/** Cahaya malam: kepala lampu jalan dan jendela kantor. Disembunyikan siang hari. */
+export function createNightLights(parent: THREE.Object3D) {
+  const g = new THREE.Group();
+  g.visible = false;
+  parent.add(g);
+  const glow = new THREE.MeshBasicMaterial({ color: '#ffe3a1' });
+  const bulb = new THREE.SphereGeometry(0.22, 10, 8);
+  for (const [x, y, z] of lampHeads()) {
+    const mesh = new THREE.Mesh(bulb, glow);
+    mesh.position.set(x, y - 0.12, z);
+    g.add(mesh);
+  }
+  const [ox, oz] = officePosition;
+  const pane = new THREE.PlaneGeometry(0.9, 0.95);
+  for (const side of [-1, 1])
+    for (const offset of [officeSize.width / 2 - 0.9, officeSize.width / 2 - 2.2]) {
+      const mesh = new THREE.Mesh(pane, glow);
+      mesh.position.set(ox + side * offset, 1.35, oz + officeSize.depth / 2 + 0.11);
+      g.add(mesh);
+    }
+  return g;
 }

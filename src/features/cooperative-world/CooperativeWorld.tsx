@@ -32,6 +32,7 @@ import {
   worldPreferencesSchema,
   type CharacterActivity,
   type RackId,
+  rackIds,
   type WorldLocation,
   type WorldPreferences,
 } from './world-model';
@@ -250,6 +251,82 @@ export function CooperativeWorld({
       setRecenter((value) => value + 1);
     }
   }
+  /** Enter di kolom cari: kantor/gudang, lahan/gerai, rak/barang, lalu anggota Tim. */
+  function searchGo() {
+    const text = query.trim().toLowerCase();
+    if (!text) return;
+    const has = (value: unknown) =>
+      String(value || '')
+        .toLowerCase()
+        .includes(text);
+    if ('kantor koperasi'.includes(text)) return select('koperasi');
+    if ('gudang koperasi'.includes(text)) return chooseZone('gudang');
+    const plot = model.plots.find(
+      (item) => has(item.unit?.data.title) || `lahan ${item.id.split('-')[1]}`.includes(text),
+    );
+    if (plot) {
+      if (location !== 'luar') enter('luar');
+      return select(plot.id, true);
+    }
+    const rackMatch = /^rak\s*([a-f])$/.exec(text)?.[1]?.toUpperCase();
+    const item = model.inventory.items.find((row) => has(row.data.title) || has(row.data.sku));
+    const rack =
+      rackMatch ||
+      (item && rackIds.includes(item.data.rack as RackId) ? String(item.data.rack) : '');
+    if (rack) {
+      if (location !== 'gudang') enter('gudang');
+      return select(`rak-${rack}`, true);
+    }
+    const person = plans.find((plan) => has(plan.staff.data.title) && plan.location);
+    if (person?.location) {
+      if (person.location !== location) enter(person.location);
+      setSelected(`staf-${person.staff.id}`);
+      showDetail();
+    }
+  }
+  // Tur hari ini: kamera berpindah zona tiap 6 detik dengan ringkasan data nyata.
+  const [tour, setTour] = useState<number | null>(null);
+  const count = (value: number) => (unavailable ? '—' : value);
+  const tourSteps: { zone: WorldZone; text: string }[] = [
+    {
+      zone: 'semua',
+      text: `${count(model.units.length)} gerai · ${count(model.tasks.length)} tugas terbuka · ${count(model.meetings.length)} rapat hari ini`,
+    },
+    {
+      zone: 'kantor',
+      text: `${plans.filter((plan) => plan.location === 'dalam').length} anggota tim di kantor · ${count(model.activities.length)} kegiatan hari ini`,
+    },
+    {
+      zone: 'gudang',
+      text:
+        stockState === 'aktif'
+          ? `${model.inventory.items.length} barang · ${model.inventory.low.length} di bawah minimum · ${model.trucks.length} truk`
+          : `Data barang: ${stockState === 'belum-aktif' ? 'pencatatan belum aktif' : 'belum tersedia'} · ${model.trucks.length} truk`,
+    },
+    {
+      zone: 'gerai',
+      text: (['aktif', 'persiapan', 'rencana'] as const)
+        .map(
+          (status) =>
+            `${count(model.units.filter((unit) => unit.data.status === status).length)} ${status}`,
+        )
+        .join(' · '),
+    },
+  ];
+  function runTour(step: number | null) {
+    setTour(step);
+    if (step === null) return;
+    if (location !== 'luar') setLocation('luar');
+    chooseZone(tourSteps[step].zone);
+  }
+  useEffect(() => {
+    if (tour === null) return;
+    const next = window.setTimeout(
+      () => runTour(tour + 1 < tourSteps.length ? tour + 1 : null),
+      6000,
+    );
+    return () => clearTimeout(next);
+  });
   function preference<K extends keyof WorldPreferences>(key: K, value: WorldPreferences[K]) {
     savePreferences(JSON.stringify({ ...preferences, [key]: value }));
   }
@@ -352,6 +429,7 @@ export function CooperativeWorld({
           setSheetTab('lokasi');
           if (!wide) setSheet((current) => (current === 'ringkas' ? 'setengah' : current));
         }}
+        onSearchGo={searchGo}
         clock={clock}
         ambience={{ icon: weatherIcon, label: ambienceLabel }}
         onAmbience={() => select('lingkungan')}
@@ -397,6 +475,9 @@ export function CooperativeWorld({
               <span>{location === 'gudang' ? 'Gudang koperasi' : 'Kantor koperasi'}</span>
             </>
           )}
+          <Button className="cw-tour-button" onClick={() => runTour(tour === null ? 0 : null)}>
+            {tour === null ? 'Tur hari ini' : 'Hentikan tur'}
+          </Button>
           {(preview || partial || error || loading) && (
             <span className="cw-notice" role={error ? 'alert' : 'status'}>
               {preview
@@ -482,6 +563,15 @@ export function CooperativeWorld({
           >
             {sheetTab === 'detail' ? detail : sheetTab === 'lokasi' ? list : tracker}
           </MobileSheet>
+        )}
+        {tour !== null && (
+          <div className="cw-tour cw-card" role="status">
+            <small>
+              Tur hari ini · {tour + 1}/{tourSteps.length} ·{' '}
+              {worldZones[tourSteps[tour].zone].title}
+            </small>
+            <strong>{tourSteps[tour].text}</strong>
+          </div>
         )}
         <div className="cw-hint">Geser untuk memutar · Cubit / gulir untuk zoom</div>
       </section>

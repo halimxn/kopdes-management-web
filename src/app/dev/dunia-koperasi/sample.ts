@@ -48,7 +48,12 @@ export function sampleWorkspace(): Workspace {
         due_date: date,
         assignee: 'Contoh Budi',
       }),
-      row('task-2', { title: 'Contoh susun rak B', status: 'rencana', due_date: '2026-10-01', assignee: 'Contoh Citra' }),
+      row('task-2', {
+        title: 'Contoh susun rak B',
+        status: 'rencana',
+        due_date: '2026-10-01',
+        assignee: 'Contoh Citra',
+      }),
     ],
     staff: [
       row('st-1', {
@@ -120,6 +125,8 @@ export function sampleWorkspace(): Workspace {
         planned_date: date,
       }),
     ],
+    decisions: [row('dec-1', { title: 'Contoh keputusan jam buka gerai', date })],
+    documents: [row('doc-1', { title: 'Contoh izin usaha', expires_date: date })],
     meetings: [
       row('meet-1', { title: 'Contoh briefing pagi', date, time: '08:00', duration: 30 }),
       row('meet-2', { title: 'Contoh rapat pengurus', date, time: '15:00', duration: 60 }),
