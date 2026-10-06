@@ -11,6 +11,10 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 - Cabang kerja: `codex/dunia-koperasi`, melacak origin. Jangan force-push.
 - Cabang `codex/manager-workspace-polish`, `codex/reset-database-kosong`, `codex/workspace-redesign` sudah masuk main dan belum dihapus; tunggu izin pemilik.
 
+## Skill proyek
+
+`.claude/skills/`: hemat-token, dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code (yang terakhir merujuk `.agents/skills/clean-code`). Pakai sesuai pekerjaan; hemat-token di setiap sesi panjang.
+
 ## Urutan melanjutkan
 
 1. Periksa Git, AGENTS, STATUS dan rencana v2.
