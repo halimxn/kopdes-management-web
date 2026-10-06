@@ -139,12 +139,64 @@
   border-radius: 3px;
   font-size: 10px;
 }
-.cw-top-location {
+.cw-zone-picker {
+  position: relative;
   margin-left: auto;
+  min-width: 0;
+}
+.cooperative-world .cw-top-location {
   display: flex;
   gap: 8px;
   align-items: center;
   min-width: 0;
+  min-height: 44px;
+  padding: 4px 10px 4px 5px;
+  border: 1px solid #dce4f0;
+  border-radius: 10px;
+  background: #fbfdff;
+  color: var(--cw-ink);
+  text-align: left;
+  box-shadow: none;
+}
+.cooperative-world .cw-top-location[aria-expanded='true'] {
+  border-color: var(--cw-blue);
+  box-shadow: 0 0 0 3px #426bf41f;
+}
+.cw-zone-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 250px;
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+}
+.cooperative-world .cw-zone-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cw-ink);
+  text-align: left;
+  box-shadow: none;
+}
+.cooperative-world .cw-zone-menu button:hover,
+.cooperative-world .cw-zone-menu button[aria-current='true'] {
+  background: #eef3ff;
+}
+.cw-zone-menu strong {
+  display: block;
+  font-size: 12px;
+}
+.cw-zone-menu small {
+  display: block;
+  font-size: 10px;
+  color: var(--cw-muted);
 }
 .cw-top-location strong,
 .cw-profile strong {
@@ -1149,13 +1201,24 @@
     height: 31px;
     border-radius: 8px;
   }
-  .cw-brand small {
-    font-size: 6px;
-    letter-spacing: 1px;
-  }
-  .cw-top-location,
-  .cw-profile {
+  /* Ponsel: logo saja agar pill zona dan jam WIB muat. */
+  .cw-brand > span:last-child {
     display: none;
+  }
+  .cooperative-world .cw-top-location strong {
+    font-size: 12px;
+  }
+  .cw-profile,
+  .cw-top-location small,
+  .cw-top-location .cw-location-icon {
+    display: none;
+  }
+  .cooperative-world .cw-top-location {
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+  .cw-top-location strong {
+    max-width: 112px;
   }
   .cw-live {
     margin-left: auto;

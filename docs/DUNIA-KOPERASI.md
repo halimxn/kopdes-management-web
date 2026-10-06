@@ -56,14 +56,19 @@ Kartu radius sekitar 11 px, border putih halus, bayangan ringan; ikon biru pada 
 
 ## Exterior
 
-- Kantor koperasi biru di X/Z [-3,2.7], dapat diklik langsung atau lewat penanda untuk masuk interior.
-- Tujuh lahan: [-9,-6], [-3,-6], [3,-6], [9,-6], [-9,3], [3,3], [9,3]. Bidang kosong hijau pucat dengan garis batas, tanda tambah dan nomor.
-- Unit dari domain units diurutkan created_at lalu ID untuk mengisi lahan. Gerai di luar tujuh slot tetap ada di daftar Gerai; jumlah sisanya diberitahukan.
-- Nama/status bangunan dari catatan asli. Detail membuka catatan yang sama melalui recordHref.
-- Jalan depan, jalur pejalan kaki, pohon, bangku, lampu dan area pengembangan logistik.
-- Suplier/mobil ekspedisi masih rencana. Tidak menampilkan pengiriman aktif palsu.
+Koordinat ada di `layout.ts` (X ke timur, Z ke selatan; kamera dari tenggara). Kawasan 62 × 50 unit:
 
-Penempatan bersifat turunan, belum permanen: penghapusan unit dapat menggeser slot berikutnya. Belum tersedia drag/editor lahan atau mapping slot cloud.
+- Jalan utama di utara (Z −21,5) dengan pagar, gerbang berpalang dan pos jaga; jalan gerbang ke selatan sampai jalan dalam (Z 0,5); boulevard gerai (Z 13,5) dan jalan penghubung X −3.
+- Parkir antre truk tiga petak di barat laut (marka putih saja).
+- Gudang 24 × 10 di pusat [3, −13] dengan empat pintu dok D1–D4 di sisi selatan, halaman dok bermarka kuning, area staging berpalet kardus/kemasan biru di timur dan area pengisian forklift di barat. Kardus, forklift dan marka adalah pemandangan, bukan stok/pengiriman tercatat. Klik membuka panel Gudang dengan tautan ke daftar Barang.
+- Kantor koperasi 8 × 5,4 di [−12, 7,2], dapat diklik langsung atau lewat penanda untuk masuk interior. Taman/titik kumpul di [10, 7,2], parkir mobil kecil bermarka di timurnya.
+- Tujuh lahan 6,4 × 5,4 di Z 19,6, X −24 sampai 24 berjarak 8. Bidang kosong hijau pucat dengan garis batas dan tanda tambah.
+- Gerai dari domain units: kolom **Lahan di Dunia Koperasi** (`slot`: otomatis atau 1–7) menempatkan gerai di lahan pilihannya sehingga tidak bergeser saat gerai lain dihapus. Pilihan ganda dimenangkan gerai yang dibuat lebih dulu; sisanya, termasuk otomatis, mengisi lahan kosong sesuai created_at lalu ID. Gerai di luar tujuh lahan tetap ada di daftar Gerai; jumlahnya diberitahukan.
+- Nama/status bangunan dari catatan asli. Detail membuka catatan yang sama melalui recordHref.
+- Pemilih zona di header (Semua kawasan / Kantor / Gudang / Boulevard gerai) dan pilihan lahan/gudang dari daftar menggerakkan kamera mulus ke tujuannya; klik di scene tidak memindahkan kamera.
+- Objek statis digabung menjadi satu mesh berwarna per titik per objek (`mergeStatic`); objek yang dapat diklik digabung per objek agar raycast tetap mengenali pilihan. Ukuran pratinjau 1280 px kualitas Sedang: 129 draw call termasuk bayangan.
+
+Belum tersedia drag/editor lahan. Truk dan pengiriman muncul setelah domain Pengiriman tersedia.
 
 ## Interior dan karakter
 

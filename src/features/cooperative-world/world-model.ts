@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { today } from '@/lib/date';
 import type { Workspace } from '../workspace/useWorkspace';
 import { landPositions } from './layout';
+import type { Item } from '../records/schemas';
 
 export const worldPreferencesSchema = z.object({
   version: z.literal(1).default(1),
@@ -44,17 +45,38 @@ export function getWorldModel(data: Workspace, now: Date) {
     activities,
     currentMeeting,
     activity,
-    plots: landPositions.map((position, index) => ({
-      id: `lahan-${index + 1}`,
-      position,
-      unit: units[index],
-    })),
-    overflow: Math.max(0, units.length - landPositions.length),
+    ...placeUnits(units),
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),
   };
 }
 export type WorldModel = ReturnType<typeof getWorldModel>;
+
+/**
+ * Gerai dengan pilihan lahan menempati lahan itu lebih dulu, sehingga posisinya tidak bergeser
+ * saat gerai lain dihapus. Pilihan ganda dimenangkan gerai yang dibuat lebih dulu; sisanya,
+ * termasuk "otomatis", mengisi lahan kosong sesuai urutan dibuat.
+ */
+export function placeUnits(units: Item[]) {
+  const slots: (Item | undefined)[] = landPositions.map(() => undefined);
+  const waiting: Item[] = [];
+  for (const unit of units) {
+    const index = Number(unit.data.slot) - 1;
+    if (Number.isInteger(index) && index >= 0 && index < slots.length && !slots[index])
+      slots[index] = unit;
+    else waiting.push(unit);
+  }
+  for (let i = 0; i < slots.length && waiting.length; i++)
+    if (!slots[i]) slots[i] = waiting.shift();
+  return {
+    plots: landPositions.map((position, index) => ({
+      id: `lahan-${index + 1}`,
+      position,
+      unit: slots[index],
+    })),
+    overflow: waiting.length,
+  };
+}
 export function getWorldHour(time: WorldPreferences['time'], now: Date) {
   if (time !== 'otomatis') return { pagi: 8, siang: 12, senja: 17, malam: 21 }[time];
   return Number(

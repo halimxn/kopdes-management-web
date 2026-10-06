@@ -1,5 +1,14 @@
 # Changelog
 
+## Paket 2 — peta baru — 6 Oktober 2026
+
+- Kawasan 62 × 50: jalan utama berpagar dengan gerbang dan pos jaga, parkir antre truk, gudang 24 × 10 dengan empat dok bermarka kuning, area staging dan forklift, jalan dalam, kantor lebih besar, taman, parkir mobil, boulevard dengan tujuh lahan 6,4 × 5,4. Kardus/forklift adalah pemandangan.
+- Pemilih zona di header (Semua kawasan, Kantor, Gudang, Boulevard gerai) dengan kamera bergerak mulus; pilihan lahan/gudang dari daftar menerbangkan kamera; panel Gudang menautkan daftar Barang; tombol reset kamera selalu kembali ke zona.
+- Kolom Lahan di Dunia Koperasi (slot otomatis/1–7) pada Gerai; gerai tidak bergeser saat gerai lain dihapus. Disimpan di data JSON yang ada, tanpa SQL.
+- Objek statis digabung menjadi satu mesh berwarna per titik per objek dan kotak tipis tidak dibulatkan: 129 draw call/126 ribu segitiga di 1280 px kualitas Sedang (sebelum optimasi 277/189 ribu).
+- Header ponsel menampilkan logo saja agar pill zona dan jam muat. Nomor lahan di daftar tidak lagi salah saat pencarian aktif.
+- 271 tes/44 berkas, typecheck, lint dan build lulus. Diperiksa di browser: semua kawasan, zona gudang dan gerai di desktop, header dan menu zona di 375 px. Batas: zona gerai di ponsel tertutup panel bawah (paket 3), lebar 768/1024 belum diperiksa.
+
 ## Paket 1 — fondasi dunia — 6 Oktober 2026
 
 - Pecah world-objects.ts menjadi layout.ts dan objects/ (primitives, props, office, exterior, characters); geometri/material dipakai bersama dan dibuang saat scene dibongkar.

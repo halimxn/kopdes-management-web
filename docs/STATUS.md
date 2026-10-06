@@ -4,7 +4,7 @@ Dokumen ini mencatat keadaan aktif. Riwayat paket ada pada CHANGELOG dan laporan
 
 ## Prioritas aktif
 
-Rencana Dunia Koperasi v2 disetujui pemilik 6 Oktober 2026 dan disimpan di DUNIA-KOPERASI; urutan paket 0–10. Paket 0 (rapikan folder) selesai: dokumen historis di docs/arsip/, modul catatan bersama (Records, Editor, catalog, schemas, query, service) di src/features/records/, audit:ui menulis docs/arsip/AUDIT.md. Tanpa perubahan perilaku; 266 tes/44 berkas, typecheck, lint dan build lulus. Paket 1 (fondasi dunia) selesai: berkas dunia dipecah, kualitas grafis Tinggi/Sedang/Hemat, pencahayaan siang lebih cerah dan malam terbaca; 269 tes lulus. Paket berikut: peta baru.
+Rencana Dunia Koperasi v2 disetujui pemilik 6 Oktober 2026 dan disimpan di DUNIA-KOPERASI; urutan paket 0–10. Paket 0 (rapikan folder) selesai: dokumen historis di docs/arsip/, modul catatan bersama (Records, Editor, catalog, schemas, query, service) di src/features/records/, audit:ui menulis docs/arsip/AUDIT.md. Tanpa perubahan perilaku; 266 tes/44 berkas, typecheck, lint dan build lulus. Paket 1 (fondasi dunia) selesai: berkas dunia dipecah, kualitas grafis Tinggi/Sedang/Hemat, pencahayaan siang lebih cerah dan malam terbaca; 269 tes lulus. Paket 2 (peta baru) selesai: kawasan dengan gudang, dok, gerbang, taman dan boulevard; pemilih zona; slot lahan Gerai; 129 draw call; 271 tes lulus. Paket berikut: UI kartu ala video.
 
 Dunia Koperasi mengikuti video pengguna: 3D isometrik biru-putih, kartu mengambang, kantor/interior, tujuh lahan gerai, maskot animatif/bubble, cuaca dan waktu. Panduan telah diringkas, konflik lingkup tema diperjelas, referensi video/interior disimpan di docs/referensi-dunia agar dapat dibaca AI berikutnya.
 

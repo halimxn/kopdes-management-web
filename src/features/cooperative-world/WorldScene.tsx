@@ -2,13 +2,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Building2, Plus, MessageCircle, MapPin } from 'lucide-react';
+import { Building2, Plus, MessageCircle, MapPin, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { animateCharacter, createCharacter } from './objects/characters';
 import { createExterior } from './objects/exterior';
 import { createInterior } from './objects/office';
-import { disposeSharedResources, palette } from './objects/primitives';
-import { cameraSpan, characterSpots, officePosition, worldStations } from './layout';
+import { disposeSharedResources, mergeStatic, palette } from './objects/primitives';
+import {
+  cameraSpan,
+  characterSpots,
+  officePosition,
+  officeSize,
+  warehouse,
+  worldStations,
+} from './layout';
 import { getLighting } from './lighting';
 import {
   qualitySettings,
@@ -26,6 +33,10 @@ type Props = {
   outfit: WorldPreferences['outfit'];
   quality: QualityChoice;
   activity: CharacterActivity;
+  /** Titik X/Z yang dituju kamera (pusat zona). */
+  focus: readonly [number, number];
+  /** Bertambah setiap kali pengguna meminta kamera kembali ke tujuan meski nilainya sama. */
+  recenter: number;
   zoom: number;
   rotation: number;
   selected: string;
@@ -40,6 +51,8 @@ export function WorldScene({
   outfit,
   quality,
   activity,
+  focus,
+  recenter,
   zoom,
   rotation,
   selected,
@@ -62,20 +75,11 @@ export function WorldScene({
   useEffect(() => {
     selectAction.current = onSelect;
   }, [onSelect]);
+  // Tujuan kamera dibaca saat scene dibangun lalu dianimasikan di loop saat berubah.
+  const view = useRef({ focus, zoom, rotation, moving: false });
   useEffect(() => {
-    if (!runtime.current) return;
-    runtime.current.camera.zoom = zoom;
-    runtime.current.camera.updateProjectionMatrix();
-  }, [zoom]);
-  useEffect(() => {
-    if (!runtime.current) return;
-    const { camera, controls } = runtime.current;
-    const angle = Math.PI / 4 + rotation;
-    controls.target.set(0, 0, 0);
-    camera.position.set(Math.sin(angle) * 26, 23, Math.cos(angle) * 26);
-    camera.lookAt(controls.target);
-    controls.update();
-  }, [rotation]);
+    view.current = { focus, zoom, rotation, moving: true };
+  }, [focus, zoom, rotation, recenter]);
   useEffect(() => {
     const node = host.current;
     if (!node) return;
@@ -100,36 +104,54 @@ export function WorldScene({
         : 'Interior koperasi 3D. Pilih meja melalui penanda atau panel.',
     );
     node.prepend(renderer.domElement);
+    // Hanya development: memeriksa anggaran draw call dari konsol (window.__cwRenderInfo).
+    if (process.env.NODE_ENV === 'development')
+      (window as Window & { __cwRenderInfo?: THREE.WebGLInfo }).__cwRenderInfo = renderer.info;
     const scene = new THREE.Scene();
     const background = new THREE.Color('#eef3fc');
     scene.background = background;
-    const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 0.1, 150);
-    camera.position.set(26, 23, 26);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 0.1, 200);
+    const cameraOffset = (turn: number) =>
+      new THREE.Vector3(Math.sin(Math.PI / 4 + turn) * 26, 23, Math.cos(Math.PI / 4 + turn) * 26);
+    const goalTarget = new THREE.Vector3(),
+      goalOffset = new THREE.Vector3(),
+      offset = new THREE.Vector3();
+    const readGoal = () => {
+      goalTarget.set(view.current.focus[0], 0, view.current.focus[1]);
+      goalOffset.copy(cameraOffset(view.current.rotation));
+    };
+    readGoal();
+    camera.zoom = view.current.zoom;
+    camera.position.copy(goalTarget).add(goalOffset);
+    camera.lookAt(goalTarget);
+    camera.updateProjectionMatrix();
+    view.current.moving = false;
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(goalTarget);
     controls.enableDamping = true;
     controls.dampingFactor = 0.09;
-    controls.minZoom = 0.65;
+    controls.minZoom = 0.35;
     controls.maxZoom = 2.8;
     controls.minPolarAngle = 0.45;
     controls.maxPolarAngle = 1.18;
     controls.enablePan = true;
-    controls.maxTargetRadius = 12;
+    controls.maxTargetRadius = location === 'luar' ? 30 : 10;
     runtime.current = { camera, controls };
     const ambient = new THREE.HemisphereLight('#f5f9ff', '#aeb8cf', 2.8);
     scene.add(ambient);
     const sun = new THREE.DirectionalLight('#fff7e8', 3.8);
-    sun.position.set(-10, 20, 10);
     sun.castShadow = settings.shadows;
     if (settings.shadows) sun.shadow.mapSize.set(settings.shadowMapSize, settings.shadowMapSize);
+    const shadowExtent = location === 'luar' ? 38 : 22;
     Object.assign(sun.shadow.camera, {
-      left: -22,
-      right: 22,
-      top: 22,
-      bottom: -22,
+      left: -shadowExtent,
+      right: shadowExtent,
+      top: shadowExtent,
+      bottom: -shadowExtent,
       near: 0.5,
-      far: 65,
+      far: 90,
     });
+    sun.position.set(-14, 28, 14);
     sun.shadow.bias = -0.0005;
     sun.shadow.normalBias = 0.04;
     scene.add(sun);
@@ -144,7 +166,10 @@ export function WorldScene({
     const world = new THREE.Group();
     scene.add(world);
     if (location === 'luar') createExterior(world, model);
-    else createInterior(world);
+    else {
+      createInterior(world);
+      mergeStatic(world);
+    }
     const color = { biru: palette.blue, lavender: '#a18ae0', hijau: '#51aa8a' }[outfit];
     const spots = characterSpots[location];
     const characters = [
@@ -224,7 +249,14 @@ export function WorldScene({
     resize();
     const positions = new Map<string, THREE.Vector3>();
     if (location === 'luar') {
-      positions.set('koperasi', new THREE.Vector3(officePosition[0], 4.1, officePosition[1]));
+      positions.set(
+        'koperasi',
+        new THREE.Vector3(officePosition[0], officeSize.height + 1, officePosition[1]),
+      );
+      positions.set(
+        'gudang',
+        new THREE.Vector3(warehouse.center[0], warehouse.size[1] + 2, warehouse.center[1]),
+      );
       model.plots.forEach((plot) =>
         positions.set(
           plot.id,
@@ -241,6 +273,21 @@ export function WorldScene({
       if (document.hidden || stamp - previous < settings.frameInterval) return;
       elapsed += Math.min((stamp - previous) / 1000, 0.06);
       previous = stamp;
+      if (view.current.moving) {
+        readGoal();
+        const k = reduced.matches ? 1 : 0.14;
+        offset.copy(camera.position).sub(controls.target).lerp(goalOffset, k);
+        controls.target.lerp(goalTarget, k);
+        camera.position.copy(controls.target).add(offset);
+        camera.zoom += (view.current.zoom - camera.zoom) * k;
+        camera.updateProjectionMatrix();
+        if (
+          controls.target.distanceTo(goalTarget) < 0.02 &&
+          offset.distanceTo(goalOffset) < 0.02 &&
+          Math.abs(camera.zoom - view.current.zoom) < 0.002
+        )
+          view.current.moving = false;
+      }
       controls.update();
       const state = motion.current,
         light = getLighting(state.hour, state.weather);
@@ -281,6 +328,7 @@ export function WorldScene({
           Math.abs(projected.x) > 1.05 || Math.abs(projected.y) > 1.05 ? 'hidden' : 'visible';
       }
       rain.visible = state.weather === 'hujan' && location === 'luar';
+      rain.position.set(controls.target.x, 0, controls.target.z);
       if (rain.visible && !reduced.matches) {
         const a = rainGeometry.attributes.position;
         for (let i = 0; i < rainCount; i++) {
@@ -327,6 +375,7 @@ export function WorldScene({
     location === 'luar'
       ? [
           { id: 'koperasi', label: 'Kantor koperasi', occupied: true },
+          { id: 'gudang', label: 'Gudang koperasi', occupied: true },
           ...model.plots.map((plot, i) => ({
             id: plot.id,
             label: plot.unit
@@ -361,6 +410,8 @@ export function WorldScene({
             >
               {marker.id === 'koperasi' ? (
                 <Building2 size={16} />
+              ) : marker.id === 'gudang' ? (
+                <Warehouse size={16} />
               ) : marker.occupied ? (
                 <MapPin size={14} />
               ) : (

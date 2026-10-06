@@ -97,3 +97,38 @@ describe('fondasi render dunia', () => {
     expect(worldPreferencesSchema.safeParse({ quality: 'ultra' }).success).toBe(false);
   });
 });
+
+describe('slot lahan gerai', () => {
+  const unit = (id: string, slot: string | undefined, created: string) =>
+    row(id, { title: id, ...(slot ? { slot } : {}) }, created);
+  it('gerai dengan pilihan lahan tetap di lahannya walau gerai lain dihapus', () => {
+    const a = unit('a', undefined, '2026-10-01T00:00:00Z');
+    const b = unit('b', '5', '2026-10-02T00:00:00Z');
+    const c = unit('c', 'otomatis', '2026-10-03T00:00:00Z');
+    const before = getWorldModel({ units: [a, b, c] }, new Date());
+    expect(before.plots.map((plot) => plot.unit?.id ?? null)).toEqual([
+      'a',
+      'c',
+      null,
+      null,
+      'b',
+      null,
+      null,
+    ]);
+    const after = getWorldModel({ units: [b, c] }, new Date());
+    expect(after.plots[4].unit?.id).toBe('b');
+    expect(after.plots[0].unit?.id).toBe('c');
+  });
+  it('pilihan ganda dimenangkan gerai paling awal, sisanya mengisi lahan kosong', () => {
+    const units = [
+      unit('lama', '2', '2026-10-01T00:00:00Z'),
+      unit('baru', '2', '2026-10-02T00:00:00Z'),
+      unit('aneh', '9', '2026-10-03T00:00:00Z'),
+    ];
+    const model = getWorldModel({ units }, new Date());
+    expect(model.plots[1].unit?.id).toBe('lama');
+    expect(model.plots[0].unit?.id).toBe('baru');
+    expect(model.plots[2].unit?.id).toBe('aneh');
+    expect(model.overflow).toBe(0);
+  });
+});

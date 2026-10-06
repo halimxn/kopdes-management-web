@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { box, cylinder, palette, sign, sphere } from './primitives';
 import { bench, chair, tree } from './props';
+import { officeSize } from '../layout';
 
 /** Gedung kawasan: kantor koperasi (main) atau gerai dari catatan unit. */
 export function building(
@@ -15,9 +16,9 @@ export function building(
   g.position.set(x, 0, z);
   g.userData.selection = main ? 'koperasi' : selection;
   parent.add(g);
-  const w = main ? 5.1 : 3.8,
-    h = main ? 3.2 : 2.2,
-    d = main ? 3.5 : 2.6;
+  const w = main ? officeSize.width : 3.8,
+    h = main ? officeSize.height : 2.2,
+    d = main ? officeSize.depth : 2.6;
   box(g, [w + 0.65, 0.16, d + 0.65], [0, 0.08, 0], '#f7f9ff');
   box(g, [w, h, d], [0, h / 2 + 0.16, 0], main ? palette.blue : palette.white);
   box(g, [w + 0.16, 0.2, d + 0.2], [0, h + 0.2, 0], palette.navy);
@@ -26,18 +27,22 @@ export function building(
   box(g, [1.15, 1.7, 0.08], [0, 1.02, d / 2 + 0.015], '#293e6a');
   box(g, [0.93, 1.55, 0.09], [0, 1.02, d / 2 + 0.06], palette.glass);
   box(g, [0.04, 1.55, 0.12], [0, 1.02, d / 2 + 0.1], palette.white);
-  for (const side of [-1, 1]) {
-    box(g, [0.95, 1, 0.09], [side * (w / 2 - 0.75), 1.35, d / 2 + 0.04], '#bedcfa');
-    box(g, [0.04, 1, 0.12], [side * (w / 2 - 0.75), 1.35, d / 2 + 0.09], palette.white);
-  }
+  // Kantor punya dua jendela tiap sisi pintu; gerai satu.
+  const windows = main ? [w / 2 - 0.9, w / 2 - 2.2] : [w / 2 - 0.75];
+  for (const side of [-1, 1])
+    for (const offset of windows) {
+      box(g, [0.95, 1, 0.09], [side * offset, 1.35, d / 2 + 0.04], '#bedcfa');
+      box(g, [0.04, 1, 0.12], [side * offset, 1.35, d / 2 + 0.09], palette.white);
+    }
   sign(g, main ? 'KOPERASI' : title, [0, h * 0.84, d / 2 + 0.08], w * 0.73);
   if (main) {
     box(g, [1.1, 0.3, 0.7], [-1, h + 0.42, -0.5], '#cbd4e9');
     for (const side of [-1, 1]) {
-      cylinder(g, 0.32, 0.5, [side * 2.3, 0.41, 2.15], '#e3e9f4');
-      sphere(g, 0.42, [side * 2.3, 0.84, 2.15], palette.green);
+      cylinder(g, 0.32, 0.5, [side * (w / 2 - 0.2), 0.41, d / 2 + 0.75], '#e3e9f4');
+      sphere(g, 0.42, [side * (w / 2 - 0.2), 0.84, d / 2 + 0.75], palette.green);
     }
   }
+  return g;
 }
 
 /** Interior kantor cutaway: rapat, meja tugas, arsip dan area kegiatan. */

@@ -14,12 +14,13 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 ## Urutan melanjutkan
 
 1. Periksa Git, AGENTS, STATUS dan rencana v2.
-2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0–1 selesai; berikutnya **paket 2 — peta baru**.
+2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0–2 selesai; berikutnya **paket 3 — UI kartu ala video dan bottom sheet ponsel**. Masalah terbuka untuk paket 3: di ponsel panel bawah menutupi zona gerai.
 3. Sebelum tiap paket buat tag checkpoint; commit kecil per paket; PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 4. Akhir paket: perbarui bagian "Paket terakhir" di bawah, STATUS dan CHANGELOG.
 
 ## Paket terakhir
 
+- 6 Oktober, paket 2: kawasan baru dengan gudang/dok/gerbang/taman/boulevard, pemilih zona, kamera mulus, kolom slot Gerai, mesh statis digabung (129 draw call). Tag checkpoint/paket-2 menandai keadaan sebelumnya.
 - 6 Oktober, paket 1: berkas dunia dipecah (layout.ts, objects/, lighting.ts, render-quality.ts), kualitas grafis Tinggi/Sedang/Hemat, siang lebih cerah, malam terbaca. Tag checkpoint/paket-1 menandai keadaan sebelumnya.
 - 6 Oktober, paket 0: dokumen historis ke docs/arsip/, modul catatan bersama ke src/features/records/. Tag checkpoint/paket-0 menandai keadaan sebelumnya. Pemeriksaan lengkap lulus.
 - 6 Oktober: rencana v2 dan delapan frame video disimpan. Dokumentasi saja; tidak ada perubahan runtime atau tes aplikasi baru.
@@ -30,7 +31,7 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 - `/dev/dunia-koperasi`: hanya development, workspace kosong tanpa database.
 - Three.js: kamera ortografis, OrbitControls, cahaya/bayangan, zoom/putar/reset, raycast gedung/karakter/lahan, penanda HTML aksesibel.
 - Berkas: layout.ts (koordinat), objects/ (mesh), lighting.ts, render-quality.ts, world-model.ts (adapter), WorldScene.tsx, CooperativeWorld.tsx.
-- Exterior kecil: kantor biru, tujuh lahan, jalan, pohon, bangku. Interior: meja rapat, meja tugas, arsip, treadmill.
+- Exterior: kawasan 62 × 50 dengan gudang, dok, gerbang, kantor, taman, boulevard tujuh lahan (lihat Exterior di DUNIA-KOPERASI). Interior: meja rapat, meja tugas, arsip, treadmill.
 - Maskot: rapat aktif → duduk; jurnal hari ini → olahraga; tugas proses → bekerja; lainnya → idle.
 - Style: `world.css`, dibatasi `.cooperative-world` dan kelas `cw-*`. Tanpa backdrop blur.
 

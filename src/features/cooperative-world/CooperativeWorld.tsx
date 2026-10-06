@@ -30,6 +30,8 @@ import {
   Users,
   X,
   BookOpen,
+  ChevronDown,
+  Warehouse,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
@@ -45,7 +47,7 @@ import {
   type WorldPreferences,
 } from './world-model';
 import { recordHref } from '../workspace/workspace-navigation';
-import { worldStations } from './layout';
+import { warehouse, worldStations, worldZones, type WorldZone } from './layout';
 const WorldScene = dynamic(() => import('./WorldScene').then((module) => module.WorldScene), {
   ssr: false,
   loading: () => <div className="cw-loading">Menyiapkan lingkungan 3D…</div>,
@@ -64,6 +66,13 @@ type Props = {
   refresh?: () => Promise<void>;
   partial?: boolean;
 };
+
+function zoneIcon(zone: WorldZone) {
+  if (zone === 'kantor') return <Building2 size={18} />;
+  if (zone === 'gudang') return <Warehouse size={18} />;
+  if (zone === 'gerai') return <Store size={18} />;
+  return <Map size={18} />;
+}
 
 export function CooperativeWorld({
   data,
@@ -88,8 +97,15 @@ export function CooperativeWorld({
   const [selected, setSelected] = useState('kawasan');
   const [panelOpen, setPanelOpen] = useState(true);
   const [query, setQuery] = useState('');
-  const [zoom, setZoom] = useState(1);
+  const [zone, setZone] = useState<WorldZone>('semua');
+  const [zoneMenu, setZoneMenu] = useState(false);
+  // Titik khusus saat memilih lahan/gudang dari daftar; zona dipakai bila kosong.
+  const [spot, setSpot] = useState<readonly [number, number] | null>(null);
+  const [recenter, setRecenter] = useState(0);
+  const [zoom, setZoom] = useState(worldZones.semua.zoom);
   const [rotation, setRotation] = useState(0);
+  const focus: readonly [number, number] =
+    location === 'dalam' ? [0, 0] : spot || worldZones[zone].target;
   const [rehearsal, setRehearsal] = useState<CharacterActivity | 'otomatis'>('otomatis');
   useEffect(() => {
     const tick = window.setInterval(() => setNow(new Date()), 60000);
@@ -134,35 +150,54 @@ export function CooperativeWorld({
   function enter(next: WorldLocation) {
     setLocation(next);
     setSelected(next === 'luar' ? 'kawasan' : 'rapat');
-    setZoom(1);
+    setSpot(null);
+    setZoom(next === 'luar' ? worldZones[zone].zoom : 1);
     setRotation(0);
     setPanelOpen(true);
   }
-  function select(id: string) {
-    if (id === 'koperasi') enter('dalam');
-    else {
-      setSelected(id);
-      setPanelOpen(true);
-    }
+  function chooseZone(next: WorldZone) {
+    setZoneMenu(false);
+    setZone(next);
+    setSpot(null);
+    setZoom(worldZones[next].zoom);
+    setRecenter((value) => value + 1);
+    if (location === 'dalam') {
+      setLocation('luar');
+      setSelected(next === 'gudang' ? 'gudang' : 'kawasan');
+    } else if (next === 'gudang') setSelected('gudang');
+  }
+  function select(id: string, fly = false) {
+    if (id === 'koperasi') return enter('dalam');
+    setSelected(id);
+    setPanelOpen(true);
+    // Pilihan dari daftar menggerakkan kamera ke objeknya; klik di scene tidak memindahkan kamera.
+    const target = model.plots.find((item) => item.id === id)?.position;
+    if (fly && target) {
+      setSpot(target);
+      setZoom(1.15);
+      setRecenter((value) => value + 1);
+    } else if (fly && id === 'gudang') chooseZone('gudang');
   }
   function preference<K extends keyof WorldPreferences>(key: K, value: WorldPreferences[K]) {
     savePreferences(JSON.stringify({ ...preferences, [key]: value }));
   }
   const count = (value: number) => (loading || error ? '—' : value);
   const title =
-    selected === 'lingkungan'
-      ? 'Suasana & karakter'
-      : selected === 'logistik'
-        ? 'Area pengembangan'
-        : selected === 'karakter'
-          ? 'Maskot koperasi'
-          : plot
-            ? plot.unit
-              ? String(plot.unit.data.title)
-              : `Lahan ${selected.split('-')[1]}`
-            : station
-              ? station.title
-              : 'Kawasan koperasi';
+    selected === 'gudang'
+      ? worldZones.gudang.title
+      : selected === 'lingkungan'
+        ? 'Suasana & karakter'
+        : selected === 'logistik'
+          ? 'Area pengembangan'
+          : selected === 'karakter'
+            ? 'Maskot koperasi'
+            : plot
+              ? plot.unit
+                ? String(plot.unit.data.title)
+                : `Lahan ${selected.split('-')[1]}`
+              : station
+                ? station.title
+                : 'Kawasan koperasi';
   return (
     <main className={`cooperative-world ${hour >= 19 || hour < 6 ? 'cw-night' : ''}`}>
       <header className="cw-topbar">
@@ -189,16 +224,42 @@ export function CooperativeWorld({
           />
           <kbd>/</kbd>
         </div>
-        <div className="cw-top-location">
-          <span className="cw-location-icon">
-            {location === 'luar' ? <Map size={18} /> : <Building2 size={18} />}
-          </span>
-          <span>
-            <strong>{model.title}</strong>
-            <small>
-              {location === 'luar' ? 'Kawasan • 7 lahan gerai' : 'Interior • 4 area kerja'}
-            </small>
-          </span>
+        <div className="cw-zone-picker">
+          <Button
+            className="cw-top-location"
+            aria-haspopup="true"
+            aria-expanded={zoneMenu}
+            onClick={() => setZoneMenu((open) => !open)}
+            onKeyDown={(event) => event.key === 'Escape' && setZoneMenu(false)}
+          >
+            <span className="cw-location-icon">
+              {zoneIcon(location === 'dalam' ? 'kantor' : zone)}
+            </span>
+            <span>
+              <strong>{location === 'dalam' ? 'Kantor · interior' : worldZones[zone].title}</strong>
+              <small>{model.title}</small>
+            </span>
+            <ChevronDown size={15} />
+          </Button>
+          {zoneMenu && (
+            <div className="cw-zone-menu cw-glass" role="menu" aria-label="Pilih zona">
+              {(Object.keys(worldZones) as WorldZone[]).map((key) => (
+                <Button
+                  key={key}
+                  role="menuitem"
+                  aria-current={location === 'luar' && zone === key ? 'true' : undefined}
+                  onClick={() => chooseZone(key)}
+                  onKeyDown={(event) => event.key === 'Escape' && setZoneMenu(false)}
+                >
+                  <span className="cw-location-icon">{zoneIcon(key)}</span>
+                  <span>
+                    <strong>{worldZones[key].title}</strong>
+                    <small>{worldZones[key].subtitle}</small>
+                  </span>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
         <span className="cw-live">
           <i />
@@ -228,6 +289,8 @@ export function CooperativeWorld({
           hour={hour}
           outfit={preferences.outfit}
           quality={preferences.quality}
+          focus={focus}
+          recenter={recenter}
           activity={activity}
           zoom={zoom}
           rotation={rotation}
@@ -302,15 +365,15 @@ export function CooperativeWorld({
         <div className="cw-camera-tools cw-glass" aria-label="Kontrol kamera">
           <Button
             aria-label="Perbesar"
-            disabled={zoom >= 2.2}
-            onClick={() => setZoom((value) => Math.min(2.2, value + 0.2))}
+            disabled={zoom >= 2.4}
+            onClick={() => setZoom((value) => Math.min(2.4, value + 0.2))}
           >
             <Plus size={18} />
           </Button>
           <Button
             aria-label="Perkecil"
-            disabled={zoom <= 0.7}
-            onClick={() => setZoom((value) => Math.max(0.7, value - 0.2))}
+            disabled={zoom <= 0.35}
+            onClick={() => setZoom((value) => Math.max(0.35, value - 0.2))}
           >
             <Minus size={18} />
           </Button>
@@ -324,8 +387,10 @@ export function CooperativeWorld({
           <Button
             aria-label="Atur ulang kamera"
             onClick={() => {
-              setZoom(1);
-              setRotation((value) => (value === 0 ? Math.PI * 2 : 0));
+              setSpot(null);
+              setZoom(location === 'luar' ? worldZones[zone].zoom : 1);
+              setRotation(0);
+              setRecenter((value) => value + 1);
             }}
           >
             <Expand size={17} />
@@ -488,6 +553,25 @@ export function CooperativeWorld({
                     Lihat mitra & kontak <ArrowRight size={15} />
                   </Link>
                 </>
+              ) : selected === 'gudang' ? (
+                <>
+                  <div className="cw-status-line">
+                    <span className="cw-status">Area logistik</span>
+                    <small>{warehouse.docks.length} pintu dok</small>
+                  </div>
+                  <div className="cw-plot-diagram">
+                    <Warehouse size={48} strokeWidth={1} />
+                    <span>Rak, dok bongkar muat dan area staging</span>
+                  </div>
+                  <p className="cw-panel-note">
+                    Isi rak akan mengikuti catatan Barang, dan truk di dok mengikuti catatan
+                    Pengiriman setelah fitur itu tersedia. Kardus dan forklift saat ini hanya
+                    pemandangan.
+                  </p>
+                  <Link className="cw-primary-link" href="/barang">
+                    Buka daftar barang <ArrowRight size={15} />
+                  </Link>
+                </>
               ) : plot ? (
                 <>
                   <span className={`cw-status ${plot.unit ? '' : 'cw-status-muted'}`}>
@@ -598,14 +682,26 @@ export function CooperativeWorld({
                         <ChevronRight size={15} />
                       </Button>
                     )}
+                    {(!query || 'gudang koperasi'.includes(query.toLowerCase())) && (
+                      <Button onClick={() => select('gudang', true)}>
+                        <span className="cw-list-icon">
+                          <Warehouse size={18} />
+                        </span>
+                        <span>
+                          <strong>Gudang koperasi</strong>
+                          <small>Dok bongkar muat dan stok</small>
+                        </span>
+                        <ChevronRight size={15} />
+                      </Button>
+                    )}
                     {model.plots
                       .filter((item) =>
                         `${item.unit?.data.title || item.id}`
                           .toLowerCase()
                           .includes(query.toLowerCase()),
                       )
-                      .map((item, index) => (
-                        <Button key={item.id} onClick={() => select(item.id)}>
+                      .map((item) => (
+                        <Button key={item.id} onClick={() => select(item.id, true)}>
                           <span className={`cw-list-icon ${!item.unit ? 'cw-empty-icon' : ''}`}>
                             {item.unit ? <Store size={17} /> : <Plus size={17} />}
                           </span>
@@ -620,7 +716,7 @@ export function CooperativeWorld({
                             </small>
                           </span>
                           <span className="cw-slot-number">
-                            {String(index + 1).padStart(2, '0')}
+                            {item.id.split('-')[1].padStart(2, '0')}
                           </span>
                         </Button>
                       ))}
@@ -630,7 +726,8 @@ export function CooperativeWorld({
                           .toLowerCase()
                           .includes(query.toLowerCase()),
                       ) &&
-                      !'kantor koperasi'.includes(query.toLowerCase()) && (
+                      !'kantor koperasi'.includes(query.toLowerCase()) &&
+                      !'gudang koperasi'.includes(query.toLowerCase()) && (
                         <p className="cw-panel-note">Lokasi tidak ditemukan.</p>
                       )}
                   </div>

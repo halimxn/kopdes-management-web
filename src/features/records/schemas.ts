@@ -130,6 +130,7 @@ export const schemas = {
       assignee: text,
       location: text,
       status: z.enum(['rencana', 'persiapan', 'siap uji', 'siap buka', 'aktif']).default('rencana'),
+      slot: z.enum(['otomatis', '1', '2', '3', '4', '5', '6', '7']).default('otomatis'),
       physical: text,
       equipment: text,
       sop: text,
@@ -233,7 +234,16 @@ export const schemas = {
     })
     .strict(),
   journal: z
-    .object({ title, code: text.optional(), date, notes: text, unit_id: ref, work_item_id: ref, stakeholder_id: ref, meeting_id: ref })
+    .object({
+      title,
+      code: text.optional(),
+      date,
+      notes: text,
+      unit_id: ref,
+      work_item_id: ref,
+      stakeholder_id: ref,
+      meeting_id: ref,
+    })
     .strict(),
   members: z
     .object({

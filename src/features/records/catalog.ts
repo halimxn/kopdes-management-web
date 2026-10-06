@@ -120,6 +120,7 @@ export const catalog: Record<Entity, { title: string; description: string; field
       'assignee',
       'location',
       'status',
+      'slot',
       'physical',
       'equipment',
       'sop',
@@ -206,6 +207,7 @@ export const catalog: Record<Entity, { title: string; description: string; field
 };
 export const labels: Record<string, string> = {
   duration: 'Durasi (menit)',
+  slot: 'Lahan di Dunia Koperasi',
   member_number: 'Nomor anggota',
   address: 'Alamat',
   direction: 'Jenis transaksi',
@@ -314,6 +316,7 @@ export const options: Record<string, string[]> = {
   'sprints.duration': ['1 minggu', '2 minggu', '1 bulan', 'kustom'],
   'checklist.status': ['rencana', 'proses', 'selesai'],
   'units.status': ['rencana', 'persiapan', 'siap uji', 'siap buka', 'aktif'],
+  'units.slot': ['otomatis', '1', '2', '3', '4', '5', '6', '7'],
   'documents.status': ['belum ada', 'diproses', 'tersedia'],
   'risks.status': ['terbuka', 'ditangani', 'ditutup'],
   'issues.status': ['terbuka', 'ditangani', 'ditutup'],
