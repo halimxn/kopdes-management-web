@@ -1,5 +1,5 @@
 import { AlertTriangle, ShieldAlert, ShieldCheck } from 'lucide-react';
-import type { Item } from '@/features/schemas';
+import type { Item } from '@/features/records/schemas';
 import { Progress } from '@/components/ui/Progress';
 
 export function Meter({ value }: { value: number | null }) {

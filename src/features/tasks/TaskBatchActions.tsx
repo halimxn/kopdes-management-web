@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { DateInput } from '@/components/ui/DateField';
 import { useState } from 'react';
-import type { Item } from '../schemas';
+import type { Item } from '../records/schemas';
 import { api } from '@/lib/client';
 import { selectTaskStatus, type TaskStatus } from '@/lib/task-status';
 import { Select } from '@/components/ui/Select';

@@ -20,13 +20,13 @@ import {
 } from 'lucide-react';
 import { schemas, type Entity, type Item } from './schemas';
 import { catalog, formatChoiceLabel, labels, options, references } from './catalog';
-import type { Workspace } from './workspace/useWorkspace';
+import type { Workspace } from '../workspace/useWorkspace';
 import { today } from '@/lib/date';
 import { api } from '@/lib/client';
 import { ZodError } from 'zod';
 import { DateField } from '@/components/ui/DateField';
 import { Select } from '@/components/ui/Select';
-import { EntryGuide } from './workspace/EntryGuide';
+import { EntryGuide } from '../workspace/EntryGuide';
 
 const STAKEHOLDER_PRESETS = [
   {

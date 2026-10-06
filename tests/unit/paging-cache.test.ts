@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, expect, it, vi } from 'vitest';
-import { listQuerySchema } from '@/features/query';
+import { listQuerySchema } from '@/features/records/query';
 import { pageEntities } from '@/features/workspace/workspace-scope';
 import { api, invalidateCache } from '@/lib/client';
 

@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/Button';
 import { useState } from 'react';
 import { Flag, CheckCircle2, Calendar, Plus, Edit3, RotateCcw, Check, Layers } from 'lucide-react';
 import type { Workspace } from '../workspace/useWorkspace';
-import type { Item } from '../schemas';
-import { Editor } from '../Editor';
+import type { Item } from '../records/schemas';
+import { Editor } from '../records/Editor';
 import { api } from '@/lib/client';
 import { formatDate, today, daysBetween } from '@/lib/date';
 

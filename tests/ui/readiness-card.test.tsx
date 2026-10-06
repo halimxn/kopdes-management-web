@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { ReadinessRadar } from '@/components/charts/ReadinessRadar';
 import { cardWorkspace } from '@/features/qa/popup-fixtures';
-import { schemas } from '@/features/schemas';
+import { schemas } from '@/features/records/schemas';
 afterEach(cleanup);
 it('kesiapan tanpa penilaian mempertahankan teks tanpa radar kosong', () => {
   render(<ReadinessRadar items={[]} />);

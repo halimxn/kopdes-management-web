@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { requireSession } from '@/lib/server/auth';
 import { sameOrigin, failure, readJson } from '@/lib/server/http';
 import { db } from '@/lib/server/db';
-import { date } from '@/features/schemas';
-import { list } from '@/features/service';
+import { date } from '@/features/records/schemas';
+import { list } from '@/features/records/service';
 import { reportSnapshot } from '@/features/reports/report-snapshot';
 
 export async function GET() {

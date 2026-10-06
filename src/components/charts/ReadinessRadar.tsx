@@ -1,4 +1,4 @@
-import type { Checklist } from '@/features/schemas';
+import type { Checklist } from '@/features/records/schemas';
 import { readiness } from '@/lib/progress';
 import { Legend } from '@/components/ui/Legend';
 const dimensions = ['legalitas', 'fisik', 'sdm', 'sop', 'sistem'] as const;

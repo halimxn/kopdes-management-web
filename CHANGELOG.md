@@ -1,5 +1,11 @@
 # Changelog
 
+## Paket 0 — rapikan folder — 6 Oktober 2026
+
+- Pindahkan LAPORAN-ASTRA, QA-ANOTASI, QA-POPUP, QA-TATA-LETAK dan AUDIT ke docs/arsip/; audit:ui kini menulis docs/arsip/AUDIT.md.
+- Pindahkan Records, Editor, catalog, schemas, query dan service ke src/features/records/; 69 berkas impor/tautan diperbarui otomatis. Tanpa perubahan perilaku.
+- 266 tes/44 berkas (--maxWorkers=2), typecheck, lint dan production build lulus. UI tidak berubah sehingga tidak diperiksa ulang di browser.
+
 ## Rencana Dunia Koperasi v2 — 6 Oktober 2026
 
 - Simpan rencana v2 yang disetujui pemilik di DUNIA-KOPERASI: 3D low-poly ringan, kawasan lebih luas dengan gudang, NPC per seksi dan manajer, UI kartu dan bottom sheet ponsel mengikuti video, Pengiriman dan Mutasi stok, tujuh ide tambahan, urutan paket 0–10.

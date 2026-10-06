@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ maybeSingle: vi.fn(), rpc: vi.fn() }));
 vi.mock('@/lib/server/db', () => ({ db: () => ({ from: () => { const chain = { select: () => chain, eq: () => chain, maybeSingle: mocks.maybeSingle }; return chain; }, rpc: mocks.rpc }) }));
-import { save } from '@/features/service';
+import { save } from '@/features/records/service';
 const projectId = '00000000-0000-4000-8000-000000000101';
 beforeEach(() => { vi.resetAllMocks(); });
 it('server menolak hubungan proyek yang tidak ditemukan', async () => {

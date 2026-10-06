@@ -5,10 +5,10 @@ import { TaskDetailDrawer } from '@/features/tasks/TaskDetailDrawer';
 import { SprintCard } from '@/features/projects/SprintCard';
 import { ScrumBoardView } from '@/features/tasks/ScrumBoardView';
 import { TodayView } from '@/features/dashboard/TodayView';
-import { Editor } from '@/features/Editor';
-import { Records } from '@/features/Records';
+import { Editor } from '@/features/records/Editor';
+import { Records } from '@/features/records/Records';
 import { Operations } from '@/features/operations/Operations';
-import { type Item } from '@/features/schemas';
+import { type Item } from '@/features/records/schemas';
 import { today, addDays } from '@/lib/date';
 
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));

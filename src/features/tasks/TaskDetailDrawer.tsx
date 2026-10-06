@@ -23,7 +23,7 @@ import {
   Copy,
   CheckCheck,
 } from 'lucide-react';
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 import type { Workspace } from '../workspace/useWorkspace';
 import { api } from '@/lib/client';
 import { subtaskProgress } from '@/lib/progress';

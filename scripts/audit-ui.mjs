@@ -78,7 +78,7 @@ const lines = [
   '## Selector berulang', '', '| Berkas | Selector dan konteks | Baris |', '|---|---|---|', ...duplicates, '',
   '## Nilai deklarasi', '', ...[...values].flatMap(([name, set]) => [`### ${name}`, '', ...[...set].sort().map((value) => `- \`${value}\``), '']),
 ];
-fs.writeFileSync('AUDIT.md', lines.join('\n'));
+fs.writeFileSync('docs/arsip/AUDIT.md', lines.join('\n'));
 console.log(JSON.stringify({ ...stats, rawOutsideUi: raw.filter((row) => !row.ui).length, duplicateSelectors: duplicates.length }, null, 2));
 if (process.argv.includes('--check') && raw.some((row) => !row.ui)) {
   console.error('Kontrol HTML mentah di luar components/ui tidak diizinkan.');

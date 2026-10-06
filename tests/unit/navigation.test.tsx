@@ -2,11 +2,11 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { getFollowUps, searchWorkspace } from '@/features/workspace/workspace-navigation';
 import { SavedTaskViews } from '@/features/tasks/SavedTaskViews';
-import { Editor } from '@/features/Editor';
+import { Editor } from '@/features/records/Editor';
 import { Operations } from '@/features/operations/Operations';
-import { Records } from '@/features/Records';
+import { Records } from '@/features/records/Records';
 import { TaskBatchActions } from '@/features/tasks/TaskBatchActions';
-import { schemas, type Item } from '@/features/schemas';
+import { schemas, type Item } from '@/features/records/schemas';
 const mocks = vi.hoisted(() => ({ api: vi.fn(), query: '', replace: vi.fn() }));
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(mocks.query),

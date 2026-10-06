@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { usePreference } from '@/lib/usePreference';
 import { Select } from '@/components/ui/Select';
 import { recordHref } from '../workspace/workspace-navigation';
-import { catalog } from '../catalog';
+import { catalog } from '../records/catalog';
 import type { Workspace } from '../workspace/useWorkspace';
 
 const pinSchema = z

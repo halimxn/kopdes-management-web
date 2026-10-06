@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireSession } from '@/lib/server/auth';
 import { sameOrigin, failure, readJson } from '@/lib/server/http';
-import { entityName } from '@/features/schemas';
-import { listPage, save } from '@/features/service';
-import { listQuerySchema } from '@/features/query';
+import { entityName } from '@/features/records/schemas';
+import { listPage, save } from '@/features/records/service';
+import { listQuerySchema } from '@/features/records/query';
 import { db } from '@/lib/server/db';
 type Context = { params: Promise<{ entity: string }> };
 export async function GET(request: Request, context: Context) {

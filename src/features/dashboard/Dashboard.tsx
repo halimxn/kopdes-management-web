@@ -31,7 +31,7 @@ import {
 import { FollowUps } from '../follow-ups/FollowUps';
 import { recordHref } from '../workspace/workspace-navigation';
 import type { Workspace } from '../workspace/useWorkspace';
-import { schemas } from '../schemas';
+import { schemas } from '../records/schemas';
 import { planProgress, taskProgress, isOverdue, scopeProgress } from '@/lib/progress';
 import { today, addDays, formatDate } from '@/lib/date';
 import { cashSummary, rupiah } from '../operations/ledger';

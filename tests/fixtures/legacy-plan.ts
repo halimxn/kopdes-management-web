@@ -1,6 +1,6 @@
 import template from './legacy-plan.json';
 import { addDays } from '@/lib/date';
-import { schemas, type Entity } from '@/features/schemas';
+import { schemas, type Entity } from '@/features/records/schemas';
 export function buildPlan(start: string, uuid: () => string) {
   const result: { id: string; entity: Entity; data: Record<string, unknown> }[] = [];
   const add = (entity: Entity, data: unknown) => {

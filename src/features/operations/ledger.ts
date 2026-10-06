@@ -1,4 +1,4 @@
-import type { Item } from '../schemas';
+import type { Item } from '../records/schemas';
 export const rupiah = (value: number) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',

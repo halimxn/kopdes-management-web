@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { RecursiveScheduleModal } from '@/features/tasks/RecursiveScheduleModal';
-import { Editor } from '@/features/Editor';
-import { schemas } from '@/features/schemas';
+import { Editor } from '@/features/records/Editor';
+import { schemas } from '@/features/records/schemas';
 
 vi.mock('@/lib/client', () => ({ api: vi.fn() }));
 beforeEach(() => {

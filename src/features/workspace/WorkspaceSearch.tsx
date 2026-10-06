@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowUpRight, FileSearch, Search } from 'lucide-react';
-import { navigation } from '../catalog';
+import { navigation } from '../records/catalog';
 import { searchWorkspace } from './workspace-navigation';
 import type { Workspace } from './useWorkspace';
 

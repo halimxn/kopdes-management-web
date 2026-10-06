@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, expect, it, vi } from 'vitest';
 import { Dashboard } from '@/features/dashboard/Dashboard';
 import { TaskCalendar } from '@/features/tasks/TaskCalendar';
-import { schemas } from '@/features/schemas';
+import { schemas } from '@/features/records/schemas';
 import { today, formatDate } from '@/lib/date';
 afterEach(cleanup);
 it('beranda memakai jumlah selesai nyata dan filter tenggat', () => {

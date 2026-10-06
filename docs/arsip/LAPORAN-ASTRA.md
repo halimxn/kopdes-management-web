@@ -1,6 +1,6 @@
 # Pelaksanaan PLAN-ASTRA — 4 Oktober 2026
 
-> Catatan historis halaman operasional; bukan aturan aktif Dunia Koperasi. Kontrak dunia: [DUNIA-KOPERASI](DUNIA-KOPERASI.md). Temuan/angka lama harus diverifikasi ulang sebelum dikerjakan.
+> Catatan historis halaman operasional; bukan aturan aktif Dunia Koperasi. Kontrak dunia: [DUNIA-KOPERASI](../DUNIA-KOPERASI.md). Temuan/angka lama harus diverifikasi ulang sebelum dikerjakan.
 
 
 ## Fase 1 — audit otomatis selesai

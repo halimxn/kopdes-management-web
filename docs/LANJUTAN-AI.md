@@ -14,12 +14,13 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 ## Urutan melanjutkan
 
 1. Periksa Git, AGENTS, STATUS dan rencana v2.
-2. Mulai paket berikutnya yang belum selesai. Saat penulisan: **paket 0 — rapikan folder** belum dimulai.
+2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0 selesai; berikutnya **paket 1 — fondasi dunia**.
 3. Sebelum tiap paket buat tag checkpoint; commit kecil per paket; PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 4. Akhir paket: perbarui bagian "Paket terakhir" di bawah, STATUS dan CHANGELOG.
 
 ## Paket terakhir
 
+- 6 Oktober, paket 0: dokumen historis ke docs/arsip/, modul catatan bersama ke src/features/records/. Tag checkpoint/paket-0 menandai keadaan sebelumnya. Pemeriksaan lengkap lulus.
 - 6 Oktober: rencana v2 dan delapan frame video disimpan. Dokumentasi saja; tidak ada perubahan runtime atau tes aplikasi baru.
 
 ## Keadaan kode (v0, ecddd85)

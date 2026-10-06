@@ -1,10 +1,10 @@
-# Status produk — 5 Oktober 2026
+# Status produk — 6 Oktober 2026
 
 Dokumen ini mencatat keadaan aktif. Riwayat paket ada pada CHANGELOG dan laporan QA; arahan desain terbaru ada pada DESAIN-ANTARMUKA dan DUNIA-KOPERASI. Jangan memakai bagian historis sebagai instruksi yang mengalahkan permintaan terbaru.
 
 ## Prioritas aktif
 
-Panduan AI/tool/skill telah disederhanakan dan lingkup historis dipertegas. Fokus implementasi berikut: dunia dan koneksi data web, dimulai dari paket terang/map pada DUNIA-KOPERASI. Audit ini terbatas dokumen repo yang tersedia; tidak mengubah aturan global AI di luar proyek.
+Rencana Dunia Koperasi v2 disetujui pemilik 6 Oktober 2026 dan disimpan di DUNIA-KOPERASI; urutan paket 0–10. Paket 0 (rapikan folder) selesai: dokumen historis di docs/arsip/, modul catatan bersama (Records, Editor, catalog, schemas, query, service) di src/features/records/, audit:ui menulis docs/arsip/AUDIT.md. Tanpa perubahan perilaku; 266 tes/44 berkas, typecheck, lint dan build lulus. Paket berikut: fondasi dunia.
 
 Dunia Koperasi mengikuti video pengguna: 3D isometrik biru-putih, kartu mengambang, kantor/interior, tujuh lahan gerai, maskot animatif/bubble, cuaca dan waktu. Panduan telah diringkas, konflik lingkup tema diperjelas, referensi video/interior disimpan di docs/referensi-dunia agar dapat dibaca AI berikutnya.
 

@@ -20,9 +20,9 @@ import {
 import { addDays, daysBetween, formatDate, today } from '@/lib/date';
 import { timelineBar, shiftSchedule, scheduleConflicts } from '@/lib/timeline';
 import { api } from '@/lib/client';
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 import type { Workspace } from '../workspace/useWorkspace';
-import { Editor } from '../Editor';
+import { Editor } from '../records/Editor';
 import { Select } from '@/components/ui/Select';
 import { EmptyState } from '@/components/ui/EmptyState';
 export function TaskTimeline({

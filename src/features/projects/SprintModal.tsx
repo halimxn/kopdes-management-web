@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Target, Calendar, Clock } from 'lucide-react';
 import { addDays, today } from '@/lib/date';
 import { api } from '@/lib/client';
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 import { Select } from '@/components/ui/Select';
 
 export function SprintModal({

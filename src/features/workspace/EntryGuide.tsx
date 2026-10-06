@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Entity } from '../schemas';
+import type { Entity } from '../records/schemas';
 
 const instructions: Partial<Record<Entity, { title: string; text: string; href?: string; link?: string }>> = {
   'work-items': { title: '1. Pilih proyek → 2. Tulis pekerjaan → 3. Tetapkan tenggat', text: 'Buat tugas dari halaman proyek agar proyek terisi otomatis. Untuk pekerjaan harian yang berdiri sendiri, pilih Tugas mandiri. Milestone, mitra dan dokumen ada di Rincian tambahan.' },

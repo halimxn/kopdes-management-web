@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Input';
 import { useRef, useState } from 'react';
 import { FileText, Heading2, List, ListChecks, Quote, Pencil, Save, CheckSquare, Square } from 'lucide-react';
-import type { Item } from '../schemas';
+import type { Item } from '../records/schemas';
 import { api } from '@/lib/client';
 
 export function NoteContent({ text }: { text: string }) {

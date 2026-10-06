@@ -13,9 +13,9 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { catalog, labels, options, formatChoiceLabel } from './catalog';
 import { schemas, type Entity, type Item } from './schemas';
-import type { Workspace } from './workspace/useWorkspace';
-import { SavedTaskViews, type TaskView } from './tasks/SavedTaskViews';
-import { TaskBatchActions } from './tasks/TaskBatchActions';
+import type { Workspace } from '../workspace/useWorkspace';
+import { SavedTaskViews, type TaskView } from '../tasks/SavedTaskViews';
+import { TaskBatchActions } from '../tasks/TaskBatchActions';
 import { Editor } from './Editor';
 import { api } from '@/lib/client';
 import { today, addDays, formatDate } from '@/lib/date';
@@ -27,7 +27,7 @@ import {
 } from '@/lib/task-status';
 import { readiness, subtaskProgress } from '@/lib/progress';
 import { Meter, RiskMatrix } from '@/components/charts/Charts';
-import { TaskCalendar } from './tasks/TaskCalendar';
+import { TaskCalendar } from '../tasks/TaskCalendar';
 import { ReadinessRadar } from '@/components/charts/ReadinessRadar';
 import { Select } from '@/components/ui/Select';
 import {
@@ -73,16 +73,16 @@ import {
   Trash2,
   ArrowUpRight,
 } from 'lucide-react';
-import { TaskTimeline } from './tasks/TaskTimeline';
-import { downloadMeeting, meetingJoinUrl } from './meetings/meeting';
-import { DailyTasksView } from './tasks/DailyTasksView';
-import { TaskDetailDrawer } from './tasks/TaskDetailDrawer';
-import { SprintModal } from './projects/SprintModal';
+import { TaskTimeline } from '../tasks/TaskTimeline';
+import { downloadMeeting, meetingJoinUrl } from '../meetings/meeting';
+import { DailyTasksView } from '../tasks/DailyTasksView';
+import { TaskDetailDrawer } from '../tasks/TaskDetailDrawer';
+import { SprintModal } from '../projects/SprintModal';
 import { Modal } from '@/components/ui/Modal';
-import { SprintCard } from './projects/SprintCard';
+import { SprintCard } from '../projects/SprintCard';
 import { CsvDropzone } from '@/components/ui/CsvDropzone';
-import { ScrumBoardView } from './tasks/ScrumBoardView';
-import { formatDisplayCode } from './tasks/task-code';
+import { ScrumBoardView } from '../tasks/ScrumBoardView';
+import { formatDisplayCode } from '../tasks/task-code';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 function getStakeholderCategoryClass(category: string) {

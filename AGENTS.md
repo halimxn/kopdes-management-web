@@ -6,7 +6,7 @@
 3. Baca dokumen lain hanya sesuai pekerjaan: `docs/DESAIN-ANTARMUKA.md` untuk halaman operasional; `docs/KEGIATAN-DAN-TUGAS.md` untuk pemetaan kegiatan; `docs/ARSITEKTUR.md` untuk koneksi data; `docs/MIGRASI-SQL.md` sebelum perubahan SQL.
 4. PRD/KEPUTUSAN menyimpan batas produk, CHECKLIST menyimpan penerimaan. Tidak perlu membaca seluruh MD untuk setiap perubahan.
 
-Arahan langsung pemilik terbaru mengatasi konflik. Jangan membuat kontrak style dunia lain. PLAN-ASTRA-Kopdes, LAPORAN-ASTRA, AUDIT dan QA-* adalah rencana/bukti historis operasional, bukan aturan aktif untuk dunia. Batas dependensi/perubahan kode pada rencana Astra lama tidak mengatur pekerjaan dunia. Jangan menghapus catatan pengguna atau fitur operasional untuk merapikan dokumen.
+Arahan langsung pemilik terbaru mengatasi konflik. Jangan membuat kontrak style dunia lain. PLAN-ASTRA-Kopdes serta isi `docs/arsip/` (LAPORAN-ASTRA, AUDIT, QA-*) adalah rencana/bukti historis operasional, bukan aturan aktif untuk dunia. Batas dependensi/perubahan kode pada rencana Astra lama tidak mengatur pekerjaan dunia. Jangan menghapus catatan pengguna atau fitur operasional untuk merapikan dokumen.
 
 ## Produk
 - Ruang kerja pribadi manajer KDMP Puntukrejo: proyek fleksibel tanpa durasi wajib, tugas, milestone, kesiapan gerai, koordinasi, dokumen, risiko, laporan kerja.

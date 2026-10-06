@@ -1,4 +1,4 @@
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 
 /** Tautan rapat online yang sah, atau null bila tidak layak ditampilkan. */
 export function meetingJoinUrl(meeting: Item | undefined): string | null {

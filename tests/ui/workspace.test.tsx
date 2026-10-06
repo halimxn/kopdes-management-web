@@ -1,8 +1,8 @@
 import { beforeEach, describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { Dashboard } from '@/features/dashboard/Dashboard';
-import { Records } from '@/features/Records';
-import { schemas } from '@/features/schemas';
+import { Records } from '@/features/records/Records';
+import { schemas } from '@/features/records/schemas';
 import { Projects } from '@/features/projects/Projects';
 const mocks = vi.hoisted(() => ({ api: vi.fn(), replace: vi.fn() }));
 vi.mock('@/lib/client', () => ({ api: mocks.api }));

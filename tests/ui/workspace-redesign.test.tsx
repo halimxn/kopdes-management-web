@@ -4,7 +4,7 @@ import { WorkspaceSearch } from '@/features/workspace/WorkspaceSearch';
 import { Projects } from '@/features/projects/Projects';
 import { searchWorkspace } from '@/features/workspace/workspace-navigation';
 import { pageEntities } from '@/features/workspace/workspace-scope';
-import type { Item } from '@/features/schemas';
+import type { Item } from '@/features/records/schemas';
 
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams('id=00000000-0000-4000-8000-000000000001'),

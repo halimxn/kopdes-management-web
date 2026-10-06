@@ -22,12 +22,12 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import type { Workspace } from '../workspace/useWorkspace';
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 import { addDays, formatDate, today } from '@/lib/date';
 import { toggleTaskStatus } from '@/lib/task-status';
 import { api } from '@/lib/client';
 import { TaskDetailDrawer } from '../tasks/TaskDetailDrawer';
-import { Editor } from '../Editor';
+import { Editor } from '../records/Editor';
 import { downloadMeeting } from '../meetings/meeting';
 
 export function TodayView({

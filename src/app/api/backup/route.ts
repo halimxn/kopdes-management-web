@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { requireSession } from '@/lib/server/auth';
 import { sameOrigin, failure, readJson } from '@/lib/server/http';
 import { db } from '@/lib/server/db';
-import { entityName, schemas } from '@/features/schemas';
-import { references } from '@/features/catalog';
+import { entityName, schemas } from '@/features/records/schemas';
+import { references } from '@/features/records/catalog';
 const reportSchema = z
   .object({
     id: z.string().uuid(),

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Records } from '@/features/Records';
-import { schemas } from '@/features/schemas';
+import { Records } from '@/features/records/Records';
+import { schemas } from '@/features/records/schemas';
 
 const mocks = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({

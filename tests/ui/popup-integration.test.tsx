@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Reports } from '@/features/reports/Reports';
 import { reportSnapshot } from '@/features/reports/report-snapshot';
 import { popupWorkspace } from '@/features/qa/popup-fixtures';
-import { Records } from '@/features/Records';
+import { Records } from '@/features/records/Records';
 const api = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/client', () => ({ api }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams() }));

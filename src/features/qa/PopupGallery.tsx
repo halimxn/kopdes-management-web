@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { Editor } from '../Editor';
+import { Editor } from '../records/Editor';
 import { TaskDetailDrawer } from '../tasks/TaskDetailDrawer';
 import { SprintModal } from '../projects/SprintModal';
 import { RecursiveScheduleModal } from '../tasks/RecursiveScheduleModal';
 import { ManagerActionModal } from '@/components/layout/ManagerActionModal';
-import { Records } from '../Records';
+import { Records } from '../records/Records';
 import { Dashboard } from '../dashboard/Dashboard';
 import { Reports } from '../reports/Reports';
 import { reportSnapshot } from '../reports/report-snapshot';
@@ -18,7 +18,7 @@ import { ManagerGuide } from '../workspace/ManagerGuide';
 import { Settings } from '../settings/Settings';
 import { Projects } from '../projects/Projects';
 import { popupEntities, popupLabels, popupWorkspace, cardWorkspace, bookWorkspace, projectWorkspace } from './popup-fixtures';
-import type { Entity } from '../schemas';
+import type { Entity } from '../records/schemas';
 const sampleReports = [{ id: 'qa-report', title: 'Laporan contoh pemeriksaan', period_start: '2026-10-01', period_end: '2026-10-04', snapshot: { ...reportSnapshot(popupWorkspace, '2026-10-01', '2026-10-04'), notes: 'Catatan contoh pemeriksaan', status: 'draft' as const } }];
 
 export function PopupGallery() {

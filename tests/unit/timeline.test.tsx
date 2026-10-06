@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { timelineBar, shiftSchedule, scheduleConflicts } from '@/lib/timeline';
 import { TaskTimeline } from '@/features/tasks/TaskTimeline';
 import { NoteContent, ProjectNotes } from '@/features/projects/ProjectNotes';
-import { schemas, type Item } from '@/features/schemas';
+import { schemas, type Item } from '@/features/records/schemas';
 import { today, addDays } from '@/lib/date';
 const mocked = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock('@/lib/client', () => ({ api: mocked.api }));

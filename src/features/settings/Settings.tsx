@@ -18,7 +18,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
-import type { Item } from '@/features/schemas';
+import type { Item } from '@/features/records/schemas';
 
 export function Settings({ refresh, preferenceScope = '', organization }: { refresh: () => Promise<void>; preferenceScope?: string; organization?: Item }) {
   const { colorStyle, setColorStyle, preference, setTheme } = useTheme();

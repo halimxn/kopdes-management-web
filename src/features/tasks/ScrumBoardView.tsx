@@ -9,7 +9,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, AlertCircle, CheckCircle2, Calendar, Flame, CheckSquare } from 'lucide-react';
 import { taskProgress } from '@/lib/progress';
-import { type Item } from '../schemas';
+import { type Item } from '../records/schemas';
 import { type Workspace } from '../workspace/useWorkspace';
 import { api } from '@/lib/client';
 import { formatDate, today } from '@/lib/date';

@@ -28,9 +28,9 @@ import {
   Calendar,
   Sparkles,
 } from 'lucide-react';
-import { Editor } from '../Editor';
-import { catalog, labels, formatChoiceLabel } from '../catalog';
-import { type Entity, type Item } from '../schemas';
+import { Editor } from '../records/Editor';
+import { catalog, labels, formatChoiceLabel } from '../records/catalog';
+import { type Entity, type Item } from '../records/schemas';
 import type { Workspace } from '../workspace/useWorkspace';
 import { cashSummary, csvCell, rupiah, stockDifference } from './ledger';
 import { formatDate, today } from '@/lib/date';

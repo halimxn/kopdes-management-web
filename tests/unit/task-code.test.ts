@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeTaskCode, makeActivityCode, formatDisplayCode } from '@/features/tasks/task-code';
-import { schemas } from '@/features/schemas';
+import { schemas } from '@/features/records/schemas';
 
 describe('Kode tugas dan kegiatan otomatis', () => {
   it('menghasilkan format standar ringkas TGS-xxxx dan KGT-xxxx', () => {

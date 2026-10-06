@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/Button';
 import { Calendar, Edit2, Trash2 } from 'lucide-react';
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 import { planProgress } from '@/lib/progress';
 import { formatDate } from '@/lib/date';
 import { api } from '@/lib/client';

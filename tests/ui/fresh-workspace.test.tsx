@@ -2,8 +2,8 @@ import { beforeEach, afterEach, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { PinnedRecords, parsePins } from '@/features/follow-ups/PinnedRecords';
 import { getFollowUps } from '@/features/workspace/workspace-navigation';
-import type { Item } from '@/features/schemas';
-import { schemas } from '@/features/schemas';
+import type { Item } from '@/features/records/schemas';
+import { schemas } from '@/features/records/schemas';
 import { Dashboard } from '@/features/dashboard/Dashboard';
 import { FollowUps } from '@/features/follow-ups/FollowUps';
 

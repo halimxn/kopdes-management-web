@@ -1,4 +1,4 @@
-import type { Task, Checklist } from '@/features/schemas';
+import type { Task, Checklist } from '@/features/records/schemas';
 export function subtaskProgress(subtasks: readonly { done: boolean }[]): number {
   return subtasks.length
     ? Math.round((subtasks.filter((item) => item.done).length / subtasks.length) * 100)

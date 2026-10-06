@@ -4,7 +4,7 @@ import { DateNav } from '@/components/ui/DateNav';
 import { useState } from 'react';
 import { CalendarDays, Plus } from 'lucide-react';
 import { addDays, formatDate, today } from '@/lib/date';
-import type { Item } from '../schemas';
+import type { Item } from '../records/schemas';
 export function TaskCalendar({
   items,
   render,

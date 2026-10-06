@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { operationEntities, type Entity, type Item } from '../schemas';
+import { operationEntities, type Entity, type Item } from '../records/schemas';
 import { api } from '@/lib/client';
 import { pageEntities } from './workspace-scope';
-import type { ListQuery } from '../query';
+import type { ListQuery } from '../records/query';
 export type Workspace = Partial<Record<Entity, Item[]>>;
 type Page = { items: Item[]; hasMore: boolean; nextOffset: number };
 export type LoadScope = Pick<ListQuery, 'scope' | 'q' | 'from' | 'to' | 'project'>;

@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react';
-import { schemas, type Item } from '../schemas';
+import { schemas, type Item } from '../records/schemas';
 import { planProgress } from '@/lib/progress';
 import type { Workspace } from '../workspace/useWorkspace';
 import { addDays, formatDate, today } from '@/lib/date';

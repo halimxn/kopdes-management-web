@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { Records } from '@/features/Records';
+import { Records } from '@/features/records/Records';
 import { popupWorkspace } from '@/features/qa/popup-fixtures';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
 vi.mock('@/lib/client', () => ({ api: vi.fn() }));

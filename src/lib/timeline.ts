@@ -1,5 +1,5 @@
 import { addDays, daysBetween } from './date';
-import type { Task } from '@/features/schemas';
+import type { Task } from '@/features/records/schemas';
 export function timelineBar(
   task: Pick<Task, 'start_date' | 'due_date'>,
   start: string,

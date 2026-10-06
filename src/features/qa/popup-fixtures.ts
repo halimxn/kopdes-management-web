@@ -1,5 +1,5 @@
-import { catalog } from '../catalog';
-import { schemas, type Entity, type Item } from '../schemas';
+import { catalog } from '../records/catalog';
+import { schemas, type Entity, type Item } from '../records/schemas';
 import type { Workspace } from '../workspace/useWorkspace';
 
 export const popupEntities = Object.keys(schemas) as Entity[];

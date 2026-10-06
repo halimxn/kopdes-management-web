@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { Editor } from '@/features/Editor';
+import { Editor } from '@/features/records/Editor';
 import { popupEntities, popupWorkspace } from '@/features/qa/popup-fixtures';
-import { schemas } from '@/features/schemas';
+import { schemas } from '@/features/records/schemas';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };

@@ -11,10 +11,10 @@ import {
 import { Dashboard } from '@/features/dashboard/Dashboard';
 import { SprintModal } from '@/features/projects/SprintModal';
 import { TaskDetailDrawer } from '@/features/tasks/TaskDetailDrawer';
-import { Records } from '@/features/Records';
+import { Records } from '@/features/records/Records';
 import { AppShell } from '@/components/layout/AppShell';
 import { invalidateWorkspaceCache, useWorkspace } from '@/features/workspace/useWorkspace';
-import { schemas, type Item } from '@/features/schemas';
+import { schemas, type Item } from '@/features/records/schemas';
 import { today } from '@/lib/date';
 import { usePreference } from '@/lib/usePreference';
 

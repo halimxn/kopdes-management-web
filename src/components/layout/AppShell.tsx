@@ -6,7 +6,7 @@ import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
 import { api, resetAuthNavigation } from '@/lib/client';
-import { navigation } from '@/features/catalog';
+import { navigation } from '@/features/records/catalog';
 import { isProjectHistory } from '@/features/projects/project-lifecycle';
 import type { Workspace } from '@/features/workspace/useWorkspace';
 import {

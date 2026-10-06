@@ -1,5 +1,5 @@
-import { pages } from '../catalog';
-import type { Entity } from '../schemas';
+import { pages } from '../records/catalog';
+import type { Entity } from '../records/schemas';
 export function pageEntities(slug: string): Entity[] {
   if (slug === 'riwayat-proyek') return pageEntities('proyek');
   const related: Record<string, Entity[]> = {

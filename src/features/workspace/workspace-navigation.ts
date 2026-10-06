@@ -1,6 +1,6 @@
-import type { Entity, Item } from '../schemas';
+import type { Entity, Item } from '../records/schemas';
 import type { Workspace } from './useWorkspace';
-import { catalog, pages } from '../catalog';
+import { catalog, pages } from '../records/catalog';
 import { addDays } from '@/lib/date';
 
 export function recordHref(entity: Entity, row: Item) {

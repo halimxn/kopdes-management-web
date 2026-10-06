@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Dashboard } from '@/features/dashboard/Dashboard';
 import { TodayView } from '@/features/dashboard/TodayView';
-import { schemas } from '@/features/schemas';
+import { schemas } from '@/features/records/schemas';
 import { addDays, today } from '@/lib/date';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams() }));

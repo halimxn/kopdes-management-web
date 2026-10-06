@@ -1,11 +1,11 @@
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { schemas, type Item } from '@/features/schemas';
+import { schemas, type Item } from '@/features/records/schemas';
 import { cashSummary, csvCell, stockDifference } from '@/features/operations/ledger';
 import { meetingCalendar } from '@/features/meetings/meeting';
 import { Operations } from '@/features/operations/Operations';
 import { DateField } from '@/components/ui/DateField';
-import { Editor } from '@/features/Editor';
+import { Editor } from '@/features/records/Editor';
 const mocked = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock('@/lib/client', () => ({ api: mocked.api }));
 beforeAll(() => {

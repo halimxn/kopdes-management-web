@@ -23,11 +23,11 @@ Kontrak API dan skema memisahkan kebutuhan UI dari penyimpanan. Bila skala membu
 
 ## Modul kode
 
-- `features/schemas.ts`: validasi dan tipe domain; tidak mengandung koneksi database.
-- `features/catalog.ts`: label formulir, referensi, pilihan status, dan navigasi.
-- `features/service.ts`: baca/simpan domain, pemeriksaan relasi dan dependensi.
-- `features/Editor.tsx`: form lengkap atau tambah cepat; skema yang sama dipakai sebelum permintaan.
-- `features/Records.tsx`: daftar/papan/aksi catatan. Kalender dipisah dalam `TaskCalendar`.
+- `features/records/schemas.ts`: validasi dan tipe domain; tidak mengandung koneksi database.
+- `features/records/catalog.ts`: label formulir, referensi, pilihan status, dan navigasi.
+- `features/records/service.ts`: baca/simpan domain, pemeriksaan relasi dan dependensi.
+- `features/records/Editor.tsx`: form lengkap atau tambah cepat; skema yang sama dipakai sebelum permintaan.
+- `features/records/Records.tsx`: daftar/papan/aksi catatan. Kalender dipisah dalam `TaskCalendar`.
 - `features/<domain>/`: komponen dan utilitas dikelompokkan berdasarkan domain sesuai tabel berikut.
 - `features/reports/report-snapshot.ts`: pemilihan periode laporan yang dipakai server.
 - `lib/progress.ts`: rumus bersama. Tanpa checklist wajib berarti belum dinilai, bukan 100% siap.

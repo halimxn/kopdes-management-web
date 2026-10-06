@@ -23,6 +23,6 @@ Fokus sekarang: **Dunia Koperasi dan koneksi dengan web**. Anda tidak perlu memb
 
 ## Catatan historis, bukan aturan aktif
 
-PLAN-ASTRA-Kopdes.md, LAPORAN-ASTRA.md, QA-ANOTASI.md, QA-TATA-LETAK.md, QA-POPUP.md dan AUDIT.md menyimpan rencana/pemeriksaan lama. Jangan memakai batas paket, urutan fase atau instruksi layout di sana untuk membatalkan kontrak dunia. GIT-KERJA-PARALEL.md hanya berlaku ketika kerja paralel diizinkan.
+PLAN-ASTRA-Kopdes.md dan folder `arsip/` (LAPORAN-ASTRA, QA-ANOTASI, QA-TATA-LETAK, QA-POPUP, AUDIT) menyimpan rencana/pemeriksaan lama. Jangan memakai batas paket, urutan fase atau instruksi layout di sana untuk membatalkan kontrak dunia. GIT-KERJA-PARALEL.md hanya berlaku ketika kerja paralel diizinkan.
 
 Berkas lama dipertahankan sebagai catatan; tidak perlu dibuka untuk pekerjaan dunia biasa. Aturan alat dan skill clean-code mengarah ke AGENTS, tanpa kontrak style lain.

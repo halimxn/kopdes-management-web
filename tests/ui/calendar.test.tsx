@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { TaskCalendar } from '@/features/tasks/TaskCalendar';
 import { today } from '@/lib/date';
-import type { Item } from '@/features/schemas';
+import type { Item } from '@/features/records/schemas';
 afterEach(cleanup);
 it('pindah tahun dan kembali ke hari ini tanpa kehilangan agenda', () => {
   const date = today();

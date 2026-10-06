@@ -4,7 +4,7 @@ import {
   getWorldModel,
   worldPreferencesSchema,
 } from '@/features/cooperative-world/world-model';
-import type { Item } from '@/features/schemas';
+import type { Item } from '@/features/records/schemas';
 const row = (
   id: string,
   data: Record<string, unknown>,

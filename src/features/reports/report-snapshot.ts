@@ -1,5 +1,5 @@
 import type { Workspace } from '../workspace/useWorkspace';
-import { schemas } from '../schemas';
+import { schemas } from '../records/schemas';
 import { addDays } from '@/lib/date';
 export function reportSnapshot(data: Workspace, start: string, end: string) {
   const tasks = (data['work-items'] || []).map((row) => schemas['work-items'].parse(row.data));

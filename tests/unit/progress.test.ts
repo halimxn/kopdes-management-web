@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { planProgress, taskProgress, readiness, isOverdue } from '@/lib/progress';
 import { today, addDays, daysBetween, nextOccurrence } from '@/lib/date';
-import { schemas, date } from '@/features/schemas';
+import { schemas, date } from '@/features/records/schemas';
 import { buildPlan } from '../fixtures/legacy-plan';
 import { reportSnapshot } from '@/features/reports/report-snapshot';
 import { randomUUID } from 'node:crypto';

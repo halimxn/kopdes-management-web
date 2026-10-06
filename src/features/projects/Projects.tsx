@@ -31,16 +31,16 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ProjectNotes } from './ProjectNotes';
-import { Editor } from '../Editor';
-import { Records } from '../Records';
-import { schemas, type Item } from '../schemas';
+import { Editor } from '../records/Editor';
+import { Records } from '../records/Records';
+import { schemas, type Item } from '../records/schemas';
 import type { Workspace } from '../workspace/useWorkspace';
 import { scopeProgress } from '@/lib/progress';
 import { formatDate, today } from '@/lib/date';
 import { Meter } from '@/components/charts/Charts';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { recordHref } from '../workspace/workspace-navigation';
-import { formatChoiceLabel } from '../catalog';
+import { formatChoiceLabel } from '../records/catalog';
 import { isProjectHistory } from './project-lifecycle';
 
 export function Projects({ data, refresh, history = false, draftScope }: { data: Workspace; refresh: () => Promise<void>; history?: boolean; draftScope?: string }) {
