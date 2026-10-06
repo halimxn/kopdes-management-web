@@ -3,20 +3,20 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { warehouse } from '../layout';
 import { createSelectionBox } from '../objects/highlight';
-import { building } from '../objects/office';
+import { allBuildings } from '../district';
 import {
-  disposeSharedResources,
-  mergeStatic,
-  palette,
-} from '../objects/primitives';
-import {
-  cardboardPallet,
-  container,
-  dropPin,
-  forklift,
-  palletRack,
-  tree,
-} from '../objects/props';
+  clinicBuilding,
+  coldStorageBuilding,
+  counterBuilding,
+  officeBuilding,
+  pharmacyBuilding,
+  plannedLot,
+  shopBuilding,
+} from '../objects/district-buildings';
+
+const find = (id: string) => allBuildings().find((b) => b.id === id)!;
+import { disposeSharedResources, mergeStatic, palette } from '../objects/primitives';
+import { cardboardPallet, container, dropPin, forklift, palletRack, tree } from '../objects/props';
 import { createRoute } from '../objects/route';
 import { truck, truckSchemes } from '../objects/vehicles';
 import { createWarehouse } from '../objects/warehouse';
@@ -30,7 +30,7 @@ type Cell = { title: string; note: string; build: (parent: THREE.Group) => void;
 const cells: Cell[] = [
   {
     title: 'Gudang koperasi',
-    note: 'createWarehouse · 24 × 10, dinding 5,4 + atap 1,8',
+    note: 'createWarehouse (WH-04) · 26 × 11, dinding 5,4 + atap 1,8',
     wide: true,
     build: (parent) => {
       const g = createWarehouse(parent);
@@ -72,16 +72,51 @@ const cells: Cell[] = [
   },
   {
     title: 'Kantor koperasi',
-    note: 'building(main) · putih, pita kaca, parapet biru',
+    note: 'officeBuilding · dua lantai, kanopi biru',
     build: (parent) => {
-      building(parent, 0, 0, 'Koperasi', true);
+      officeBuilding(parent, find('kantor'));
     },
   },
   {
-    title: 'Gerai',
-    note: 'building · tenda bergaris, etalase',
+    title: 'Cold storage (WH-03)',
+    note: 'coldStorageBuilding · lis navy, unit pendingin',
     build: (parent) => {
-      building(parent, 0, 0, 'Contoh Gerai', false, 'gerai');
+      coldStorageBuilding(parent, find('cold-storage'), 'aset');
+    },
+  },
+  {
+    title: 'Klinik desa',
+    note: 'clinicBuilding · atap biru langit, kanopi',
+    build: (parent) => {
+      clinicBuilding(parent, find('klinik'), 'Contoh Klinik', 'aset');
+    },
+  },
+  {
+    title: 'Apotek',
+    note: 'pharmacyBuilding · atap mint, palang hijau',
+    build: (parent) => {
+      pharmacyBuilding(parent, find('apotek'), 'Contoh Apotek', 'aset');
+    },
+  },
+  {
+    title: 'Simpan pinjam',
+    note: 'counterBuilding · atap lavender',
+    build: (parent) => {
+      counterBuilding(parent, find('simpan-pinjam'), 'Contoh Simpan Pinjam', 'aset');
+    },
+  },
+  {
+    title: 'Gerai sembako',
+    note: 'shopBuilding · tenda peach',
+    build: (parent) => {
+      shopBuilding(parent, find('sembako'), 'Contoh Sembako', 'aset', palette.pastelPeach);
+    },
+  },
+  {
+    title: 'Kavling rencana',
+    note: 'plannedLot · kosong / pondasi / rangka',
+    build: (parent) => {
+      plannedLot(parent, find('gerai-1'), 'aset', 'rangka');
     },
   },
   {
@@ -146,7 +181,8 @@ export function AssetSheet() {
       scene.add(group);
       cell.build(group);
       // Gudang dibangun di koordinat kawasan; geser ke titik asal agar kamera sederhana.
-      if (cell.title === 'Gudang koperasi') group.position.set(-warehouse.center[0], 0, -warehouse.center[1]);
+      if (cell.title === 'Gudang koperasi')
+        group.position.set(-warehouse.center[0], 0, -warehouse.center[1]);
       const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(80, 80),
         new THREE.MeshStandardMaterial({ color: palette.ground, roughness: 1 }),
@@ -158,7 +194,9 @@ export function AssetSheet() {
       const center = bounds.getCenter(new THREE.Vector3());
       const radius = bounds.getSize(new THREE.Vector3()).length() / 2;
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
-      camera.position.copy(center).add(new THREE.Vector3(26, 23, 26).normalize().multiplyScalar(80));
+      camera.position
+        .copy(center)
+        .add(new THREE.Vector3(26, 23, 26).normalize().multiplyScalar(80));
       camera.lookAt(center);
       return { scene, camera, radius };
     });
@@ -212,7 +250,7 @@ export function AssetSheet() {
       <h1 style={{ fontSize: 22, margin: '0 0 4px' }}>Lembar aset Dunia Koperasi</h1>
       <p style={{ margin: '0 0 18px', color: '#6b7a92', fontSize: 13 }}>
         Render langsung dari src/features/cooperative-world/objects. Acuan: docs/DUNIA-KOPERASI.md
-        bagian Blueprint visual v3.
+        bagian Distrik ala video v4 dan Blueprint visual v3.
       </p>
       <div ref={host} style={{ position: 'relative' }}>
         <div
@@ -237,7 +275,12 @@ export function AssetSheet() {
             >
               <div data-cell={index} style={{ height: 230 }} />
               <figcaption
-                style={{ padding: '8px 12px', background: '#ffffffd9', fontSize: 12, lineHeight: 1.4 }}
+                style={{
+                  padding: '8px 12px',
+                  background: '#ffffffd9',
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                }}
               >
                 <strong style={{ display: 'block', fontSize: 13 }}>{cell.title}</strong>
                 <span style={{ color: '#6b7a92' }}>{cell.note}</span>

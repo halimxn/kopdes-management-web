@@ -18,14 +18,16 @@ it('masuk dan keluar kantor dengan pintasan area yang tepat', () => {
 });
 it('gerai kosong mengarah ke form asli, tanpa membuat data pratinjau', () => {
   render(<CooperativeWorld data={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: /Lahan gerai 1/ }));
-  expect(screen.getByText('Lahan kosong')).toBeTruthy();
+  // Bangunan unit tanpa catatan Gerai tampil sebagai rencana (distrik v4).
+  fireEvent.click(screen.getByRole('button', { name: /Simpan pinjam/ }));
+  expect(screen.getByText('Belum buka')).toBeTruthy();
   expect(screen.getByRole('link', { name: 'Tambahkan gerai' }).getAttribute('href')).toBe('/gerai');
 });
 it('galat pemuatan ditampilkan sebagai tidak tersedia, bukan angka nol', () => {
   render(<CooperativeWorld data={{}} error="Koneksi gagal" refresh={vi.fn()} />);
   expect(screen.getByRole('alert').textContent).toContain('Koneksi gagal');
-  expect(screen.getByRole('link', { name: /Gerai tercatat/ }).textContent).toContain('—');
+  // Zona bawaan v4 = logistik, jadi KPI pertama adalah barang; galat tetap tanda —, bukan 0.
+  expect(screen.getByRole('link', { name: /Barang tercatat/ }).textContent).toContain('—');
   expect(screen.getByRole('button', { name: 'Coba lagi' })).toBeTruthy();
 });
 it('preferensi korup tidak mencegah halaman tampil', () => {

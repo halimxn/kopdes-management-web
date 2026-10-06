@@ -14,6 +14,10 @@ Implementasi lokal, belum dinilai pemilik. Aset baru dari kode: gudang dok ala v
 
 Bukti: 296 tes/45 berkas, typecheck, lint dan build lulus. Tangkapan headless Chromium (SwiftShader) data contoh pada 375, 768, 1024, 1280 dan 1440 px; 58–89 draw call. Belum: perangkat fisik, rekaman gerak, data cloud, penilaian pemilik. Di 1024–1279 px dock masih menutupi baris bawah kartu Daftar (keadaan lama).
 
+## Distrik ala video v4 (6 Oktober, denah disetujui pemilik)
+
+Selesai lokal (belum di-push): denah distrik kota grid dari `district.ts`, bangunan unit KDMP per Jenis Gerai, gudang WH-04 + cold storage WH-03 berlantai dok tinggi, kota bervariasi, warna sampel video + pastel, AO, bawaan siang; kartu transparan, pemilih zona berdata, bar chart, klik pergi ke tempat; kendaraan berbelok halus dan truk mundur ke dok; interior cold storage dan empat jenis gerai. Bukti: tes Vitest lulus, typecheck/lint/build, tangkapan headless 375–1440 px (render headless ±2–3 fps sehingga animasi hanya diperiksa lewat tangkapan berjeda dan tes fungsi murni). Belum: perangkat fisik, rekaman gerak di GPU asli, data cloud, penilaian pemilik. Kolom Rak barang kini menerima C1–C3 (Zod/katalog, tanpa migrasi).
+
 ## Perbaikan kecil v3.1 (6 Oktober, hasil wawancara pemilik)
 
 Selesai lokal: tanah tak berujung berkabut tanpa tepi pink saat zoom keluar, batas zoom; skylight menggantikan logo atap, pin peti dihapus; penunjuk kotak bersiku tebal mengikuti objek bergerak; kamera mengikuti objek bergerak terpilih; maskot tanpa tombol/bubble, bubble hanya percakapan. Bukti: 296 tes lulus, typecheck/lint/build, tangkapan headless (forklift diikuti, zoom senja). Belum: perangkat fisik, rekaman gerak percakapan manajer.

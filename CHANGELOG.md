@@ -1,5 +1,14 @@
 # Changelog
 
+## Distrik ala video v4 — 6 Oktober 2026
+
+- Denah distrik dari data teruji (district.ts, scripts/denah-dunia.mjs): jalan kota, lima kavling berpagar, unit KDMP per Jenis Gerai, lahan pertanian, kota bervariasi.
+- Aset: kantor, simpan pinjam, toko, apotek, klinik, cold storage WH-03, kavling rencana; gudang WH-04 di atas lantai dok tinggi; halaman logistik dari data.
+- Visual: warna sampel video + pastel, Neutral tone mapping, bayangan biru, GTAO, bawaan siang.
+- UI: kartu transparan, pemilih zona berdata, bar chart stok dan 7 hari, klik item pergi ke tempatnya.
+- Gerak: kendaraan berbelok halus, truk maju lalu mundur ke dok.
+- Interior cold storage (rak C1–C3) dan gerai per jenis; lima skill Three.js dari cloudai-x/threejs-skills.
+
 ## Perbaikan kecil v3.1 — 6 Oktober 2026
 
 - Tanah tak berujung + kabut, zoom keluar dibatasi; tidak ada tepi pink.
