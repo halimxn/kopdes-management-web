@@ -51,9 +51,28 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jangan membuat kontrak style 
 
 Commit/push per paket kerja, pesan ringkas dengan judul dan isi dipisahkan baris kosong. Cabang fitur `codex/`. Hanya buat repo baru/riwayat bersih jika pemilik meminta secara eksplisit; jangan force-push repo lama. Jangan menandai pemeriksaan perangkat yang belum dilakukan.
 
+## Skill dan peta kode untuk semua AI
+- Skill proyek: `.claude/skills/` (Claude Code) dan salinannya `.agents/skills/` (Codex, Antigravity, agen lain). Ubah di `.claude/skills`, lalu jalankan `node scripts/sync-skills.mjs`; `clean-code` bersumber di `.agents/skills`. Sumber/lisensi pihak ketiga: `SUMBER.md`.
+- Skill utama: hemat-token (setiap sesi panjang), dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code, 3d-graphics; opsional caveman, grill-me/grilling. AI tanpa dukungan skill cukup membaca SKILL.md yang relevan.
+- Aturan per AI menunjuk ke berkas ini: `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.agents/rules/`. Hook Graphify lokal (`.claude/settings.json`, `.codex/`, `.gemini/settings.json`) berisi path komputer pemilik dan tidak di-commit.
+- Peta kode Graphify (`graphify-out/`, tidak di-commit) dibuat ulang dengan `graphify update .` (hanya kode, tanpa AI). Jangan memproses `docs/` dengan ekstraksi AI tanpa izin pemilik: boros token atau mengirim isi ke layanan luar.
+
 ## Pencatatan dan rapat
 - Acuan aktivasi: docs/PENCATATAN.md. Migrasi 20261001000002_operations.sql perlu persetujuan sebelum dijalankan cloud.
 - Empat domain baru memakai hub_records; pemeriksaan kemampuan server menentukan apakah pencatatan sudah aktif. Jangan menyamarkan migrasi belum terpasang sebagai data nol.
 - Buku kas hanya uang masuk/keluar tercatat; jangan melabeli selisih sebagai laba/saldo bank. Opname menyimpan snapshot stok buku tanpa koreksi stok otomatis.
 - Rapat online memakai tautan pengguna dan unduhan ICS; bukan konferensi video bawaan atau pengiriman undangan otomatis.
 - Bahasa UI langsung, ringkas, tanpa slogan motivasi. Pilih judul yang menjelaskan isi atau tindakan.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

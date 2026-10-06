@@ -60,3 +60,7 @@ Thumbs.db
 
 # Peta kode Graphify: dibuat ulang dengan "graphify update ." (hanya kode, tanpa AI)
 graphify-out/
+# Hook Graphify lokal: berisi path komputer pemilik (dibuat ulang dengan "graphify <platform> install")
+.claude/settings.json
+.codex/
+.gemini/settings.json
