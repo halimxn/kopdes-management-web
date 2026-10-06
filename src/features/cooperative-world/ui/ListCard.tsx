@@ -56,6 +56,7 @@ export function ListCard({
       title: String(step.row.data.title),
       kind: 'Rapat',
       href: recordHref('meetings', step.row),
+      go: `rapat-${step.row.id}` as string | undefined,
     })),
     ...model.deliveries
       .filter((row) => row.data.planned_date === date || row.data.arrived_date === date)
@@ -65,6 +66,9 @@ export function ListCard({
         title: String(row.data.title),
         kind: `Pengiriman · ${row.data.status}`,
         href: recordHref('deliveries', row),
+        go: model.trucks.some((spot) => spot.delivery.id === row.id)
+          ? `kirim-${row.id}`
+          : undefined,
       })),
     ...model.activities.map((row) => ({
       key: `j-${row.id}`,
@@ -72,6 +76,7 @@ export function ListCard({
       title: String(row.data.title),
       kind: 'Kegiatan',
       href: recordHref('journal', row),
+      go: undefined,
     })),
   ].filter((event) => !query || matches(event.title, query));
   const team = plans.filter(
@@ -259,16 +264,29 @@ export function ListCard({
           </p>
         )}
         {tab === 'hari' &&
-          events.map((event) => (
-            <Link key={event.key} className="cw-row" href={event.href}>
-              <span className="cw-row-time">{event.time}</span>
-              <span className="cw-row-text">
-                <strong>{event.title}</strong>
-                <small>{event.kind}</small>
-              </span>
-              <ChevronRight size={15} />
-            </Link>
-          ))}
+          events.map((event) => {
+            const body = (
+              <>
+                <span className="cw-row-time">{event.time}</span>
+                <span className="cw-row-text">
+                  <strong>{event.title}</strong>
+                  <small>{event.kind}</small>
+                </span>
+                <ChevronRight size={15} />
+              </>
+            );
+            // Rapat dan truk punya tempat di dunia; kegiatan membuka catatannya.
+            const go = event.go;
+            return go ? (
+              <Button key={event.key} className="cw-row" onClick={() => onSelect(go)}>
+                {body}
+              </Button>
+            ) : (
+              <Link key={event.key} className="cw-row" href={event.href}>
+                {body}
+              </Link>
+            );
+          })}
         {tab === 'hari' && !events.length && (
           <p className="cw-empty">
             {unavailable
@@ -303,7 +321,11 @@ export function ListCard({
           stock.slice(0, 10).map((row) => {
             const short = isBelowMinimum(row);
             return (
-              <Link key={row.id} className="cw-stock-row" href={recordHref('inventory-items', row)}>
+              <Button
+                key={row.id}
+                className="cw-stock-row"
+                onClick={() => onSelect(`barang-${row.id}`)}
+              >
                 <WorldIcon kind={short ? 'kardus-minimum' : 'kardus'} size={30} />
                 <span className="cw-row-text">
                   <strong>{String(row.data.title)}</strong>
@@ -320,7 +342,7 @@ export function ListCard({
                 <span className={`cw-pill ${short ? 'is-amber' : 'is-green'}`}>
                   {short ? 'Minimum' : 'Cukup'}
                 </span>
-              </Link>
+              </Button>
             );
           })}
         {tab === 'stok' && !stock.length && (
@@ -341,7 +363,7 @@ export function ListCard({
         )}
         {tab === 'tugas' &&
           tasks.slice(0, 8).map((row) => (
-            <Link key={row.id} className="cw-row" href={recordHref('work-items', row)}>
+            <Button key={row.id} className="cw-row" onClick={() => onSelect(`tugas-${row.id}`)}>
               <span className="cw-row-text">
                 <strong>{String(row.data.title)}</strong>
                 <small>
@@ -352,11 +374,15 @@ export function ListCard({
                 {String(row.data.status || 'rencana')}
               </span>
               <ChevronRight size={15} />
-            </Link>
+            </Button>
           ))}
         {tab === 'rapat' &&
           meetings.map((step) => (
-            <Link key={step.row.id} className="cw-row" href={recordHref('meetings', step.row)}>
+            <Button
+              key={step.row.id}
+              className="cw-row"
+              onClick={() => onSelect(`rapat-${step.row.id}`)}
+            >
               <span className="cw-row-text">
                 <strong>{String(step.row.data.title)}</strong>
                 <small>
@@ -369,7 +395,7 @@ export function ListCard({
                 {meetingState[step.state]}
               </span>
               <ChevronRight size={15} />
-            </Link>
+            </Button>
           ))}
         {tab === 'lokasi' && !places.length && <p className="cw-empty">Lokasi tidak ditemukan.</p>}
         {tab === 'tugas' &&

@@ -228,8 +228,45 @@ export function CooperativeWorld({
     // Di ponsel lembar diciutkan agar zona yang dipilih terlihat.
     setSheet('ringkas');
   }
+  /** Pindah ke ruang lain lalu terbang ke titiknya; dipakai item daftar yang "pergi ke tempatnya". */
+  function travel(
+    next: WorldLocation,
+    id: string,
+    target: readonly [number, number],
+    close = 1.25,
+  ) {
+    setLocation(next);
+    setSelected(id);
+    showDetail();
+    setSpot(target);
+    setZoom(close);
+    setRotation(0);
+    setRecenter((value) => value + 1);
+  }
   function select(id: string, fly = false) {
     if (id === 'koperasi') return enter('dalam');
+    // Rapat → ruang rapat kantor; tugas → meja tugas; barang → raknya di gudang (atau staging).
+    if (id.startsWith('rapat-') || id.startsWith('tugas-')) {
+      const station = worldStations.find(
+        (s) => s.id === (id.startsWith('rapat-') ? 'rapat' : 'tugas'),
+      )!;
+      return travel('dalam', id, [station.position[0], station.position[2]]);
+    }
+    if (id.startsWith('barang-')) {
+      const item = model.inventory.items.find((row) => row.id === id.slice(7));
+      const rack = String(item?.data.rack || '') as RackId;
+      return travel(
+        'gudang',
+        id,
+        rackIds.includes(rack) ? warehouseInterior.racks[rack] : warehouseInterior.staging,
+        1.1,
+      );
+    }
+    // Karakter Tim di ruang lain: pindah ke ruangnya dulu agar kamera dapat mengikutinya.
+    const plan = id.startsWith('staf-')
+      ? plans.find((row) => `staf-${row.staff.id}` === id)
+      : undefined;
+    if (plan?.location && plan.location !== location) setLocation(plan.location);
     setSelected(id);
     showDetail();
     // Pilihan dari daftar menggerakkan kamera; klik di scene tidak memindahkan kamera,
