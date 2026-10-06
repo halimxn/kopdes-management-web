@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Building2, Plus, MessageCircle, MapPin, Truck, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { animateCharacter, createCharacter } from './objects/characters';
-import { createExterior, createNightLights } from './objects/exterior';
+import { cityGround, createExterior, createNightLights } from './objects/exterior';
 import { createInterior } from './objects/office';
 import { disposeSharedResources, mergeStatic, palette } from './objects/primitives';
 import {
@@ -19,6 +19,7 @@ import {
   warehouseInterior,
   worldStations,
   yardForkliftPath,
+  minWorldZoom,
 } from './layout';
 import { dayPhase, getLighting } from './lighting';
 import {
@@ -167,9 +168,13 @@ export function WorldScene({
     const scene = new THREE.Scene();
     const background = new THREE.Color('#eef3fc');
     scene.background = background;
-    const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 0.1, 200);
+    // Kawasan: tanah tak berujung memudar ke warna langit sehingga tepi tanah tidak terlihat saat zoom keluar.
+    const fog = location === 'luar' ? new THREE.Fog(background, 158, 225) : null;
+    scene.fog = fog;
+    const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 1, 420);
     const cameraOffset = (turn: number) =>
-      new THREE.Vector3(Math.sin(Math.PI / 4 + turn) * 26, 23, Math.cos(Math.PI / 4 + turn) * 26);
+      // Kamera ortografis dijauhkan (sudut sama) agar tanah di tepi bawah tidak terpotong bidang dekat saat zoom keluar.
+      new THREE.Vector3(Math.sin(Math.PI / 4 + turn) * 78, 69, Math.cos(Math.PI / 4 + turn) * 78);
     const goalTarget = new THREE.Vector3(),
       goalOffset = new THREE.Vector3(),
       offset = new THREE.Vector3();
@@ -187,7 +192,7 @@ export function WorldScene({
     controls.target.copy(goalTarget);
     controls.enableDamping = true;
     controls.dampingFactor = 0.09;
-    controls.minZoom = 0.35;
+    controls.minZoom = location === 'luar' ? minWorldZoom : 0.35;
     controls.maxZoom = 2.8;
     controls.minPolarAngle = 0.45;
     controls.maxPolarAngle = 1.18;
@@ -212,11 +217,15 @@ export function WorldScene({
     sun.shadow.normalBias = 0.04;
     scene.add(sun);
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(300, 300),
-      new THREE.MeshStandardMaterial({ color: '#eef3fc', roughness: 1 }),
+      new THREE.PlaneGeometry(2000, 2000),
+      new THREE.MeshStandardMaterial({
+        color: location === 'luar' ? cityGround : '#eef3fc',
+        roughness: 1,
+      }),
     );
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.4;
+    // Sedikit di bawah tanah kota (puncak −0,08) dan berwarna sama agar sambungannya tak terlihat.
+    floor.position.y = location === 'luar' ? -0.1 : -0.4;
     floor.receiveShadow = true;
     scene.add(floor);
     const world = new THREE.Group();
@@ -383,7 +392,8 @@ export function WorldScene({
       const state = motion.current,
         light = getLighting(state.hour, state.weather);
       background.set(light.sky);
-      (floor.material as THREE.MeshStandardMaterial).color.set(light.sky);
+      if (fog) fog.color.set(light.sky);
+      else (floor.material as THREE.MeshStandardMaterial).color.set(light.sky);
       ambient.intensity = light.ambient;
       sun.intensity = light.sun;
       sun.color.set(light.sunColor);

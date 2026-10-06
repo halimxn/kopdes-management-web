@@ -9,6 +9,8 @@ import { warehouse } from '../layout';
 
 const asphalt = palette.asphalt;
 const sidewalk = '#f7f9fe';
+/** Warna tanah kota, juga dipakai lantai tak berujung di WorldScene. */
+export const cityGround = '#e2e8f5';
 
 /**
  * Blok kota di luar pagar (utara dan barat, di belakang kawasan dari sudut kamera) memberi
@@ -21,7 +23,7 @@ function cityBlocks(parent: THREE.Object3D) {
   for (let z = -18, i = 0; z <= 26; z += 11, i++) blocks.push([38, z, 5, 7.5, 1.2 + (i % 2) * 0.6]);
   for (let x = -26, i = 0; x <= 30; x += 14, i++) blocks.push([x, 31, 9, 4.5, 1 + (i % 2) * 0.5]);
   // Tanah kota sedikit di bawah tanah kawasan agar tepi kawasan tetap terbaca.
-  box(parent, [130, 0.1, 120], [0, -0.13, 0], '#e2e8f5', 0);
+  box(parent, [130, 0.1, 120], [0, -0.13, 0], cityGround, 0);
   for (const [x, z, w, d, h] of blocks) {
     box(parent, [w, h, d], [x, h / 2, z], '#edf1fa', 0.05);
     box(parent, [w + 0.12, 0.2, d + 0.12], [x, h + 0.1, z], '#dbe3f3', 0.03);

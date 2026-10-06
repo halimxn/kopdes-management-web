@@ -60,6 +60,9 @@ export const landPositions: readonly [number, number][] = [-24, -16, -8, 0, 8, 1
 );
 export const plotSize: [number, number] = [6.4, 5.4];
 
+/** Zoom terjauh di kawasan: seluruh kawasan dan sedikit blok kota (1280 px). */
+export const minWorldZoom = 0.38;
+
 export type WorldZone = 'semua' | 'kantor' | 'gudang' | 'gerai';
 export const worldZones: Record<
   WorldZone,

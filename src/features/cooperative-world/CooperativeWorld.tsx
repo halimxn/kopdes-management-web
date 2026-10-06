@@ -36,7 +36,13 @@ import {
   type WorldLocation,
   type WorldPreferences,
 } from './world-model';
-import { warehouseInterior, worldStations, worldZones, type WorldZone } from './layout';
+import {
+  minWorldZoom,
+  warehouseInterior,
+  worldStations,
+  worldZones,
+  type WorldZone,
+} from './layout';
 import { dayPhase } from './lighting';
 import { truckFocus } from './truck-routes';
 import { WorldHeader } from './ui/WorldHeader';
@@ -511,7 +517,7 @@ export function CooperativeWorld({
           <Button
             aria-label="Perkecil"
             disabled={zoom <= 0.35}
-            onClick={() => setZoom((value) => Math.max(0.35, value - 0.2))}
+            onClick={() => setZoom((value) => Math.max(location === 'luar' ? minWorldZoom : 0.35, value - 0.2))}
           >
             <Minus size={18} />
           </Button>
