@@ -20,6 +20,7 @@ import {
   resolveQuality,
 } from '@/features/cooperative-world/render-quality';
 import {
+  truckArrival,
   pathPose,
   truckFocus,
   truckPose,
@@ -411,5 +412,23 @@ describe('riwayat 7 hari', () => {
       row('d', { date: '2026-09-20' }),
     ];
     expect(weekCounts(rows, (r) => String(r.data.date), '2026-10-06')).toEqual([0, 1, 0, 0, 0, 0, 2]);
+  });
+});
+
+describe('animasi kedatangan truk', () => {
+  it('truk dok maju melewati dok lalu mundur hingga posisi dok', () => {
+    const spots = placeTrucks([row('a', { title: 'A', status: 'tiba', dock: 'D2' })]);
+    const { drive, reverse } = truckArrival(spots[0], spots);
+    expect(reverse.at(-1)).toEqual(truckPose(spots[0]));
+    expect(drive.at(-1)).toEqual(reverse[0]);
+    // Melewati dok: titik balik berada di seberang dok dari arah gerbang.
+    expect(Math.abs(reverse[0][0] - truckPose(spots[0])[0])).toBeGreaterThan(4);
+    expect(Math.abs(reverse[0][0] - truckPose(spots[0])[0])).toBeLessThanOrEqual(7);
+  });
+  it('truk antre hanya maju ke petaknya', () => {
+    const spots = placeTrucks([row('b', { title: 'B', status: 'dikirim' })]);
+    const { drive, reverse } = truckArrival(spots[0], spots);
+    expect(reverse).toEqual([]);
+    expect(drive.at(-1)).toEqual(truckPose(spots[0]));
   });
 });

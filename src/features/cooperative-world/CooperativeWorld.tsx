@@ -480,6 +480,7 @@ export function CooperativeWorld({
 
       <section className="cw-viewport" aria-label="Dunia koperasi interaktif">
         <WorldScene
+          preview={preview}
           model={sceneModel}
           location={location}
           weather={preferences.weather}

@@ -48,9 +48,12 @@ import {
   createAmbientCars,
   createTrucks,
   createYardForklift,
+  placeOnCurve,
+  roundedPath,
   type AmbientCar,
+  type TruckActor,
 } from './objects/vehicles';
-import { pathPose, truckPose, truckRoute } from './truck-routes';
+import { pathPose, truckArrival, truckPose, truckRoute } from './truck-routes';
 import { createSelectionBox, disposeGroup } from './objects/highlight';
 import { createRoute } from './objects/route';
 
@@ -81,6 +84,8 @@ type Props = {
   plans: NpcPlan[];
   managerPlan: ManagerPlan;
   onSelect: (id: string) => void;
+  /** Pratinjau desain development: truk contoh selalu diperagakan datang. */
+  preview?: boolean;
 };
 export function WorldScene({
   model,
@@ -99,6 +104,7 @@ export function WorldScene({
   plans,
   managerPlan,
   onSelect,
+  preview = false,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   // Komponen ini hanya dirender di browser, sehingga petunjuk perangkat aman dibaca di sini.
@@ -247,11 +253,30 @@ export function WorldScene({
     const world = new THREE.Group();
     scene.add(world);
     let cars: AmbientCar[] = [];
+    const arrivals: (TruckActor & {
+      drive: THREE.CurvePath<THREE.Vector3>;
+      reverse: THREE.CurvePath<THREE.Vector3> | null;
+      time: number;
+      done: boolean;
+    })[] = [];
     let yardForklift: THREE.Group | null = null;
     let nightLights: THREE.Object3D | null = null;
     if (location === 'luar') {
       createExterior(world, model);
-      createTrucks(world, model.trucks);
+      // Truk beranimasi datang bila statusnya baru berubah (≤ 15 menit) atau di pratinjau desain.
+      const fresh = Date.now() - 15 * 60000;
+      for (const actor of createTrucks(world, model.trucks)) {
+        const recent = Date.parse(actor.spot.delivery.updated_at) >= fresh;
+        if (!recent && !preview) continue;
+        const path = truckArrival(actor.spot, model.trucks);
+        arrivals.push({
+          ...actor,
+          drive: roundedPath(path.drive, 3.5),
+          reverse: path.reverse.length ? roundedPath(path.reverse, 3.2) : null,
+          time: -arrivals.length * 2.2,
+          done: false,
+        });
+      }
       nightLights = createNightLights(world);
       cars = createAmbientCars(world);
       yardForklift = createYardForklift(world);
@@ -416,7 +441,7 @@ export function WorldScene({
       if (view.current.moving) {
         readGoal();
         // Laju berbasis waktu agar kamera tetap tiba ±0,6 detik walau frame tersendat.
-        const k = reduced.matches ? 1 : 1 - Math.exp(-Math.min(delta, 0.5) * 7);
+        const k = reduced.matches ? 1 : 1 - Math.exp(-Math.min(delta, 0.5) * 4.5);
         offset.copy(camera.position).sub(controls.target).lerp(goalOffset, k);
         controls.target.lerp(goalTarget, k);
         camera.position.copy(controls.target).add(offset);
@@ -534,11 +559,40 @@ export function WorldScene({
       // Mobil suasana melaju dan kembali dari sisi lain; berhenti bila pengguna memilih gerak minimal.
       if (!reduced.matches)
         for (const car of cars) {
-          car.group.position.x += car.speed * Math.min(delta, 0.06);
-          if (car.group.position.x > 84) car.group.position.x = -76;
-          if (car.group.position.x < -76) car.group.position.x = 84;
+          car.distance = (car.distance + car.speed * Math.min(delta, 0.06)) % car.length;
+          placeOnCurve(car.group, car.curve, car.distance / car.length);
         }
-      // Forklift suasana bolak-balik staging ? rak luar; diam di titik awal saat gerak minimal.
+      // Truk yang baru tiba: maju lewat gerbang, berhenti sejenak, lalu mundur berbelok ke dok.
+      for (const arrival of arrivals) {
+        if (arrival.done) continue;
+        const step = reduced.matches ? 1e6 : Math.min(delta, 0.06);
+        arrival.time += step;
+        const driveTime = arrival.drive.getLength() / 12;
+        const reverseTime = arrival.reverse ? arrival.reverse.getLength() / 3.2 : 0;
+        const ease = (t: number) => 1 - Math.pow(1 - Math.min(1, t), 2.2);
+        if (arrival.time < driveTime)
+          placeOnCurve(arrival.group, arrival.drive, ease(arrival.time / driveTime));
+        else if (arrival.reverse && arrival.time < driveTime + 0.7)
+          placeOnCurve(arrival.group, arrival.drive, 1);
+        else if (arrival.reverse && arrival.time < driveTime + 0.7 + reverseTime)
+          placeOnCurve(
+            arrival.group,
+            arrival.reverse,
+            ease((arrival.time - driveTime - 0.7) / reverseTime),
+            true,
+          );
+        else {
+          const [x, z] = truckPose(arrival.spot);
+          arrival.group.position.set(x, 0, z);
+          arrival.group.rotation.y = 0;
+          arrival.done = true;
+        }
+        positions.set(
+          `kirim-${arrival.spot.delivery.id}`,
+          arrival.group.position.clone().add(new THREE.Vector3(0, 4.3, 0)),
+        );
+      }
+      // Forklift suasana bolak-balik staging → rak luar; diam di titik awal saat gerak minimal.
       if (yardForklift) {
         const pose = pathPose(yardForkliftPath, reduced.matches ? 0 : elapsed, 1.6, 1.8);
         yardForklift.position.set(pose.x, 0, pose.z);
@@ -618,7 +672,7 @@ export function WorldScene({
       renderer.domElement.remove();
     };
     // The scene is rebuilt only when its geometry/data changes; animation settings use motion.current.
-  }, [location, model, outfit, tier]);
+  }, [location, model, outfit, tier, preview]);
   // Kartu/lembar berubah ukuran: hitung ulang proyeksi agar fokus tetap di area terlihat.
   useEffect(() => {
     covered.current = occlusion;

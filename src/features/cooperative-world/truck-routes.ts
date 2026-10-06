@@ -1,6 +1,6 @@
 // Rute truk dan jalur forklift: fungsi murni tanpa Three.js agar teruji dan aman dimuat
 // di komponen React mana pun (WorldScene dimuat dinamis karena WebGL).
-import { docks } from './district';
+import { docks, lots } from './district';
 import { gate, roads, site, truckBays, warehouse } from './layout';
 import type { TruckSpot } from './world-model';
 
@@ -110,4 +110,27 @@ export function pathPose(path: Point[], time: number, speed: number, pause: numb
     distance -= lengths[i];
   }
   return { x: path[0][0], z: path[0][1], angle: 0 };
+}
+
+/**
+ * Lintasan kedatangan truk untuk animasi (pola video): maju dari jalan lewat gerbang ke jalur
+ * manuver, melewati dok tujuan, lalu mundur berbelok hingga belakang boks menempel lantai dok.
+ * Truk antre cukup maju masuk petak. Titik akhir sama dengan truckPose.
+ */
+export function truckArrival(spot: TruckSpot, spots: TruckSpot[]) {
+  const { done } = truckRoute(spot, spots);
+  if (spot.place !== 'dok') return { drive: done, reverse: [] as Point[] };
+  const [x, z] = truckPose(spot);
+  const yard = roads.yardLane;
+  // Titik balik ±7 unit melewati dok, tetapi ekor truk tidak boleh menembus pagar kavling.
+  const fence = lots.find((lot) => lot.id === 'logistik')!.fence;
+  const past =
+    x < gate.x ? Math.max(x - 7, fence.x + 4.2) : Math.min(x + 7, fence.x + fence.w - 4.2);
+  const drive: Point[] = [...done.slice(0, -2), [past, yard]];
+  const reverse: Point[] = [
+    [past, yard],
+    [x, yard],
+    [x, z],
+  ];
+  return { drive, reverse };
 }

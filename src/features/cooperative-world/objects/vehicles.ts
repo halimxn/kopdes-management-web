@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { roads, yardForkliftPath } from '../layout';
+import { yardForkliftPath } from '../layout';
 import { truckPose } from '../truck-routes';
 import type { TruckSpot } from '../world-model';
 import { box, cylinder, mergeStatic, palette } from './primitives';
@@ -72,45 +72,145 @@ export function truck(
   return g;
 }
 
-export function createTrucks(parent: THREE.Object3D, spots: TruckSpot[]) {
-  for (const spot of spots) {
+type Point = [number, number];
+
+/**
+ * Lintasan berbelok halus: garis lurus antar titik dengan sudut dibulatkan (kurva kuadrat),
+ * sehingga kendaraan berbelok lembut seperti video, bukan berputar di tempat.
+ */
+export function roundedPath(points: Point[], radius = 3.2, closed = false) {
+  const path = new THREE.CurvePath<THREE.Vector3>();
+  const v = ([x, z]: Point) => new THREE.Vector3(x, 0, z);
+  const list = closed ? [...points, points[0]] : points;
+  let start = v(list[0]);
+  for (let i = 1; i < list.length; i++) {
+    const corner = v(list[i]);
+    const next = closed && i === list.length - 1 ? v(list[1]) : list[i + 1] ? v(list[i + 1]) : null;
+    if (!next) {
+      if (start.distanceTo(corner) > 0.01) path.add(new THREE.LineCurve3(start, corner));
+      break;
+    }
+    const inLen = corner.distanceTo(start);
+    const outLen = corner.distanceTo(next);
+    const r = Math.min(radius, inLen / 2, outLen / 2);
+    const a = corner.clone().sub(start).normalize().multiplyScalar(-r).add(corner);
+    const b = next.clone().sub(corner).normalize().multiplyScalar(r).add(corner);
+    if (start.distanceTo(a) > 0.01) path.add(new THREE.LineCurve3(start, a));
+    path.add(new THREE.QuadraticBezierCurve3(a, corner, b));
+    start = b;
+  }
+  if (closed && path.curves.length) {
+    const first = path.curves[0].getPoint(0);
+    if (start.distanceTo(first) > 0.01) path.add(new THREE.LineCurve3(start, first));
+  }
+  return path;
+}
+
+export type TruckActor = { spot: TruckSpot; group: THREE.Group };
+
+export function createTrucks(parent: THREE.Object3D, spots: TruckSpot[]): TruckActor[] {
+  return spots.map((spot) => {
     const g = truck(parent, spot.delivery.id, `kirim-${spot.delivery.id}`);
     const [x, z] = truckPose(spot);
     g.position.set(x, 0, z);
     mergeStatic(g);
-  }
+    return { spot, group: g };
+  });
 }
 
-export type AmbientCar = { group: THREE.Group; speed: number; z: number };
+export type AmbientCar = {
+  group: THREE.Group;
+  curve: THREE.CurvePath<THREE.Vector3>;
+  length: number;
+  speed: number;
+  distance: number;
+};
 
-/** Kendaraan suasana di jalan utama. Simulasi lingkungan, bukan kendaraan atau pengiriman tercatat. */
+/**
+ * Kendaraan suasana berkeliling blok distrik di lajur kiri, berbelok halus di persimpangan.
+ * Truk suasana hanya di blok niaga (tidak melewati area kesehatan). Simulasi lingkungan,
+ * bukan kendaraan atau pengiriman tercatat.
+ */
 export function createAmbientCars(parent: THREE.Object3D): AmbientCar[] {
-  const lanes = [
-    { z: roads.main.z + roads.main.width / 4, speed: 3.6, start: -40, kind: 'truk' as const },
-    { z: roads.main.z - roads.main.width / 4, speed: -4.4, start: 20, kind: 'mobil' as const },
+  const loops: {
+    points: Point[];
+    kind: 'truk' | 'mobil';
+    color: string;
+    speed: number;
+    start: number;
+  }[] = [
+    {
+      points: [
+        [-60.2, -50.4],
+        [-1.8, -50.4],
+        [-1.8, -2.5],
+        [-60.2, -2.5],
+      ],
+      kind: 'mobil',
+      color: '#9fb8f5',
+      speed: 5,
+      start: 0.1,
+    },
+    {
+      points: [
+        [1.8, 2.5],
+        [68, 2.5],
+        [68, 44.4],
+        [1.8, 44.4],
+      ],
+      kind: 'truk',
+      color: '',
+      speed: 4,
+      start: 0.6,
+    },
+    {
+      points: [
+        [-60.2, 2.5],
+        [-1.8, 2.5],
+        [-1.8, 44.4],
+        [-60.2, 44.4],
+      ],
+      kind: 'mobil',
+      color: '#c9b8f6',
+      speed: 4.6,
+      start: 0.35,
+    },
   ];
-  return lanes.map((lane, index) => {
+  return loops.map((loop, index) => {
     const g = new THREE.Group();
     // ID per kendaraan agar penunjuk mengikuti kendaraan yang diklik, bukan yang pertama.
     g.userData.selection = `kendaraan-suasana-${index}`;
     parent.add(g);
     const body = new THREE.Group();
-    body.rotation.y = lane.speed > 0 ? Math.PI / 2 : -Math.PI / 2;
     g.add(body);
-    if (lane.kind === 'truk') {
+    if (loop.kind === 'truk') {
       const vehicle = truck(body, 'suasana', 'kendaraan-suasana', truckSchemes[2]);
       vehicle.scale.setScalar(0.82);
     } else {
-      box(body, [1.7, 0.7, 3.4], [0, 0.65, 0], '#f4f6fb', 0.15);
-      box(body, [1.5, 0.6, 1.8], [0, 1.25, -0.2], '#f4f6fb', 0.15);
-      box(body, [1.52, 0.42, 1.6], [0, 1.27, -0.2], palette.glassDark, 0.05);
-      box(body, [1.72, 0.14, 3.42], [0, 0.55, 0], palette.blue, 0);
+      box(body, [1.7, 0.66, 3.4], [0, 0.62, 0], loop.color, 0.22);
+      box(body, [1.5, 0.56, 1.9], [0, 1.18, -0.2], loop.color, 0.2);
+      box(body, [1.52, 0.38, 1.7], [0, 1.2, -0.2], palette.glassDark, 0.1);
       wheels(body, [-0.8, 0.8], [-1.1, 1.1], 0.32, 0.26);
     }
     mergeStatic(body);
-    g.position.set(lane.start, 0, lane.z);
-    return { group: g, speed: lane.speed, z: lane.z };
+    const curve = roundedPath(loop.points, 4.5, true);
+    const length = curve.getLength();
+    return { group: g, curve, length, speed: loop.speed, distance: length * loop.start };
   });
+}
+
+/** Letakkan kendaraan di jarak tertentu sepanjang lintasan dan hadapkan ke arah gerak. */
+export function placeOnCurve(
+  group: THREE.Object3D,
+  curve: THREE.CurvePath<THREE.Vector3>,
+  u: number,
+  backwards = false,
+) {
+  const t = Math.min(1, Math.max(0, u));
+  const point = curve.getPointAt(t);
+  const tangent = curve.getTangentAt(t);
+  group.position.set(point.x, 0, point.z);
+  group.rotation.y = Math.atan2(tangent.x, tangent.z) + (backwards ? Math.PI : 0);
 }
 
 /** Forklift suasana yang membawa palet dari staging ke rak luar. Simulasi lingkungan. */
