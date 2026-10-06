@@ -41,12 +41,12 @@ Arsip `PANDUAN_AGENT_DUNIA_KOPERASI.md` dan `dunia-koperasi-referensi-luas.html`
 
 | Unsur video | Perilaku di video | Implementasi | Sumber data |
 |---|---|---|---|
-| Gudang dok (WH-04) | Dinding bergelombang terang, atap pelana biru bergaris, kolom sudut dan kusen dok biru, nomor dok, palet di ambang pintu, unit AC dan logo bulat di atap | `objects/warehouse.ts` `createWarehouse` | Statis; klik = `gudang` |
+| Gudang dok (WH-04) | Dinding bergelombang terang, atap pelana biru bergaris, kolom sudut dan kusen dok biru, nomor dok, palet di ambang pintu, unit AC dan skylight di atap (logo bulat dihapus, v3.1) | `objects/warehouse.ts` `createWarehouse` | Statis; klik = `gudang` |
 | Truk boks cab-over | Kabin biru atau putih bergaris teal/oranye/navy, kaca gelap, gril, boks putih berlogo | `objects/vehicles.ts` `truck`, skema dari ID | Pengiriman dikirim/tiba/diperiksa |
 | Klik truk | Kotak seleksi biru bersiku, label biru "nama · status", kamera terbang, **garis rute**: pita biru (dilalui) + titik-titik (sisa) + cakram dan pin di dok | `objects/highlight.ts`, `objects/route.ts`, `truck-routes.ts` `truckRoute/truckFocus` | Rute skematis kawasan, bukan GPS |
 | Forklift kuning | Atap pelindung hitam, tiang, garpu membawa palet, bergerak | `props.ts` `forklift`; satu forklift suasana bolak-balik staging → rak luar (`pathPose`) | Simulasi lingkungan berlabel |
 | Palet kardus / kemasan biru | Kardus oranye berlakban, kemasan biru berbalut | `props.ts` `cardboardPallet`, `palletRack` | Pemandangan; rak interior dari Barang |
-| Pin biru | Tetes biru di atas barang | `props.ts` `dropPin` | Hanya data: stok di bawah minimum, dok tujuan rute |
+| Pin biru | Tetes biru di atas barang | `props.ts` `dropPin` | Hanya dok tujuan rute (v3.1: pin di atas peti dihapus; stok minimum lewat label kuning gudang) |
 | Pagar kaca, rumput, pohon bulat | Panel transparan, jalur rumput, pohon berbaris | `exterior.ts` (`mergeTransparent`) | Statis |
 | Kota di latar | Blok putih berjendela biru | `exterior.ts` `cityBlocks` (utara/barat tinggi, timur/selatan rendah) | Statis |
 | Kartu detail | Ilustrasi + eyebrow + judul + pill + progres + baris kunci–nilai + daftar inventaris | `ui/DetailCard.tsx`, `ui/WorldIcon.tsx` | Catatan asli |
@@ -60,7 +60,7 @@ Arsip `PANDUAN_AGENT_DUNIA_KOPERASI.md` dan `dunia-koperasi-referensi-luas.html`
 - **Forklift**: ±1,1 × 2,4 × 2,2, badan #f5b82e, atap hitam, garpu ke +Z, opsi muatan kardus/kemasan.
 - **Kantor**: 8 × 4 × 5,4 putih, dua pita kaca #9fc0f5 dengan tiang putih, parapet biru, kanopi pintu biru, papan KOPERASI. **Gerai**: 3,8 × 2,2 × 2,6 putih, tenda bergaris biru-putih 7 lajur, etalase, papan nama dari judul Gerai.
 - **Lingkungan**: tanah #e9eefb, aspal #d3dbee bermarka putih, rumput #d3efdd di kaki pagar, pagar tiang #b9c4d8 + panel transparan #dfe8f8 (opasitas 0,38), pohon batang #8a7a66 tajuk #4cc47f/#8fe0ac, kontainer teal di utara petak antre.
-- **Seleksi**: sisi biru 7 %, garis tepi 55 %, siku 0,07 tebal di delapan sudut, cahaya lantai gradien. **Rute**: pita 0,78 lebar + panah putih tiap 2,4, titik r 0,2 tiap 0,95, cakram r 0,85 + pin bergoyang di dok tujuan; material dasar (tidak terpengaruh cahaya).
+- **Seleksi**: kotak 3D, isi biru 9 %, garis tepi 50 %, siku tebal 0,1 sepanjang ±25 % tiap sisi (maks. 1,6) di delapan sudut, cahaya lantai gradien; diikat ke objek dan diperbarui tiap frame. **Rute**: pita 0,78 lebar + panah putih tiap 2,4, titik r 0,2 tiap 0,95, cakram r 0,85 + pin bergoyang di dok tujuan; material dasar (tidak terpengaruh cahaya).
 - Anggaran terukur 1280–1440 px kualitas Tinggi, data contoh: 58–89 draw call (batas 150).
 
 ### Spesifikasi kartu (lihat kartu-contoh.html)
@@ -75,6 +75,9 @@ Arsip `PANDUAN_AGENT_DUNIA_KOPERASI.md` dan `dunia-koperasi-referensi-luas.html`
 ### Interaksi
 
 - Klik truk (scene, label, daftar, tab Dok) → kotak seleksi, label biru, rute, kamera terbang ke tengah truk–dok (zoom 0,68 antre / 1,05 dok). Objek lain: klik di scene tidak memindahkan kamera; pilihan dari daftar menerbangkan kamera.
+- v3.1: semua objek bergerak (forklift, kendaraan jalan, karakter Tim, maskot) dapat diklik; penunjuk ikut bergerak dan kamera mengikuti sampai pengguna menggeser/memutar/zoom, memilih objek lain, menutup kartu, kendaraan melompat ke ujung jalan, atau objek keluar radius fokus.
+- v3.1: tanpa tombol/bubble maskot. Maskot dipilih lewat badannya; alasan rencana di kartu detail ("Sedang"). Bubble "…" hanya percakapan: Tim berpapasan dan manajer saat tiba di meja staf atau dok (4 detik).
+- v3.1: tanah tak berujung (2000 unit, warna tanah kota) dengan kabut ke warna langit (pink senja tetap), kamera ortografis dijauhkan, zoom keluar minimum 0,38 (`minWorldZoom`).
 - Forklift suasana bergerak bolak-balik; kendaraan jalan utama (truk boks + mobil) melaju; semuanya berhenti saat reduced-motion dan kartunya berlabel **Simulasi lingkungan**.
 
 ### Daftar periksa anti-meleset (wajib sebelum melapor selesai)

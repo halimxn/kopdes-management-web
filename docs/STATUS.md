@@ -14,6 +14,10 @@ Implementasi lokal, belum dinilai pemilik. Aset baru dari kode: gudang dok ala v
 
 Bukti: 296 tes/45 berkas, typecheck, lint dan build lulus. Tangkapan headless Chromium (SwiftShader) data contoh pada 375, 768, 1024, 1280 dan 1440 px; 58–89 draw call. Belum: perangkat fisik, rekaman gerak, data cloud, penilaian pemilik. Di 1024–1279 px dock masih menutupi baris bawah kartu Daftar (keadaan lama).
 
+## Perbaikan kecil v3.1 (6 Oktober, hasil wawancara pemilik)
+
+Selesai lokal: tanah tak berujung berkabut tanpa tepi pink saat zoom keluar, batas zoom; skylight menggantikan logo atap, pin peti dihapus; penunjuk kotak bersiku tebal mengikuti objek bergerak; kamera mengikuti objek bergerak terpilih; maskot tanpa tombol/bubble, bubble hanya percakapan. Bukti: 296 tes lulus, typecheck/lint/build, tangkapan headless (forklift diikuti, zoom senja). Belum: perangkat fisik, rekaman gerak percakapan manajer.
+
 ## Penilaian pemilik terbaru
 
 Versi sekarang belum diterima: kawasan kecil/sepi, mobil belum ada, tampilan agak gelap, pengaturan waktu tidak mudah ditemukan dan perpindahan karakter belum terlihat. Gym aktif serta patroli manajer sesekali belum tersedia. Kontrol manual/animasi pose ada dalam kode, tetapi bukan bukti pengalaman tersebut memenuhi permintaan. Rencana paket revisi ada hanya di [DUNIA-KOPERASI](DUNIA-KOPERASI.md); pembaruan ini dokumentasi, belum implementasi runtime.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Perbaikan kecil v3.1 — 6 Oktober 2026
+
+- Tanah tak berujung + kabut, zoom keluar dibatasi; tidak ada tepi pink.
+- Skylight atap gudang, pin di atas peti dihapus, pin rute lebih kecil.
+- Penunjuk kotak 3D bersiku tebal mengikuti objek bergerak; kamera mengikuti objek bergerak terpilih.
+- Tombol dan bubble maskot dihapus; bubble "…" untuk percakapan manajer di meja staf/dok.
+
 ## Blueprint visual v3 — mengikuti video — 6 Oktober 2026
 
 - Aset 3D baru: gudang dok ala video, truk cab-over empat skema, forklift, palet, rak luar, kontainer, kantor dan gerai baru, pagar kaca, pohon, blok kota; primitif gable/badge/cone/mergeTransparent.
