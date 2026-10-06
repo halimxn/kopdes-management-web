@@ -1,23 +1,22 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Building2, Plus, MessageCircle, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { animateCharacter, createCharacter } from './objects/characters';
+import { createExterior } from './objects/exterior';
+import { createInterior } from './objects/office';
+import { disposeSharedResources, palette } from './objects/primitives';
+import { cameraSpan, characterSpots, officePosition, worldStations } from './layout';
+import { getLighting } from './lighting';
 import {
-  animateCharacter,
-  createCharacter,
-  createExterior,
-  createInterior,
-  palette,
-} from './world-objects';
-import {
-  worldStations,
-  type CharacterActivity,
-  type WorldLocation,
-  type WorldModel,
-  type WorldPreferences,
-} from './world-model';
+  qualitySettings,
+  readDeviceHints,
+  resolveQuality,
+  type QualityChoice,
+} from './render-quality';
+import type { CharacterActivity, WorldLocation, WorldModel, WorldPreferences } from './world-model';
 
 type Props = {
   model: WorldModel;
@@ -25,6 +24,7 @@ type Props = {
   weather: WorldPreferences['weather'];
   hour: number;
   outfit: WorldPreferences['outfit'];
+  quality: QualityChoice;
   activity: CharacterActivity;
   zoom: number;
   rotation: number;
@@ -38,6 +38,7 @@ export function WorldScene({
   weather,
   hour,
   outfit,
+  quality,
   activity,
   zoom,
   rotation,
@@ -46,6 +47,8 @@ export function WorldScene({
   onSelect,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  // Komponen ini hanya dirender di browser, sehingga petunjuk perangkat aman dibaca di sini.
+  const tier = useMemo(() => resolveQuality(quality, readDeviceHints()), [quality]);
   const markerRefs = useRef(new Map<string, HTMLDivElement>());
   const runtime = useRef<{ camera: THREE.OrthographicCamera; controls: OrbitControls } | null>(
     null,
@@ -76,19 +79,20 @@ export function WorldScene({
   useEffect(() => {
     const node = host.current;
     if (!node) return;
+    const settings = qualitySettings[tier];
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer = new THREE.WebGLRenderer({ antialias: settings.antialias, alpha: false });
     } catch {
       const failureFrame = requestAnimationFrame(() => setFailed(true));
       return () => cancelAnimationFrame(failureFrame);
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, settings.pixelRatio));
+    renderer.shadowMap.enabled = settings.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.22;
+    renderer.toneMappingExposure = 1.25;
     renderer.domElement.setAttribute(
       'aria-label',
       location === 'luar'
@@ -97,7 +101,8 @@ export function WorldScene({
     );
     node.prepend(renderer.domElement);
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#e7edf9');
+    const background = new THREE.Color('#eef3fc');
+    scene.background = background;
     const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 0.1, 150);
     camera.position.set(26, 23, 26);
     camera.lookAt(0, 0, 0);
@@ -111,12 +116,12 @@ export function WorldScene({
     controls.enablePan = true;
     controls.maxTargetRadius = 12;
     runtime.current = { camera, controls };
-    const ambient = new THREE.HemisphereLight('#f3f8ff', '#a1acc4', 2.5);
+    const ambient = new THREE.HemisphereLight('#f5f9ff', '#aeb8cf', 2.8);
     scene.add(ambient);
-    const sun = new THREE.DirectionalLight('#fff5e3', 3.5);
+    const sun = new THREE.DirectionalLight('#fff7e8', 3.8);
     sun.position.set(-10, 20, 10);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.castShadow = settings.shadows;
+    if (settings.shadows) sun.shadow.mapSize.set(settings.shadowMapSize, settings.shadowMapSize);
     Object.assign(sun.shadow.camera, {
       left: -22,
       right: 22,
@@ -130,7 +135,7 @@ export function WorldScene({
     scene.add(sun);
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(300, 300),
-      new THREE.MeshStandardMaterial({ color: '#e5ebf8', roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: '#eef3fc', roughness: 1 }),
     );
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -0.4;
@@ -141,15 +146,11 @@ export function WorldScene({
     if (location === 'luar') createExterior(world, model);
     else createInterior(world);
     const color = { biru: palette.blue, lavender: '#a18ae0', hijau: '#51aa8a' }[outfit];
+    const spots = characterSpots[location];
     const characters = [
-      createCharacter(world, location === 'luar' ? [-1.3, 0.1, 5] : [-4, 0.1, -0.95], color),
-      createCharacter(
-        world,
-        location === 'luar' ? [5.4, 0.1, -0.7] : [2, 0.1, -0.15],
-        '#a18ae0',
-        1,
-      ),
-      createCharacter(world, location === 'luar' ? [-7, 0.1, -1] : [5.3, 0.3, 3.5], '#50ab90', 2),
+      createCharacter(world, spots[0], color),
+      createCharacter(world, spots[1], '#a18ae0', 1),
+      createCharacter(world, spots[2], '#50ab90', 2),
     ];
     characters.forEach((character) => {
       character.group.userData.selection = 'karakter';
@@ -185,7 +186,7 @@ export function WorldScene({
     };
     renderer.domElement.addEventListener('pointerdown', startPointer);
     renderer.domElement.addEventListener('pointerup', pickObject);
-    const rainCount = 350,
+    const rainCount = settings.rainCount,
       rainPositions = new Float32Array(rainCount * 6);
     for (let i = 0; i < rainCount; i++) {
       const x = ((i * 17.37) % 34) - 17,
@@ -211,7 +212,7 @@ export function WorldScene({
       if (!width || !height) return;
       renderer.setSize(width, height);
       const aspect = width / height;
-      const span = location === 'luar' ? (aspect < 1 ? 20 : 13.2) : aspect < 1 ? 11.5 : 8.5;
+      const span = cameraSpan[location][aspect < 1 ? 'portrait' : 'landscape'];
       camera.left = -span * aspect;
       camera.right = span * aspect;
       camera.top = span;
@@ -223,7 +224,7 @@ export function WorldScene({
     resize();
     const positions = new Map<string, THREE.Vector3>();
     if (location === 'luar') {
-      positions.set('koperasi', new THREE.Vector3(-3, 4.1, 2.7));
+      positions.set('koperasi', new THREE.Vector3(officePosition[0], 4.1, officePosition[1]));
       model.plots.forEach((plot) =>
         positions.set(
           plot.id,
@@ -237,25 +238,18 @@ export function WorldScene({
     const draw = (stamp: number) => {
       if (disposed) return;
       frame = requestAnimationFrame(draw);
-      if (document.hidden || stamp - previous < 32) return;
+      if (document.hidden || stamp - previous < settings.frameInterval) return;
       elapsed += Math.min((stamp - previous) / 1000, 0.06);
       previous = stamp;
       controls.update();
       const state = motion.current,
-        night = state.hour < 6 || state.hour >= 19,
-        dusk = state.hour >= 16 && state.hour < 19;
-      const sky = night
-        ? '#23304e'
-        : dusk
-          ? '#e5d8ed'
-          : state.weather === 'cerah'
-            ? '#e7edf9'
-            : '#cbd7e9';
-      scene.background = new THREE.Color(sky);
-      (floor.material as THREE.MeshStandardMaterial).color.set(sky);
-      ambient.intensity = night ? 1.2 : 2.5;
-      sun.intensity = night ? 0.6 : state.weather === 'cerah' ? 3.5 : 1.5;
-      sun.color.set(dusk ? '#ffd0a6' : night ? '#9cb8ff' : '#fff5e3');
+        light = getLighting(state.hour, state.weather);
+      background.set(light.sky);
+      (floor.material as THREE.MeshStandardMaterial).color.set(light.sky);
+      ambient.intensity = light.ambient;
+      sun.intensity = light.sun;
+      sun.color.set(light.sunColor);
+      renderer.toneMappingExposure = light.exposure;
       characters.forEach((character, index) => {
         const mode =
           location === 'luar'
@@ -322,12 +316,13 @@ export function WorldScene({
           });
         }
       });
+      disposeSharedResources();
       renderer.domElement.removeEventListener('webglcontextlost', lost);
       renderer.dispose();
       renderer.domElement.remove();
     };
     // The scene is rebuilt only when its geometry/data changes; animation settings use motion.current.
-  }, [location, model, outfit]);
+  }, [location, model, outfit, tier]);
   const markers =
     location === 'luar'
       ? [

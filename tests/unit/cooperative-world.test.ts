@@ -5,6 +5,12 @@ import {
   worldPreferencesSchema,
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
+import { dayPhase, getLighting } from '@/features/cooperative-world/lighting';
+import {
+  detectQualityTier,
+  qualitySettings,
+  resolveQuality,
+} from '@/features/cooperative-world/render-quality';
 const row = (
   id: string,
   data: Record<string, unknown>,
@@ -57,5 +63,37 @@ describe('pemetaan dunia koperasi', () => {
     expect(getWorldHour('senja', new Date())).toBe(17);
     expect(worldPreferencesSchema.safeParse({ weather: 'salju' }).success).toBe(false);
     expect(worldPreferencesSchema.parse({}).time).toBe('otomatis');
+  });
+});
+
+describe('fondasi render dunia', () => {
+  it('memilih kualitas sesuai petunjuk perangkat dan menghormati pilihan manual', () => {
+    expect(detectQualityTier({ width: 1440, cores: 8, memory: 8 })).toBe('tinggi');
+    expect(detectQualityTier({ width: 390, cores: 8, memory: 8 })).toBe('sedang');
+    expect(detectQualityTier({ width: 1440, cores: 2, memory: 8 })).toBe('hemat');
+    expect(detectQualityTier({ width: 1440, cores: 8, memory: 8, saveData: true })).toBe('hemat');
+    expect(resolveQuality('tinggi', { width: 360, cores: 2 })).toBe('tinggi');
+    expect(qualitySettings.hemat.shadows).toBe(false);
+    expect(qualitySettings.sedang.pixelRatio).toBeLessThanOrEqual(1.5);
+  });
+  it('siang cerah lebih terang dari malam, dan malam tidak hitam', () => {
+    const day = getLighting(12, 'cerah');
+    const night = getLighting(22, 'cerah');
+    expect(day.sun).toBeGreaterThan(night.sun);
+    expect(day.ambient).toBeGreaterThan(night.ambient);
+    expect(night.sky).not.toBe('#000000');
+    expect(getLighting(12, 'hujan').sun).toBeLessThan(day.sun);
+    expect([5, 7, 12, 17, 19].map(dayPhase)).toEqual(['malam', 'pagi', 'siang', 'senja', 'malam']);
+  });
+  it('preferensi lama tanpa kualitas tetap valid dengan bawaan otomatis', () => {
+    const old = worldPreferencesSchema.parse({
+      version: 1,
+      weather: 'hujan',
+      time: 'malam',
+      outfit: 'hijau',
+    });
+    expect(old.quality).toBe('otomatis');
+    expect(old.weather).toBe('hujan');
+    expect(worldPreferencesSchema.safeParse({ quality: 'ultra' }).success).toBe(false);
   });
 });

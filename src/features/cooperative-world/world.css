@@ -996,9 +996,10 @@
   --cw-card: rgba(248, 251, 255, 0.96);
 }
 .cw-night .cw-location-breadcrumb,
+.cw-night .cw-location-breadcrumb button,
 .cw-night .cw-scene-hint,
 .cw-night .cw-compass {
-  color: #b6c7ea;
+  color: #dbe5fa;
 }
 @keyframes cw-appear {
   from {

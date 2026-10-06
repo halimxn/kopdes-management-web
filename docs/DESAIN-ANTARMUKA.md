@@ -6,7 +6,7 @@ Arahan terbaru memprioritaskan **Dunia Koperasi**, mengikuti lingkungan 3D dan k
 
 | Permukaan | Gaya dan sumber |
 |---|---|
-| Dunia Koperasi `/dunia-koperasi` | Layar penuh 3D isometrik biru-putih, kartu mengambang, dock dunia. `src/features/cooperative-world/world.css` dan `world-objects.ts`. |
+| Dunia Koperasi `/dunia-koperasi` | Layar penuh 3D isometrik biru-putih, kartu mengambang, dock dunia. `src/features/cooperative-world/world.css` dan `objects/primitives.ts`. |
 | Halaman operasional | Arang, hijau lembut/lavender, tema terang/gelap, sidebar/rel/dock aplikasi. globals.css, personal.css, tokens.css dan ui.css. |
 
 Acuan e8fc8b4 dan arahan 3 Oktober untuk tweak kecil berlaku pada halaman operasional. Jangan memakai arahan tersebut untuk menolak atau menetralkan desain Dunia Koperasi. Jangan menyebarkan palet dunia ke seluruh form secara otomatis.

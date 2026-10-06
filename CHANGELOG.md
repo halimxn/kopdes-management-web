@@ -1,5 +1,12 @@
 # Changelog
 
+## Paket 1 — fondasi dunia — 6 Oktober 2026
+
+- Pecah world-objects.ts menjadi layout.ts dan objects/ (primitives, props, office, exterior, characters); geometri/material dipakai bersama dan dibuang saat scene dibongkar.
+- Tambah tingkat kualitas Tinggi/Sedang/Hemat (DPR, antialias, bayangan, batas fps, jumlah hujan) dengan deteksi perangkat dan pilihan Kualitas grafis di Suasana; preferensi lama tetap valid.
+- Pencahayaan pindah ke lighting.ts: siang lebih cerah, malam biru terbaca, label Kawasan malam terbaca. Palet ditambah aksen kardus/marka dan pohon lebih hijau; area layanan memakai marka kuning dan satu palet kardus dekoratif.
+- 269 tes/44 berkas (--maxWorkers=2), typecheck, lint dan build lulus. Satu putaran tes awal gagal 4 tes saat server dev sedang kompilasi; dua putaran berikutnya bersih. Diperiksa di browser: kawasan desktop siang, malam + Hemat, interior 375 px. Tata letak kawasan/kartu belum diubah (paket 2–3).
+
 ## Paket 0 — rapikan folder — 6 Oktober 2026
 
 - Pindahkan LAPORAN-ASTRA, QA-ANOTASI, QA-POPUP, QA-TATA-LETAK dan AUDIT ke docs/arsip/; audit:ui kini menulis docs/arsip/AUDIT.md.

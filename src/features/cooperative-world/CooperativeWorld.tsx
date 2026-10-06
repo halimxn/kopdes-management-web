@@ -40,12 +40,12 @@ import {
   getWorldHour,
   getWorldModel,
   worldPreferencesSchema,
-  worldStations,
   type CharacterActivity,
   type WorldLocation,
   type WorldPreferences,
 } from './world-model';
 import { recordHref } from '../workspace/workspace-navigation';
+import { worldStations } from './layout';
 const WorldScene = dynamic(() => import('./WorldScene').then((module) => module.WorldScene), {
   ssr: false,
   loading: () => <div className="cw-loading">Menyiapkan lingkungan 3D…</div>,
@@ -227,6 +227,7 @@ export function CooperativeWorld({
           weather={preferences.weather}
           hour={hour}
           outfit={preferences.outfit}
+          quality={preferences.quality}
           activity={activity}
           zoom={zoom}
           rotation={rotation}
@@ -414,6 +415,22 @@ export function CooperativeWorld({
                         preference('outfit', value as WorldPreferences['outfit'])
                       }
                       options={['biru', 'lavender', 'hijau']}
+                    />
+                  </label>
+                  <label className="cw-field">
+                    Kualitas grafis
+                    <Select
+                      ariaLabel="Kualitas grafis"
+                      value={preferences.quality}
+                      onChange={(value) =>
+                        preference('quality', value as WorldPreferences['quality'])
+                      }
+                      options={[
+                        { value: 'otomatis', label: 'Otomatis · sesuai perangkat' },
+                        { value: 'tinggi', label: 'Tinggi · bayangan halus' },
+                        { value: 'sedang', label: 'Sedang' },
+                        { value: 'hemat', label: 'Hemat · tanpa bayangan' },
+                      ]}
                     />
                   </label>
                   <p className="cw-panel-note">Pilihan suasana disimpan di perangkat ini.</p>

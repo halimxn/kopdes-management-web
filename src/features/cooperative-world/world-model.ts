@@ -1,55 +1,18 @@
 import { z } from 'zod';
 import { today } from '@/lib/date';
 import type { Workspace } from '../workspace/useWorkspace';
+import { landPositions } from './layout';
 
 export const worldPreferencesSchema = z.object({
   version: z.literal(1).default(1),
   weather: z.enum(['cerah', 'berawan', 'hujan']).default('cerah'),
   time: z.enum(['otomatis', 'pagi', 'siang', 'senja', 'malam']).default('otomatis'),
   outfit: z.enum(['biru', 'lavender', 'hijau']).default('biru'),
+  quality: z.enum(['otomatis', 'tinggi', 'sedang', 'hemat']).default('otomatis'),
 });
 export type WorldPreferences = z.infer<typeof worldPreferencesSchema>;
 export type WorldLocation = 'luar' | 'dalam';
 export type CharacterActivity = 'idle' | 'work' | 'meeting' | 'gym';
-export const landPositions: readonly [number, number][] = [
-  [-9, -6],
-  [-3, -6],
-  [3, -6],
-  [9, -6],
-  [-9, 3],
-  [3, 3],
-  [9, 3],
-];
-export const worldStations = [
-  {
-    id: 'rapat',
-    title: 'Meja rapat',
-    href: '/rapat',
-    description: 'Agenda, notulen, dan keputusan.',
-    position: [-4, 0, -2],
-  },
-  {
-    id: 'tugas',
-    title: 'Meja tugas',
-    href: '/tugas',
-    description: 'Pekerjaan dan tenggat yang perlu ditindaklanjuti.',
-    position: [3, 0, -2],
-  },
-  {
-    id: 'kegiatan',
-    title: 'Area kegiatan',
-    href: '/jurnal',
-    description: 'Karakter berolahraga sebagai visualisasi kegiatan hari ini.',
-    position: [4, 0, 3],
-  },
-  {
-    id: 'dokumen',
-    title: 'Arsip & buku',
-    href: '/dokumen',
-    description: 'Dokumen koperasi dan pintasan pencatatan.',
-    position: [-4, 0, 3],
-  },
-] as const;
 
 export function getWorldModel(data: Workspace, now: Date) {
   const date = today(now);

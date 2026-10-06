@@ -14,20 +14,22 @@ Kerjakan **Rencana Dunia Koperasi v2** pada bagian terakhir [DUNIA-KOPERASI](DUN
 ## Urutan melanjutkan
 
 1. Periksa Git, AGENTS, STATUS dan rencana v2.
-2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0 selesai; berikutnya **paket 1 — fondasi dunia**.
+2. Mulai paket berikutnya yang belum selesai. Saat penulisan: paket 0–1 selesai; berikutnya **paket 2 — peta baru**.
 3. Sebelum tiap paket buat tag checkpoint; commit kecil per paket; PR ke main hanya setelah pemilik menilai screenshot/rekaman.
 4. Akhir paket: perbarui bagian "Paket terakhir" di bawah, STATUS dan CHANGELOG.
 
 ## Paket terakhir
 
+- 6 Oktober, paket 1: berkas dunia dipecah (layout.ts, objects/, lighting.ts, render-quality.ts), kualitas grafis Tinggi/Sedang/Hemat, siang lebih cerah, malam terbaca. Tag checkpoint/paket-1 menandai keadaan sebelumnya.
 - 6 Oktober, paket 0: dokumen historis ke docs/arsip/, modul catatan bersama ke src/features/records/. Tag checkpoint/paket-0 menandai keadaan sebelumnya. Pemeriksaan lengkap lulus.
 - 6 Oktober: rencana v2 dan delapan frame video disimpan. Dokumentasi saja; tidak ada perubahan runtime atau tes aplikasi baru.
 
-## Keadaan kode (v0, ecddd85)
+## Keadaan kode (v0 + paket 1)
 
 - `/dunia-koperasi`: navigasi aplikasi, sesi yang sudah ada, data workspace; AppShell menyerahkan layar penuh.
 - `/dev/dunia-koperasi`: hanya development, workspace kosong tanpa database.
 - Three.js: kamera ortografis, OrbitControls, cahaya/bayangan, zoom/putar/reset, raycast gedung/karakter/lahan, penanda HTML aksesibel.
+- Berkas: layout.ts (koordinat), objects/ (mesh), lighting.ts, render-quality.ts, world-model.ts (adapter), WorldScene.tsx, CooperativeWorld.tsx.
 - Exterior kecil: kantor biru, tujuh lahan, jalan, pohon, bangku. Interior: meja rapat, meja tugas, arsip, treadmill.
 - Maskot: rapat aktif → duduk; jurnal hari ini → olahraga; tugas proses → bekerja; lainnya → idle.
 - Style: `world.css`, dibatasi `.cooperative-world` dan kelas `cw-*`. Tanpa backdrop blur.

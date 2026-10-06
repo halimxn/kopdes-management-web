@@ -31,15 +31,17 @@ Diorama 3D bersih, objek membulat ringan, cahaya lembut, bayangan kontak, detail
 | Biru gelap atap/trim | #2443a6 |
 | Putih objek | #fafcff |
 | Kaca | #a7c8e9 |
-| Lantai kawasan | #e4eaf6 |
-| Vegetasi | #79c8a0 |
+| Lantai kawasan | #e9eefb |
+| Vegetasi | #5fbf8a / #9fdcb2 |
 | Kayu muda | #dfc59c |
+| Aksen kardus | #f2b36b / #d9944a |
+| Aksen marka/forklift | #f5c542 |
 | Teks UI | --cw-ink: #263750 |
 | Metadata UI | --cw-muted: #74839b |
 | Garis | --cw-line: #e4eaf4 |
 | Kartu putih transparan | --cw-card: rgba(255,255,255,.94) |
 
-Sumber aktual: world-objects.ts dan world.css. Palet literal Three.js merupakan palet dunia; jangan memakainya untuk mengganti token semua halaman. Bila pemilik mengubah palet, ubah sumber dan tabel ini bersama.
+Sumber aktual: objects/primitives.ts (palet), lighting.ts (cahaya per jam/cuaca) dan world.css. Palet literal Three.js merupakan palet dunia; jangan memakainya untuk mengganti token semua halaman. Bila pemilik mengubah palet, ubah sumber dan tabel ini bersama.
 
 ## Komposisi kartu seperti video
 
@@ -82,7 +84,7 @@ Prioritas global: rapat → jurnal hari ini → tugas proses → idle. Mode prat
 
 Cuaca manual cerah/berawan/hujan. Hujan memakai partikel garis exterior; cuaca memengaruhi latar dan intensitas cahaya. Pencahayaan pagi/siang/senja/malam atau otomatis WIB. Jam UI tetap WIB aktual meskipun cahaya manual. Jam diperbarui setiap 60 detik; tick tidak membangun ulang geometri/kamera.
 
-Preferensi {version:1, weather, time, outfit} divalidasi worldPreferencesSchema dan disimpan usePreference dengan key hub-world-preferences-v1. Nilai korup kembali ke default. Penyimpanan lokal perangkat, belum antarperangkat. Reduced-motion menghentikan gerakan periodik karakter/hujan dan animasi CSS.
+Preferensi {version:1, weather, time, outfit, quality} divalidasi worldPreferencesSchema dan disimpan usePreference dengan key hub-world-preferences-v1. Nilai korup kembali ke default. Penyimpanan lokal perangkat, belum antarperangkat. Reduced-motion menghentikan gerakan periodik karakter/hujan dan animasi CSS.
 
 ## Berkas dan backend
 
@@ -92,8 +94,12 @@ Semua berkas dunia berada pada src/features/cooperative-world/:
 |---|---|
 | CooperativeWorld.tsx | Kartu, dock, scene/detail, preferensi dan pintasan |
 | WorldScene.tsx | WebGL, kamera, raycast, proyeksi penanda, animasi, disposal |
-| world-objects.ts | Mesh lingkungan, gedung, perabot, karakter dan gerakan |
-| world-model.ts | Adapter data, tujuh slot, stasiun, prioritas aktivitas, Zod, jam WIB |
+| layout.ts | Koordinat lahan, kantor, stasiun interior, posisi karakter, bidang pandang kamera |
+| objects/primitives.ts | Palet dan bentuk dasar; geometri/material dipakai bersama lalu dibuang saat scene dibongkar |
+| objects/props.ts, office.ts, exterior.ts, characters.ts | Perabot, gedung/interior, kawasan, maskot dan gerakan |
+| lighting.ts | Fungsi murni pencahayaan pagi/siang/senja/malam dan cuaca |
+| render-quality.ts | Tingkat kualitas Tinggi/Sedang/Hemat dan deteksi perangkat |
+| world-model.ts | Adapter data, tujuh slot, prioritas aktivitas, Zod preferensi, jam WIB |
 | world.css | Style dunia dan breakpoint |
 
 Integrasi melalui WorkspacePage/useWorkspace, workspace-scope, catalog dan AppShell. Domain yang dimuat: organization, workstreams, units, work-items, meetings, journal. /dev/dunia-koperasi hanya development dan memakai workspace kosong tanpa database.
@@ -111,7 +117,7 @@ Paket berikut dimulai dari terang/kontrol waktu/perluasan map sesuai rencana di 
 ## Cara AI berikutnya meningkatkan lingkungan
 
 1. Periksa Git, dokumen ini, screenshot terbaru dan kode; pertahankan perubahan pemilik.
-2. Untuk gedung/perabot/karakter, ubah fungsi mesh world-objects.ts. Pertahankan ID klik, ukuran relatif dan skala dunia.
+2. Untuk gedung/perabot/karakter, ubah fungsi mesh di objects/; koordinat di layout.ts. Pertahankan ID klik, ukuran relatif dan skala dunia.
 3. Untuk UI, ubah world.css/CooperativeWorld.tsx. Pertahankan komposisi video, ketajaman teks, data asli dan kontrol sentuh.
 4. Aturan gerai/aktivitas di adapter dengan tes; simulasi tidak boleh menjadi data operasional.
 5. Layout permanen, editor lingkungan, suplier/pengiriman, kendaraan dan karakter pegawai memerlukan kontrak data tersendiri. Skema harus kompatibel; migrasi cloud mengikuti persetujuan pengguna.
