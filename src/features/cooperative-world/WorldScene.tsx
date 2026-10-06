@@ -34,8 +34,9 @@ import {
   type WorldPreferences,
 } from './world-model';
 import { createWarehouseInterior } from './objects/warehouse-interior';
-import { createNpcs, updateNpcs } from './npc/movement';
-import { npcActivityNames, type NpcPlan } from './npc/schedule';
+import { briefingSpot, createNpcs, updateNpcs, walkToward } from './npc/movement';
+import { npcActivityNames, type ManagerPlan, type NpcPlan } from './npc/schedule';
+import type { CharacterPose } from './objects/characters';
 import { createAmbientCars, createTrucks, truckPose, type AmbientCar } from './objects/vehicles';
 
 type Props = {
@@ -61,6 +62,9 @@ type Props = {
   bubble: string;
   /** Rencana kegiatan karakter Tim (dihitung ulang tiap menit tanpa membangun ulang scene). */
   plans: NpcPlan[];
+  managerPlan: ManagerPlan;
+  /** Bubble maskot tampil otomatis sesekali (selain saat maskot dipilih). */
+  bubbleOpen: boolean;
   onSelect: (id: string) => void;
 };
 export function WorldScene({
@@ -79,6 +83,8 @@ export function WorldScene({
   selected,
   bubble,
   plans,
+  managerPlan,
+  bubbleOpen,
   onSelect,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
@@ -94,9 +100,11 @@ export function WorldScene({
   } | null>(null);
   const motion = useRef({ activity, weather, hour });
   const npcPlans = useRef(plans);
+  const bossPlan = useRef(managerPlan);
   useEffect(() => {
     npcPlans.current = plans;
-  }, [plans]);
+    bossPlan.current = managerPlan;
+  }, [plans, managerPlan]);
   const selectAction = useRef(onSelect);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -351,25 +359,48 @@ export function WorldScene({
       sun.intensity = light.sun;
       sun.color.set(light.sunColor);
       renderer.toneMappingExposure = light.exposure;
-      // Manajer di kantor menempati tempat sesuai aktivitas: kepala meja rapat, meja manajer, gym.
+      // Manajer: rapat/gym dari aktivitas; selain itu mengikuti rencana (briefing, meja staf, dok).
+      const boss = bossPlan.current;
+      const [rx, rz] = officeInterior.manager;
+      let goal: [number, number, number, CharacterPose] = [
+        rx + 1.4,
+        rz + 1.6,
+        Math.PI * 0.85,
+        'idle',
+      ];
       if (location === 'dalam') {
         const [mx, mz] = officeInterior.meeting;
-        const [rx, rz] = officeInterior.manager;
         const [gx, gz] = officeInterior.gym;
-        const place =
-          state.activity === 'meeting'
-            ? ([mx - 2.5, mz, Math.PI / 2, 'meeting'] as const)
-            : state.activity === 'work'
-              ? ([rx, rz + 1, Math.PI, 'desk'] as const)
-              : state.activity === 'gym'
-                ? ([gx - 1.2, gz + 0.1, Math.PI, 'gym'] as const)
-                : ([rx + 1.4, rz + 1.6, Math.PI * 0.85, 'idle'] as const);
-        manager.base.set(place[0], 0.1 + (place[3] === 'gym' ? 0.2 : 0), place[1]);
-        manager.group.rotation.y = place[2];
-        animateCharacter(manager, elapsed, place[3], reduced.matches);
-      } else animateCharacter(manager, elapsed, 'idle', reduced.matches);
+        const visit =
+          boss.kind === 'meja-staf'
+            ? npcs.find((actor) => actor.id === boss.staffId && actor.character.group.visible)
+            : undefined;
+        if (state.activity === 'meeting') goal = [mx - 2.5, mz, Math.PI / 2, 'meeting'];
+        else if (state.activity === 'gym') goal = [gx - 1.2, gz + 0.1, Math.PI, 'gym'];
+        else if (boss.kind === 'briefing')
+          goal = [briefingSpot.manager[0], briefingSpot.manager[1], 0, 'idle'];
+        else if (visit) {
+          const { x, z } = visit.character.base;
+          goal = [x + 0.9, z + 0.7, Math.atan2(-0.9, -0.7), 'idle'];
+        } else if (state.activity === 'work') goal = [rx, rz + 1, Math.PI, 'desk'];
+      } else if (location === 'luar') {
+        const front = warehouse.center[1] + warehouse.size[2] / 2;
+        goal =
+          boss.kind === 'dok'
+            ? [warehouse.docks[0] - 2.4, front + 1.6, Math.PI / 2, 'idle']
+            : [spots[0][0], spots[0][2], 0, 'idle'];
+      } else {
+        const [sx, sz] = warehouseInterior.staging;
+        goal = [sx + 2.4, sz - 1, -Math.PI / 2, 'idle'];
+      }
+      if (npcSnap || reduced.matches) manager.base.set(goal[0], manager.base.y, goal[1]);
+      const arrived =
+        npcSnap || reduced.matches || walkToward(manager, goal[0], goal[1], Math.min(delta, 0.25));
+      if (arrived) manager.group.rotation.y = goal[2];
+      manager.base.y = arrived && goal[3] === 'gym' ? 0.3 : 0.1;
+      animateCharacter(manager, elapsed, arrived ? goal[3] : 'walk', reduced.matches);
       positions.set('karakter', manager.group.position.clone().add(new THREE.Vector3(0, 2.4, 0)));
-      updateNpcs(
+      const chatting = updateNpcs(
         npcs,
         npcPlans.current,
         location,
@@ -380,6 +411,10 @@ export function WorldScene({
         npcSnap,
       );
       npcSnap = false;
+      for (const actor of npcs)
+        markerRefs.current
+          .get(`staf-${actor.id}`)
+          ?.classList.toggle('is-chatting', chatting.has(actor.id));
       for (const actor of npcs)
         if (actor.character.group.visible)
           positions.set(
@@ -629,7 +664,7 @@ export function WorldScene({
             if (node) markerRefs.current.set('karakter', node);
           }}
         >
-          {selected === 'karakter' && (
+          {(selected === 'karakter' || bubbleOpen) && (
             <div className="cw-speech" role="status">
               {bubble}
             </div>

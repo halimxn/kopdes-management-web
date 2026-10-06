@@ -1,5 +1,12 @@
 # Changelog
 
+## Paket 8 — manajer dan interaksi karakter — 6 Oktober 2026
+
+- Briefing pagi 15 menit, manajer berjalan ke meja staf dengan tugas lewat tenggat atau ke dok saat truk tiba (fungsi murni teruji).
+- Karakter keliling yang berpapasan berhenti mengobrol dengan bubble; staf bongkar muat membawa kardus; bubble maskot otomatis sesekali dari data.
+- Skill proyek Claude Code di .claude/skills (hemat-token, dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code).
+- 290 tes/45 berkas, typecheck, lint dan build lulus. Diperiksa di browser dengan contoh: interior kantor 1280 px (manajer di meja staf, nama karakter). Interaksi berpapasan hanya diuji lewat logika, belum direkam.
+
 ## Paket 7 — kantor bersekat dan karakter Tim — 6 Oktober 2026
 
 - Interior kantor 22 × 15 dengan ruang rapat, ruang manajer, lima meja seksi berpapan nama, pantry, arsip dan area kegiatan.

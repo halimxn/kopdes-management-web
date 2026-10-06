@@ -10,7 +10,7 @@ import {
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
 import { dayPhase, getLighting } from '@/features/cooperative-world/lighting';
-import { planStaff } from '@/features/cooperative-world/npc/schedule';
+import { planManager, planStaff } from '@/features/cooperative-world/npc/schedule';
 import {
   detectQualityTier,
   qualitySettings,
@@ -232,5 +232,40 @@ describe('jadwal karakter tim', () => {
   });
   it('staf nonaktif tidak digambar', () => {
     expect(planStaff([staff('Fajar', { status: 'nonaktif' })], empty, at10)).toHaveLength(0);
+  });
+});
+
+describe('briefing dan rencana manajer', () => {
+  const staff = (id: string, extra: Record<string, unknown> = {}) =>
+    row(id, { title: id, status: 'aktif', work_hours: '08:00-16:00', ...extra });
+  it('15 menit pertama jam kerja staf kantor ikut briefing, staf gudang tidak', () => {
+    // 08:05 WIB
+    const plans = planStaff(
+      [staff('Ani'), staff('Dodi', { workplace: 'gudang' })],
+      { tasks: [], deliveries: [] },
+      new Date('2026-10-06T01:05:00Z'),
+    );
+    expect(plans[0].activity).toBe('briefing');
+    expect(plans[1].activity).not.toBe('briefing');
+    expect(planManager(plans, { tasks: [], deliveries: [] }, new Date(), '2026-10-06').kind).toBe(
+      'briefing',
+    );
+  });
+  it('manajer mendatangi meja staf dengan tugas lewat tenggat, lalu dok, lalu ruangannya', () => {
+    const at10 = new Date('2026-10-06T03:00:00Z');
+    const plans = planStaff([staff('Citra')], { tasks: [], deliveries: [] }, at10).map((plan) => ({
+      ...plan,
+      activity: 'kerja' as const,
+    }));
+    const late = [row('t', { title: 'Susun rak', due_date: '2026-10-01', assignee: 'Citra' })];
+    const visit = planManager(plans, { tasks: late, deliveries: [] }, at10, '2026-10-06');
+    expect(visit).toMatchObject({ kind: 'meja-staf', staffId: 'Citra' });
+    const dock = [row('d', { title: 'Kiriman', direction: 'masuk', status: 'tiba' })];
+    expect(planManager(plans, { tasks: [], deliveries: dock }, at10, '2026-10-06').kind).toBe(
+      'dok',
+    );
+    expect(planManager(plans, { tasks: [], deliveries: [] }, at10, '2026-10-06').kind).toBe(
+      'ruang',
+    );
   });
 });

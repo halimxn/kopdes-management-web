@@ -1,7 +1,8 @@
 import type { Item } from '../../records/schemas';
 import type { WorldLocation } from '../world-model';
 
-export type NpcActivity = 'rapat' | 'bongkar' | 'kerja' | 'istirahat' | 'keliling' | 'pulang';
+export type NpcActivity =
+  'rapat' | 'briefing' | 'bongkar' | 'kerja' | 'istirahat' | 'keliling' | 'pulang';
 export type NpcPlan = {
   staff: Item;
   activity: NpcActivity;
@@ -13,6 +14,7 @@ export type NpcPlan = {
 
 export const npcActivityNames: Record<NpcActivity, string> = {
   rapat: 'Ikut rapat',
+  briefing: 'Briefing pagi',
   bongkar: 'Bongkar muat',
   kerja: 'Bekerja di meja',
   istirahat: 'Istirahat',
@@ -79,6 +81,14 @@ export function planStaff(
           location: null,
           reason: `Jam kerja ${start}–${end}`,
         };
+      // 15 menit pertama jam kerja: staf kantor berkumpul untuk briefing singkat dengan manajer.
+      if (workplace === 'kantor' && minutes < minutesOf(start) + 15)
+        return {
+          staff: row,
+          activity: 'briefing',
+          location: 'dalam',
+          reason: `Briefing awal jam kerja ${start}`,
+        };
       if (atDock && row.data.section === 'gudang & logistik')
         return {
           staff: row,
@@ -109,4 +119,52 @@ export function planStaff(
         ? { staff: row, activity: 'keliling', location: home, reason: 'Keliling di jam kerja' }
         : { staff: row, activity: 'kerja', location: home, reason: 'Jam kerja' };
     });
+}
+
+export type ManagerPlan =
+  | { kind: 'briefing'; reason: string }
+  | { kind: 'meja-staf'; staffId: string; reason: string }
+  | { kind: 'dok'; reason: string }
+  | { kind: 'ruang'; reason: string };
+
+/**
+ * Manajer: memimpin briefing; bila ada tugas lewat tenggat milik staf yang sedang di meja,
+ * mendatangi meja itu bergiliran tiap 10 menit; bila truk di dok, menuju dok; selain itu di ruangannya.
+ */
+export function planManager(
+  plans: NpcPlan[],
+  context: { tasks: Item[]; deliveries: Item[] },
+  now: Date,
+  today: string,
+): ManagerPlan {
+  if (plans.some((plan) => plan.activity === 'briefing'))
+    return { kind: 'briefing', reason: 'Memimpin briefing pagi' };
+  const late = plans
+    .filter((plan) => plan.activity === 'kerja' && plan.location === 'dalam')
+    .map((plan) => ({
+      plan,
+      task: context.tasks.find(
+        (task) =>
+          task.data.due_date &&
+          String(task.data.due_date) < today &&
+          nameIn(task.data.assignee, String(plan.staff.data.title)),
+      ),
+    }))
+    .filter((entry) => entry.task);
+  if (late.length) {
+    const pick = late[Math.floor(jakartaMinutes(now) / 10) % late.length];
+    return {
+      kind: 'meja-staf',
+      staffId: pick.plan.staff.id,
+      reason: `Cek tugas lewat tenggat: ${pick.task?.data.title}`,
+    };
+  }
+  if (
+    context.deliveries.some(
+      (row) =>
+        row.data.direction !== 'keluar' && ['tiba', 'diperiksa'].includes(String(row.data.status)),
+    )
+  )
+    return { kind: 'dok', reason: 'Memeriksa truk di dok' };
+  return { kind: 'ruang', reason: 'Di ruang manajer' };
 }

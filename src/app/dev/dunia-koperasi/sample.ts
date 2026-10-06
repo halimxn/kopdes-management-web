@@ -48,7 +48,7 @@ export function sampleWorkspace(): Workspace {
         due_date: date,
         assignee: 'Contoh Budi',
       }),
-      row('task-2', { title: 'Contoh susun rak B', status: 'rencana', due_date: '2026-10-01' }),
+      row('task-2', { title: 'Contoh susun rak B', status: 'rencana', due_date: '2026-10-01', assignee: 'Contoh Citra' }),
     ],
     staff: [
       row('st-1', {

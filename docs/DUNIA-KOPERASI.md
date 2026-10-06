@@ -95,6 +95,9 @@ Belum tersedia drag/editor lahan.
 - `npc/schedule.ts` (teruji): rapat berlangsung (nama di peserta; peserta kosong → staf kantor) → bongkar muat untuk seksi gudang & logistik saat truk di dok → tugas berstatus proses yang menyebut nama → istirahat 12:00–13:00 → di jam kerja kerja di meja atau keliling bergiliran 15 menit → di luar jam kerja tidak digambar. Lokasi: kantor, gudang (tempat kerja gudang/bongkar), atau depan lahan gerainya.
 - `npc/movement.ts`: karakter berjalan ke kursi rapat, kursi meja seksi (dua kursi, berikutnya berdiri), pantry, staging gudang atau lahan gerai, lalu duduk/bekerja; keliling memakai lorong kantor. Rencana dihitung ulang tiap menit tanpa membangun ulang scene; gerak minimal menaruh karakter langsung di tujuan.
 - Maskot manajer di kantor: kepala meja rapat saat rapat, meja manajer saat tugas proses, gym saat kegiatan hari ini, selain itu di ruang manajer. Maskot dekoratif lama dihapus.
+- Paket 8: 15 menit pertama jam kerja staf kantor **briefing** berbaris di lorong menghadap manajer. `planManager` (teruji): briefing → mendatangi meja staf yang punya tugas lewat tenggat (bergiliran 10 menit) → ke halaman dok bila truk di dok (kawasan) → ruang manajer. Manajer berjalan ke tujuan; rapat/kegiatan tetap didahulukan.
+- Dua karakter keliling yang berpapasan berhenti 3 detik, saling menghadap, bubble "…" di penanda; jeda 20 detik sebelum mengobrol lagi; mati saat reduced-motion. Staf bongkar muat membawa kardus.
+- Bubble maskot muncul otomatis 7 detik tiap 2,5 menit berisi alasan rencana manajer atau ringkasan data; tidak saat reduced-motion, memuat/galat, atau pratinjau gerakan.
 - Penanda nama karakter (area sentuh 44 px) dan tab **Tim** di kartu Daftar; kartu karakter menampilkan kegiatan, alasan dari catatan, tempat dan jam kerja, dengan keterangan "Visualisasi jadwal/tugas, bukan kehadiran".
 
 ## Interior dan karakter

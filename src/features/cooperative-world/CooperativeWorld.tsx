@@ -38,7 +38,8 @@ import {
 import { warehouseInterior, worldStations, worldZones, type WorldZone } from './layout';
 import { dayPhase } from './lighting';
 import { WorldHeader } from './ui/WorldHeader';
-import { planStaff } from './npc/schedule';
+import { planManager, planStaff } from './npc/schedule';
+import { today } from '@/lib/date';
 import { KpiCards } from './ui/KpiCards';
 import { DetailCard, activityNames, type StockState } from './ui/DetailCard';
 import { ListCard } from './ui/ListCard';
@@ -126,6 +127,25 @@ export function CooperativeWorld({
       ),
     [model, now],
   );
+  const managerPlan = useMemo(
+    () => planManager(plans, { tasks: model.tasks, deliveries: model.deliveries }, now, today(now)),
+    [plans, model, now],
+  );
+  // Bubble maskot muncul sendiri 7 detik setiap 2,5 menit; tidak saat gerak minimal atau tanpa data.
+  const [bubbleOpen, setBubbleOpen] = useState(false);
+  const quietBubble = loading || Boolean(error) || rehearsal !== 'otomatis';
+  useEffect(() => {
+    if (quietBubble || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let hide = 0;
+    const show = window.setInterval(() => {
+      setBubbleOpen(true);
+      hide = window.setTimeout(() => setBubbleOpen(false), 7000);
+    }, 150000);
+    return () => {
+      clearInterval(show);
+      clearTimeout(hide);
+    };
+  }, [quietBubble]);
   const hour = getWorldHour(preferences.time, now);
   const night = dayPhase(hour) === 'malam';
   const activity = rehearsal === 'otomatis' ? model.activity : rehearsal;
@@ -173,11 +193,13 @@ export function CooperativeWorld({
   const bubble =
     rehearsal !== 'otomatis'
       ? `Pratinjau animasi: ${activityNames[activity].toLowerCase()}.`
-      : model.currentMeeting
-        ? `Ada rapat: ${String(model.currentMeeting.data.title)}.`
-        : model.tasks.length
-          ? `${model.tasks.length} tugas masih terbuka. Mari lihat meja tugas!`
-          : 'Klik gedung koperasi untuk masuk. Kita bisa melihat ruang rapat dan meja tugas!';
+      : managerPlan.kind !== 'ruang'
+        ? `${managerPlan.reason}.`
+        : model.currentMeeting
+          ? `Ada rapat: ${String(model.currentMeeting.data.title)}.`
+          : model.tasks.length
+            ? `${model.tasks.length} tugas masih terbuka. Mari lihat meja tugas!`
+            : 'Klik gedung koperasi untuk masuk. Kita bisa melihat ruang rapat dan meja tugas!';
   const status: { label: string; tone: 'green' | 'muted' | 'red' } = preview
     ? { label: 'Pratinjau desain', tone: 'muted' }
     : error
@@ -352,6 +374,8 @@ export function CooperativeWorld({
           selected={selected}
           bubble={bubble}
           plans={plans}
+          managerPlan={managerPlan}
+          bubbleOpen={bubbleOpen && !quietBubble}
           onSelect={select}
         />
         <KpiCards
