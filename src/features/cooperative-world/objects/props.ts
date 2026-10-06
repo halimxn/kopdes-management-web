@@ -1,15 +1,59 @@
 import * as THREE from 'three';
 import { box, cone, cylinder, palette, sphere } from './primitives';
 
-/** Pohon bulat ala video: batang cokelat tipis, tajuk hijau jenuh dengan sorot terang. */
+/** Pohon bulat voxel bergaya diorama: batang kayu cokelat, tajuk daun kubus bertingkat (clustered voxel foliage). */
 export function tree(parent: THREE.Object3D, x: number, z: number, scale = 1) {
   const group = new THREE.Group();
   group.position.set(x, 0, z);
   group.scale.setScalar(scale);
   parent.add(group);
-  cylinder(group, 0.07, 1.1, [0, 0.55, 0], palette.trunk);
-  sphere(group, 0.62, [0, 1.75, 0], palette.green, [0.92, 1.18, 0.92]);
-  sphere(group, 0.34, [-0.22, 1.98, 0.2], palette.greenLight);
+  // Batang pohon silinder
+  cylinder(group, 0.1, 1.2, [0, 0.6, 0], '#855127');
+  // Mahkota daun bertingkat kubik bersudut halus (voxel foliage cluster)
+  box(group, [1.4, 0.75, 1.4], [0, 1.55, 0], '#22c55e', 0.14);
+  box(group, [1.6, 0.65, 1.15], [0, 1.6, 0], '#16a34a', 0.12);
+  box(group, [1.15, 0.65, 1.6], [0, 1.6, 0], '#16a34a', 0.12);
+  box(group, [1.15, 0.7, 1.15], [0, 2.2, 0], '#22c55e', 0.12);
+  box(group, [0.75, 0.5, 0.75], [-0.25, 2.3, 0.25], '#4ade80', 0.08);
+  box(group, [0.65, 0.6, 0.65], [0, 2.7, 0], '#4ade80', 0.08);
+}
+
+/** Rumah pedesaan atap genteng terakota (sesuai gambar referensi). */
+export function villageHouse(
+  parent: THREE.Object3D,
+  x: number,
+  z: number,
+  rotation = 0,
+  scale = 1,
+) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotation;
+  g.scale.setScalar(scale);
+  parent.add(g);
+  // Dinding krem kayu
+  box(g, [4.2, 2.6, 3.4], [0, 1.3, 0], '#fef3c7', 0.08);
+  // Lis talang & atap pelana genteng terakota
+  box(g, [4.6, 0.25, 3.8], [0, 2.65, 0], '#b45309', 0.04);
+  const r1 = new THREE.Group();
+  r1.position.set(0, 2.7, -0.9);
+  r1.rotation.x = 0.52;
+  g.add(r1);
+  box(r1, [4.7, 0.18, 2.1], [0, 0.45, 0], '#c25e38', 0.04);
+
+  const r2 = new THREE.Group();
+  r2.position.set(0, 2.7, 0.9);
+  r2.rotation.x = -0.52;
+  g.add(r2);
+  box(r2, [4.7, 0.18, 2.1], [0, 0.45, 0], '#c25e38', 0.04);
+
+  // Cerobong asap
+  box(g, [0.45, 1.1, 0.45], [1.2, 3.3, 0.5], '#78350f', 0.04);
+  // Pintu kayu & jendela berbingkai putih
+  box(g, [0.8, 1.4, 0.06], [-0.8, 0.7, 1.73], '#b45309', 0);
+  box(g, [0.9, 0.9, 0.06], [0.9, 1.4, 1.73], '#93c5fd', 0);
+  box(g, [0.06, 0.9, 0.08], [0.9, 1.4, 1.74], '#ffffff', 0);
+  box(g, [0.9, 0.06, 0.08], [0.9, 1.4, 1.74], '#ffffff', 0);
 }
 export function bench(parent: THREE.Object3D, x: number, z: number) {
   for (const offset of [-0.6, 0.6])

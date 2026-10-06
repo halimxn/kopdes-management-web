@@ -8,13 +8,22 @@ Rencana Dunia Koperasi v2 disetujui pemilik 6 Oktober 2026 dan disimpan di DUNIA
 
 Dunia Koperasi mengikuti video pengguna: 3D isometrik biru-putih, kartu mengambang, kantor/interior, tujuh lahan gerai, maskot animatif/bubble, cuaca dan waktu. Panduan telah diringkas, konflik lingkup tema diperjelas, referensi video/interior disimpan di docs/referensi-dunia agar dapat dibaca AI berikutnya.
 
-## Distrik Mini Kompak & 3D Pixel Downsampling (6 Oktober, sesi /grill-me pemilik)
+## Aset Nyata & Diorama Komplek Terpadu (Cozy Village Co-op Compound) — 6 Oktober 2026
 
-Selesai lokal (belum di-push): menindaklanjuti keluhan pemilik bahwa peta terlalu luas dan memberatkan komputer:
-1. **Denah Distrik Mini Kompak**: Jalan diringkas menjadi 1 perempatan ringkas (`Jalan Raya` × `Jalan Koperasi`) yang menghubungkan 4 kavling aktif (Logistik, Administrasi, Kesehatan, Niaga). Empat jalan luar, 16 blok kota latar belakang, dan 6 petak lahan kosong 128m dihapus. Ukuran bounds berkurang dari 160×120 menjadi 65×55 unit scene (>70% pengurangan geometri luar).
-2. **Kunci Penuh Mode Retro Piksel (Permanen)**: WebGL internal canvas di-downsample (skala 0.5x Tinggi, 0.4x Sedang, 0.33x Hemat) lalu di-upscale tajam secara crisp dengan CSS `image-rendering: pixelated; crisp-edges`.
-3. **Optimasi Performa Ringan**: GTAOPass (ambient occlusion multi-pass berat) dinonaktifkan total, bayangan dioptimasi ke `BasicShadowMap 512` yang retro tajam, ukuran lantai dipangkas ke 360×360, dan fog dirapatkan ke 85–140.
-4. **Verifikasi**: 304 tes Vitest lulus (45 berkas, 100%), typecheck 0 error, lint 0 error, build Next.js lulus dalam 7.8s. Pengujian browser subagent mengonfirmasi tampilan retro piksel tajam, transisi kamera zona mulus, 0 console error/warning, dan frame rate stabil/ringan.
+Selesai lokal (berdasarkan instruksi langsung pemilik "buat cozy sperti ini, jangan pecah2 grafik nya, buatkan dulu asetnya seperti apa real nyasample dulu agar dapat gambaran"):
+1. **Grafik Bersih & Halus (Tanpa Downsampling / Pecah-pecah)**:
+   - Pixelated downsampling dinonaktifkan total: `downsampleScale` dikembalikan ke `1`, `pixelRatio` ke native device (1.5x - 2x) dengan `antialias: true` dan `PCFSoftShadowMap`.
+   - `world.css` dibersihkan dari `image-rendering: pixelated; crisp-edges` sehingga garis, teks, dan bayangan 3D tampil bersih, mulus, dan tajam di semua layar.
+2. **Aset Nyata Sesuai Gambar Referensi Pemilik**:
+   - **Gudang WH-04 (Co-op Logistics Depot)**: Plang atap 3D besar `"CO-OP LOGISTICS DEPOT"`, tulisan dinding `"WAREHOUSE WH-04"`, kanopi miring berpenyangga besi diagonal di atas pintu dok, garis serong hazard kuning-hitam di lantai dok, dok D1 & D2 terbuka berisi palet, dok D3 rolling shutter tertutup, dan deretan jendela kisi clerestory horizontal.
+   - **Kantor Koperasi HQ (Rural Cooperative HQ)**: Gedung 2 lantai dengan dinding kayu hangat (*timber slats*), lis beton putih pemisah lantai 1 & 2, papan nama horizontal gelap `"RURAL COOPERATIVE HQ"`, pita jendela kaca horizontal membentang, pot tanaman hijau, dan taman bunga berbingkai beton di depan kantor.
+   - **Pohon Voxel Bertingkat**: Tajuk daun kubus bertingkat (*clustered voxel foliage*) dengan tiga gradasi hijau alami dan batang silinder kayu.
+   - **Rumah Pedesaan (Village House)**: Atap pelana genteng terakota, cerobong asap bata, dinding krem kayu, pintu dan jendela kaca berbingkai putih.
+3. **Sample Diorama Komplek Terpadu (`/dev/dunia-koperasi/aset`)**:
+   - Menghadirkan visualisasi nyata komplek satu kavling berpagar: Gudang WH-04 berdampingan langsung dengan Kantor Koperasi HQ di halaman yang sama, truk CO-OP bersandar di dok D2, truk pickup di parkir, forklift aktif membawa palet, tumpukan kardus & kontainer, pohon voxel berjajar, pagar keliling berpos gerbang, jalan raya beraspal dengan marka garis putus-putus dan trotoar, serta rumah-rumah pedesaan di seberang jalan.
+4. **Verifikasi Kualitas & Stabilitas**:
+   - 304 tes Vitest lulus (45 berkas, 100%), typecheck 0 error, lint 0 error.
+   - Tangkapan layar visual browser mengonfirmasi rendering tajam anti-aliased tanpa jagged pixels.
 
 ## Blueprint visual v3 (6 Oktober, arahan pemilik: semirip mungkin dengan video)
 

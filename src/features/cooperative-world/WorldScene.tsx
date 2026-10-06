@@ -165,7 +165,7 @@ export function WorldScene({
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: false,
+        antialias: settings.antialias,
         alpha: false,
         powerPreference: 'high-performance',
         // Hanya development: tangkapan layar QA dapat membaca isi kanvas.
@@ -175,16 +175,13 @@ export function WorldScene({
       const failureFrame = requestAnimationFrame(() => setFailed(true));
       return () => cancelAnimationFrame(failureFrame);
     }
-    renderer.setPixelRatio(1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, settings.pixelRatio));
     renderer.shadowMap.enabled = settings.shadows;
-    renderer.shadowMap.type = THREE.BasicShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     // Neutral menjaga rona biru-pastel video; ACES memudarkan warna ke abu-abu.
     renderer.toneMapping = THREE.NeutralToneMapping;
     renderer.toneMappingExposure = 1.25;
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-    renderer.domElement.style.imageRendering = 'pixelated';
     renderer.domElement.setAttribute(
       'aria-label',
       location === 'luar'
@@ -406,15 +403,9 @@ export function WorldScene({
     const resize = () => {
       const { width, height } = node.getBoundingClientRect();
       if (!width || !height) return;
-      const scale = settings.downsampleScale ?? 0.5;
-      const renderW = Math.max(320, Math.floor(width * scale));
-      const renderH = Math.max(180, Math.floor(height * scale));
-      renderer.setPixelRatio(1);
-      renderer.setSize(renderW, renderH, false);
-      renderer.domElement.style.width = '100%';
-      renderer.domElement.style.height = '100%';
-      renderer.domElement.style.imageRendering = 'pixelated';
-      composer?.setSize(renderW, renderH);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, settings.pixelRatio));
+      renderer.setSize(width, height);
+      composer?.setSize(width, height);
       const aspect = width / height;
       const span = cameraSpan[roomKind(location)][aspect < 1 ? 'portrait' : 'landscape'];
       const cover = covered.current;

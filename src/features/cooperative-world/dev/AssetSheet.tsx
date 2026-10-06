@@ -15,19 +15,133 @@ import {
 } from '../objects/district-buildings';
 
 const find = (id: string) => allBuildings().find((b) => b.id === id)!;
-import { disposeSharedResources, mergeStatic, palette } from '../objects/primitives';
-import { cardboardPallet, container, dropPin, forklift, palletRack, tree } from '../objects/props';
+import { box, disposeSharedResources, mergeStatic, palette } from '../objects/primitives';
+import {
+  cardboardPallet,
+  container,
+  dropPin,
+  fence,
+  forklift,
+  palletRack,
+  tree,
+  villageHouse,
+} from '../objects/props';
 import { createRoute } from '../objects/route';
 import { truck, truckSchemes } from '../objects/vehicles';
 import { createWarehouse } from '../objects/warehouse';
 
-type Cell = { title: string; note: string; build: (parent: THREE.Group) => void; wide?: boolean };
+type Cell = {
+  title: string;
+  note: string;
+  build: (parent: THREE.Group) => void;
+  wide?: boolean;
+  hero?: boolean;
+};
+
+/**
+ * Membangun komplek terpadu sesuai gambar referensi:
+ * Gudang WH-04 & Kantor Koperasi dalam satu halaman berpagar, truk di dok, forklift,
+ * pohon voxel bertingkat, jalan raya depan, dan rumah pedesaan seberang.
+ */
+function buildCozyCompoundSample(parent: THREE.Group) {
+  // 1. Lahan halaman kavling & rumput sekeliling
+  box(parent, [56, 0.1, 46], [0, -0.05, 5], '#bbf7d0', 0);
+  box(parent, [48, 0.12, 28], [-1, 0.05, -3], '#e2e8f0', 0.04);
+  box(parent, [28, 0.14, 12], [-10, 0.06, 0], '#cbd5e1', 0.02);
+
+  // 2. Pagar keliling komplek dengan bukaan gerbang
+  fence(parent, [-25, -17], [23, -17]);
+  fence(parent, [-25, -17], [-25, 11]);
+  fence(parent, [23, -17], [23, 11]);
+  fence(parent, [-25, 11], [-8, 11]);
+  fence(parent, [0, 11], [23, 11]);
+  box(parent, [0.35, 2.2, 0.35], [-8, 1.1, 11], '#475569', 0.04);
+  box(parent, [0.35, 2.2, 0.35], [0, 1.1, 11], '#475569', 0.04);
+
+  // 3. Gudang WH-04 di sisi kiri
+  const wh = createWarehouse(parent);
+  wh.position.set(-11, 0, -6);
+
+  // 4. Kantor Koperasi HQ (Rural Cooperative HQ) di sisi kanan
+  const office = officeBuilding(parent, find('kantor'));
+  office.position.set(13, 0, -2);
+
+  // 5. Truk logistik CO-OP terparkir di Dok 2
+  const d2X = -11 + (warehouse.docks[1] - warehouse.center[0]);
+  const truck1 = truck(parent, 'sample-truck-1', 'aset', truckSchemes[0]);
+  truck1.position.set(d2X, 0, 1.6);
+  truck1.rotation.y = Math.PI;
+
+  // Truk logistik 2 di area parkir samping
+  const truck2 = truck(parent, 'sample-truck-2', 'aset', truckSchemes[1]);
+  truck2.position.set(13, 0, 7.5);
+  truck2.rotation.y = -Math.PI / 2;
+  truck2.scale.setScalar(0.85);
+
+  // 6. Forklift membawa palet kardus
+  forklift(parent, 1.8, 0, 1.5, 'kardus');
+
+  // 7. Palet dan kontainer di sudut halaman
+  cardboardPallet(parent, -22, -2, 3);
+  cardboardPallet(parent, -22, 0.5, 2, true);
+  container(parent, -21.5, 5);
+
+  // 8. Pohon-pohon voxel bertingkat
+  tree(parent, -23.5, -15, 1.25);
+  tree(parent, -15, -15.5, 1.1);
+  tree(parent, 1, -15.5, 1.3);
+  tree(parent, 18, -15.5, 1.15);
+  tree(parent, 21.5, -10, 1.2);
+  tree(parent, 21.5, 3, 1.0);
+  tree(parent, 21.5, 9, 1.15);
+  tree(parent, -23.5, -8, 1.1);
+  tree(parent, -23.5, 2, 1.2);
+
+  // 9. Jalan raya depan, marka, dan trotoar
+  box(parent, [56, 0.22, 2.4], [0, 0.05, 12.2], '#e2e8f0', 0.04);
+  box(parent, [56, 0.16, 8.5], [0, 0.02, 17.65], '#334155', 0);
+  for (let rx = -25; rx <= 25; rx += 4.5) {
+    box(parent, [2.4, 0.02, 0.28], [rx, 0.11, 17.65], '#f8fafc', 0);
+  }
+  box(parent, [56, 0.22, 2.4], [0, 0.05, 23.1], '#e2e8f0', 0.04);
+
+  // 10. Rumah pedesaan (Village Houses) di seberang jalan
+  villageHouse(parent, -13, 29, 0, 1.05);
+  villageHouse(parent, 14, 29, 0, 1.0);
+  tree(parent, 0, 28.5, 1.35);
+  tree(parent, -23, 28.5, 1.2);
+  tree(parent, 23, 28.5, 1.15);
+}
 
 /**
  * Lembar aset Dunia Koperasi (hanya development): setiap mesh dirender dari fungsi aslinya
  * sehingga panduan aset tidak bisa berbeda dari kode. Dipakai sebagai acuan AI dan QA visual.
  */
 const cells: Cell[] = [
+  {
+    title: 'Sample Diorama Komplek Terpadu (Cozy Compound Sesuai Gambar)',
+    note: 'Gudang WH-04 & Kantor Koperasi dalam 1 kavling berpagar, truk dok D2, forklift, pohon voxel & rumah pedesaan',
+    hero: true,
+    wide: true,
+    build: (parent) => {
+      buildCozyCompoundSample(parent);
+    },
+  },
+  {
+    title: 'Rumah pedesaan (Village House)',
+    note: 'villageHouse · dinding krem kayu, atap genteng terakota, cerobong asap',
+    build: (parent) => {
+      villageHouse(parent, 0, 0, 0, 1.1);
+    },
+  },
+  {
+    title: 'Pohon voxel bertingkat',
+    note: 'tree · clustered voxel foliage cubes, batang silinder kayu',
+    build: (parent) => {
+      tree(parent, -1.2, 0, 1.2);
+      tree(parent, 1.2, 0.5, 0.9);
+    },
+  },
   {
     title: 'Gudang koperasi',
     note: 'createWarehouse (WH-04) · 26 × 11, dinding 5,4 + atap 1,8',
@@ -72,7 +186,7 @@ const cells: Cell[] = [
   },
   {
     title: 'Kantor koperasi',
-    note: 'officeBuilding · dua lantai, kanopi biru',
+    note: 'officeBuilding · kayu hangat (timber slats), lantai 2, lis putih, plang HQ & taman bunga',
     build: (parent) => {
       officeBuilding(parent, find('kantor'));
     },
@@ -225,8 +339,10 @@ export function AssetSheet() {
     draw();
     const observer = new ResizeObserver(draw);
     observer.observe(node);
+    window.addEventListener('scroll', draw, { passive: true });
     return () => {
       observer.disconnect();
+      window.removeEventListener('scroll', draw);
       scenes.forEach(({ scene }) =>
         scene.traverse((object) => {
           if (object instanceof THREE.Mesh) object.geometry.dispose();
@@ -266,24 +382,28 @@ export function AssetSheet() {
             <figure
               key={cell.title}
               style={{
-                gridColumn: cell.wide ? 'span 2' : undefined,
+                gridColumn: cell.hero ? 'span 4' : cell.wide ? 'span 2' : undefined,
                 margin: 0,
                 border: '1px solid #e2e8f4',
                 borderRadius: 14,
                 overflow: 'hidden',
+                boxShadow: cell.hero ? '0 4px 20px rgba(0,0,0,0.06)' : undefined,
               }}
             >
-              <div data-cell={index} style={{ height: 230 }} />
+              <div data-cell={index} style={{ height: cell.hero ? 480 : 230 }} />
               <figcaption
                 style={{
-                  padding: '8px 12px',
-                  background: '#ffffffd9',
+                  padding: '10px 14px',
+                  background: '#ffffffea',
                   fontSize: 12,
                   lineHeight: 1.4,
+                  borderTop: '1px solid #eef2f6',
                 }}
               >
-                <strong style={{ display: 'block', fontSize: 13 }}>{cell.title}</strong>
-                <span style={{ color: '#6b7a92' }}>{cell.note}</span>
+                <strong style={{ display: 'block', fontSize: cell.hero ? 15 : 13, color: '#1e293b' }}>
+                  {cell.title}
+                </strong>
+                <span style={{ color: '#64748b' }}>{cell.note}</span>
               </figcaption>
             </figure>
           ))}

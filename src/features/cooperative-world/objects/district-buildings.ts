@@ -83,24 +83,64 @@ export function officeBuilding(parent: THREE.Object3D, b: DistrictBuilding) {
   const { g, w, d } = frame(parent, b, 'koperasi');
   const h = b.height;
   const front = d / 2;
-  body(g, w, d, h, palette.blue);
+
+  // Alas pondasi beton putih
+  box(g, [w + 0.8, 0.22, d + 0.8], [0, 0.11, 0], '#e2e8f0', 0.06);
+
+  // Badan utama bangunan kayu hangat (warm timber slats)
+  box(g, [w, h, d], [0, h / 2 + 0.22, 0], '#b48356', 0.08);
+
+  // Garis-garis slat kayu horizontal di fasad depan & samping
+  for (let y = 0.5; y < h + 0.1; y += 0.38) {
+    box(g, [w + 0.04, 0.04, 0.04], [0, y, front + 0.02], '#925d30', 0);
+    box(g, [0.04, 0.04, d + 0.04], [w / 2 + 0.02, y, 0], '#925d30', 0);
+  }
+
+  // Lis beton pemisah lantai 1 & 2 dan lis atap
+  box(g, [w + 0.4, 0.25, d + 0.4], [0, h / 2 + 0.2, 0], '#f1f5f9', 0.04);
+  box(g, [w + 0.5, 0.35, d + 0.5], [0, h + 0.25, 0], '#f1f5f9', 0.06);
+
+  // Pita jendela kaca horizontal di Lantai 1 (kiri & kanan pintu)
+  glassBand(g, -w / 2 + 0.8, -1.5, 1.7, 1.25, front);
+  glassBand(g, 1.5, w / 2 - 0.8, 1.7, 1.25, front);
+
+  // Pita jendela kaca horizontal di Lantai 2 (panjang membentang)
+  glassBand(g, -w / 2 + 0.8, w / 2 - 0.8, h - 1.4, 1.25, front);
+
+  // Pintu masuk kaca lantai 1
+  door(g, 0, front, 1.8, 2.3);
+
+  // Kanopi kecil di atas pintu masuk
+  box(g, [2.8, 0.12, 1.4], [0, 2.65, front + 0.7], '#334155', 0.04);
   for (const side of [-1, 1])
-    box(g, [0.36, h, 0.36], [side * (w / 2 - 0.05), h / 2 + 0.2, front], palette.blue, 0.12);
-  glassBand(g, -w / 2 + 0.8, -1.6, 1.6, 1.3, front);
-  glassBand(g, 1.6, w / 2 - 0.8, 1.6, 1.3, front);
-  glassBand(g, -w / 2 + 0.8, w / 2 - 0.8, 4.3, 1.3, front);
-  door(g, 0, front);
-  box(g, [4.2, 0.18, 1.8], [0, 3.0, front + 0.9], palette.blue, 0.08);
-  for (const side of [-1, 1])
-    box(g, [0.12, 2.8, 0.12], [side * 1.9, 1.6, front + 1.7], palette.navy, 0);
-  sign(g, 'KOPERASI', [0, h - 0.35, front + 0.08], 4.4);
+    box(g, [0.06, 0.8, 0.06], [side * 1.3, 2.2, front + 1.2], '#64748b', 0);
+
+  // Papan nama horizontal gelap: "RURAL COOPERATIVE HQ" di antara lantai 1 & 2
+  box(g, [w * 0.75, 0.7, 0.1], [0, h / 2 + 0.2, front + 0.06], '#1e293b', 0.04);
+  sign(g, 'RURAL COOPERATIVE HQ', [0, h / 2 + 0.2, front + 0.12], w * 0.7, '#ffffff');
+
+  // Pot tanaman hijau di kiri-kanan pintu masuk
+  for (const side of [-1, 1]) {
+    cylinder(g, 0.25, 0.45, [side * 1.6, 0.45, front + 0.6], '#e2e8f0');
+    sphere(g, 0.35, [side * 1.6, 0.85, front + 0.6], '#22c55e');
+  }
+
+  // Taman bunga kecil berbingkai beton di depan kantor (seperti gambar referensi)
+  const gardenBox = new THREE.Group();
+  gardenBox.position.set(-w / 4, 0.12, front + 1.6);
+  g.add(gardenBox);
+  box(gardenBox, [4.5, 0.28, 1.8], [0, 0, 0], '#cbd5e1', 0.06);
+  box(gardenBox, [4.2, 0.22, 1.5], [0, 0.08, 0], '#15803d', 0.04);
+  for (let gx = -1.6; gx <= 1.6; gx += 0.8)
+    sphere(gardenBox, 0.24, [gx, 0.28, (gx * 3) % 0.4], gx % 1.6 === 0 ? '#ef4444' : '#f59e0b');
+
+  // Unit AC di atap datar
   for (const [x, z] of [
-    [-4, -2],
-    [-1.5, -2.5],
-    [3.5, -1.5],
+    [-3.5, -2],
+    [2.8, -1.8],
   ])
-    roofUnit(g, x, h + 0.5, z);
-  for (const side of [-1, 1]) plant(g, side * 3, front + 1.2);
+    roofUnit(g, x, h + 0.45, z);
+
   return g;
 }
 

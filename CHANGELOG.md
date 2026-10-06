@@ -1,12 +1,16 @@
 # Changelog
 
-## Distrik Mini Kompak & 3D Pixel Downsampling — 6 Oktober 2026
+## Aset Nyata & Diorama Komplek Terpadu (Cozy Village Co-op Compound) — 6 Oktober 2026
 
-- Optimalisasi performa hasil evaluasi /grill-me pemilik untuk mengatasi peta terlalu luas & memberatkan beban komputer.
-- Denah Distrik Mini: Jalan diringkas menjadi 1 perempatan ringkas (`Jalan Raya` × `Jalan Koperasi`), menghubungkan 4 kavling aktif kompak (Logistik, Administrasi, Kesehatan, Niaga). Menghilangkan 4 jalan lingkar luar, 16 blok kota latar belakang, dan 6 petak lahan kosong 128m. Ukuran bounds berkurang dari 160×120 menjadi 65×55 unit scene.
-- Kunci Penuh Mode Retro Piksel: kanvas WebGL di-downsample internal (skala 0.5x pada Tinggi, 0.4x pada Sedang, 0.33x pada Hemat) lalu di-stretch dengan CSS `image-rendering: pixelated; crisp-edges`.
-- Efisiensi GPU: GTAOPass dinonaktifkan total, bayangan disederhanakan ke BasicShadowMap 512 tajam retro, lantai diperkecil ke 360×360, dan fog dirapatkan ke 85–140. Menghemat beban GPU ~80% dan berjalan 60 FPS stabil.
-- 304 tes / 45 berkas lulus 100%, typecheck lulus, lint lulus, build Next.js sukses (7.8s).
+- Grafik Bersih & Halus: pixelated downsampling dinonaktifkan total (`downsampleScale: 1`), canvas di-render pada resolusi native dengan anti-aliasing (`antialias: true`) dan PCFSoftShadowMap halus, menghapus jagged pixel edges sesuai instruksi langsung pemilik.
+- Aset 3D Nyata Sesuai Gambar Referensi:
+  - Gudang WH-04: Plang atap 3D "CO-OP LOGISTICS DEPOT", tulisan dinding "WAREHOUSE WH-04", kanopi dok berpenyangga besi diagonal, garis serong hazard kuning-hitam di lantai dok, dok D1 & D2 terbuka berisi palet, dok D3 tertutup rolling shutter rapat, nomor dok D1-D4 rapi.
+  - Kantor Koperasi HQ (Rural Cooperative HQ): Bangunan 2 lantai dinding kayu hangat (*timber slats*), lis lantai beton putih, papan nama horizontal gelap "RURAL COOPERATIVE HQ", pita jendela kaca horizontal membentang, pot tanaman hijau, dan taman bunga berbingkai beton di depan kantor.
+  - Pohon Voxel Bertingkat: Mahkota daun kubus bertingkat (*clustered voxel foliage*) dengan tiga tingkat hijau alami dan batang silinder kayu.
+  - Rumah Pedesaan (Village House): Atap pelana genteng terakota, cerobong asap bata, dinding krem kayu, pintu dan jendela kaca berbingkai putih.
+- Sample Diorama Komplek Terpadu (`/dev/dunia-koperasi/aset`):
+  - Halaman terpadu satu kavling berpagar: Gudang WH-04 berdampingan langsung dengan Kantor Koperasi HQ, truk CO-OP bersandar di dok D2, truk pickup di samping, forklift aktif membawa palet, tumpukan kardus & kontainer, pohon voxel berjajar, pagar keliling berpos gerbang, jalan raya beraspal dengan marka garis putus-putus dan trotoar, serta rumah pedesaan di seberang jalan.
+- 304 tes Vitest lulus (45 berkas, 100%), typecheck lulus 0 error, ESLint lulus 0 error.
 
 - Skema `deliveries`: kolom nama sopir (`driver_name`), nomor plat kendaraan (`license_plate`), dan estimasi jam tiba (`arrival_time` dengan format JJ:MM). Kompatibilitas mundur penuh (default '').
 - Formulir & web: Editor input time untuk field jam tiba, placeholder dan field-helper; kartu `/pengiriman` di Records menampilkan badge arah, dok, jam tiba WIB, plat nomor, nama sopir, dan rincian barang (`items`).
