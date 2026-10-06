@@ -50,6 +50,9 @@ import { pathPose, truckPose, truckRoute } from './truck-routes';
 import { createSelectionBox, disposeGroup } from './objects/highlight';
 import { createRoute } from './objects/route';
 
+/** ID objek yang bergerak sendiri: forklift dan kendaraan suasana, karakter Tim, maskot. */
+const movingSelection = /^(forklift-suasana|kendaraan-suasana|staf-|karakter$)/;
+
 type Props = {
   model: WorldModel;
   location: WorldLocation;
@@ -104,6 +107,9 @@ export function WorldScene({
   const markerRefs = useRef(new Map<string, HTMLDivElement>());
   /** Pin tujuan rute truk terpilih; dianimasikan naik-turun di loop gambar. */
   const routePin = useRef<THREE.Object3D | null>(null);
+  /** Kamera sedang mengikuti objek bergerak terpilih; posisi terakhir untuk mendeteksi lompatan. */
+  const cameraFollow = useRef(false);
+  const lastFollow = useRef(new THREE.Vector3(Number.NaN, 0, 0));
   /** Penunjuk terpilih dan objek yang diikutinya (lihat efek kotak sorot). */
   const followed = useRef<{
     box: THREE.Object3D;
@@ -302,6 +308,12 @@ export function WorldScene({
     scene.add(rain);
     const projected = new THREE.Vector3();
     const quaternion = new THREE.Quaternion();
+    const shift = new THREE.Vector3();
+    // Geser/putar/zoom oleh pengguna menghentikan kamera mengikuti objek.
+    const stopFollow = () => {
+      cameraFollow.current = false;
+    };
+    controls.addEventListener('start', stopFollow);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame = 0,
       previous = 0,
@@ -500,6 +512,23 @@ export function WorldScene({
           new THREE.Euler().setFromQuaternion(follow.target.getWorldQuaternion(quaternion), 'YXZ')
             .y - follow.turn;
         follow.box.visible = follow.target.visible;
+        if (cameraFollow.current && follow.box.visible) {
+          const at = follow.box.position;
+          // Kendaraan yang melompat ke ujung jalan lain: berhenti mengikuti, jangan ikut melompat.
+          // Di luar radius fokus OrbitControls kamera juga berhenti agar sudut pandang tidak bergeser.
+          if (
+            (!Number.isNaN(lastFollow.current.x) && lastFollow.current.distanceTo(at) > 8) ||
+            Math.hypot(at.x, at.z) > controls.maxTargetRadius - 1
+          )
+            cameraFollow.current = false;
+          lastFollow.current.copy(at);
+          if (cameraFollow.current) {
+            const k = reduced.matches ? 1 : 1 - Math.exp(-Math.min(delta, 0.5) * 4);
+            shift.set((at.x - controls.target.x) * k, 0, (at.z - controls.target.z) * k);
+            controls.target.add(shift);
+            camera.position.add(shift);
+          }
+        }
       }
       const pin = routePin.current;
       if (pin) pin.position.y = reduced.matches ? 0 : Math.sin(elapsed * 2.4) * 0.15;
@@ -526,6 +555,7 @@ export function WorldScene({
       disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      controls.removeEventListener('start', stopFollow);
       controls.dispose();
       runtime.current = null;
       renderer.domElement.removeEventListener('pointerdown', startPointer);
@@ -575,6 +605,9 @@ export function WorldScene({
       anchor: target.worldToLocal(highlight.position.clone()),
       turn,
     };
+    // Objek bergerak yang dipilih diikuti kamera sampai pengguna menggerakkan kamera sendiri.
+    cameraFollow.current = movingSelection.test(selected);
+    lastFollow.current.set(Number.NaN, 0, 0);
     // Truk terpilih menampilkan rute seperti video: jalur dilalui, sisa jalur dan dok tujuan.
     const spot =
       location === 'luar'
