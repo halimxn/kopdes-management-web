@@ -270,19 +270,27 @@ export function CooperativeWorld({
       ? location === 'dalam'
         ? 'Kantor koperasi'
         : worldZones[zone].title
-      : selected.startsWith('rak-')
-        ? `Rak ${selected.slice(4)}`
-        : selected === 'staging'
-          ? 'Area staging'
-          : selectedPlot
-            ? String(selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`)
-            : selected === 'gudang'
-              ? worldZones.gudang.title
-              : selected === 'lingkungan'
-                ? 'Suasana'
-                : selected === 'karakter'
-                  ? 'Maskot koperasi'
-                  : worldStations.find((item) => item.id === selected)?.title || 'Kantor koperasi';
+      : selected.startsWith('kirim-')
+        ? String(
+            model.deliveries.find((row) => row.id === selected.slice(6))?.data.title ||
+              'Pengiriman',
+          )
+        : selected === 'kendaraan-suasana'
+          ? 'Mobil di jalan utama'
+          : selected.startsWith('rak-')
+            ? `Rak ${selected.slice(4)}`
+            : selected === 'staging'
+              ? 'Area staging'
+              : selectedPlot
+                ? String(selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`)
+                : selected === 'gudang'
+                  ? worldZones.gudang.title
+                  : selected === 'lingkungan'
+                    ? 'Suasana'
+                    : selected === 'karakter'
+                      ? 'Maskot koperasi'
+                      : worldStations.find((item) => item.id === selected)?.title ||
+                        'Kantor koperasi';
   // Kartu kanan desktop (320 px + jarak) atau lembar bawah ponsel menutupi sebagian scene.
   const occlusion = useMemo(
     () =>
@@ -385,7 +393,9 @@ export function CooperativeWorld({
             aria-label="Atur ulang kamera"
             onClick={() => {
               setSpot(null);
-              setZoom(location === 'luar' ? worldZones[zone].zoom : location === 'gudang' ? 0.8 : 1);
+              setZoom(
+                location === 'luar' ? worldZones[zone].zoom : location === 'gudang' ? 0.8 : 1,
+              );
               setRotation(0);
               setRecenter((value) => value + 1);
             }}

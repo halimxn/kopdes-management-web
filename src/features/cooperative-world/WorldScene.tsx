@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Building2, Plus, MessageCircle, MapPin, Warehouse } from 'lucide-react';
+import { Building2, Plus, MessageCircle, MapPin, Truck, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { animateCharacter, createCharacter } from './objects/characters';
 import { createExterior } from './objects/exterior';
@@ -33,6 +33,7 @@ import {
   type WorldPreferences,
 } from './world-model';
 import { createWarehouseInterior } from './objects/warehouse-interior';
+import { createAmbientCars, createTrucks, truckPose, type AmbientCar } from './objects/vehicles';
 
 type Props = {
   model: WorldModel;
@@ -185,9 +186,14 @@ export function WorldScene({
     scene.add(floor);
     const world = new THREE.Group();
     scene.add(world);
-    if (location === 'luar') createExterior(world, model);
-    else if (location === 'gudang') createWarehouseInterior(world, model.inventory);
-    else {
+    let cars: AmbientCar[] = [];
+    if (location === 'luar') {
+      createExterior(world, model);
+      createTrucks(world, model.trucks);
+      cars = createAmbientCars(world);
+    }
+    if (location === 'gudang') createWarehouseInterior(world, model.inventory);
+    if (location === 'dalam') {
       createInterior(world);
       mergeStatic(world);
     }
@@ -290,6 +296,10 @@ export function WorldScene({
         'gudang',
         new THREE.Vector3(warehouse.center[0], warehouse.size[1] + 2, warehouse.center[1]),
       );
+      for (const spot of model.trucks) {
+        const [x, z] = truckPose(spot);
+        positions.set(`kirim-${spot.delivery.id}`, new THREE.Vector3(x, 3.8, z));
+      }
       model.plots.forEach((plot) =>
         positions.set(
           plot.id,
@@ -369,6 +379,13 @@ export function WorldScene({
         marker.style.visibility =
           Math.abs(projected.x) > 1.05 || Math.abs(projected.y) > 1.05 ? 'hidden' : 'visible';
       }
+      // Mobil suasana melaju dan kembali dari sisi lain; berhenti bila pengguna memilih gerak minimal.
+      if (!reduced.matches)
+        for (const car of cars) {
+          car.group.position.x += car.speed * Math.min(delta, 0.06);
+          if (car.group.position.x > 33) car.group.position.x = -33;
+          if (car.group.position.x < -33) car.group.position.x = 33;
+        }
       rain.visible = state.weather === 'hujan' && location === 'luar';
       rain.position.set(controls.target.x, 0, controls.target.z);
       if (rain.visible && !reduced.matches) {
@@ -495,6 +512,15 @@ export function WorldScene({
               status: low ? `${low} di bawah minimum` : `${warehouse.docks.length} dok`,
               alert: low > 0,
             },
+            ...model.trucks.map((spot) => ({
+              id: `kirim-${spot.delivery.id}`,
+              label: String(spot.delivery.data.title),
+              occupied: true,
+              status:
+                spot.place === 'dok'
+                  ? `${spot.delivery.data.status} · D${spot.index + 1}`
+                  : 'dikirim · antre',
+            })),
             ...model.plots.map((plot, i) => ({
               id: plot.id,
               label: plot.unit
@@ -537,6 +563,8 @@ export function WorldScene({
                 <Building2 size={16} />
               ) : marker.id === 'gudang' ? (
                 <Warehouse size={16} />
+              ) : marker.id.startsWith('kirim-') ? (
+                <Truck size={15} />
               ) : marker.occupied ? (
                 <MapPin size={14} />
               ) : (

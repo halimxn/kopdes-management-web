@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { CalendarClock, Check, ChevronRight, Users } from 'lucide-react';
+import { CalendarClock, Check, ChevronRight, Truck, Users } from 'lucide-react';
 import { recordHref } from '../../workspace/workspace-navigation';
-import type { MeetingStep, WorldModel } from '../world-model';
+import { deliverySteps, type MeetingStep, type WorldModel } from '../world-model';
 
 type Props = {
   model: WorldModel;
@@ -16,7 +16,77 @@ const stateLabel = { selesai: 'Selesai', berlangsung: 'Berlangsung', nanti: 'Nan
  * Pengganti "Shipment Tracking" pada video: urutan rapat hari ini. Setelah domain Pengiriman
  * tersedia, kartu ini dapat menampilkan tahap pengiriman dengan pola langkah yang sama.
  */
+/** Pengiriman yang ditampilkan: yang sedang di dok, lalu dalam perjalanan, lalu yang dipesan. */
+function activeDelivery(model: WorldModel) {
+  const order = ['diperiksa', 'tiba', 'dikirim', 'dipesan'];
+  return [...model.deliveries]
+    .filter((row) => order.includes(String(row.data.status)))
+    .sort((a, b) => order.indexOf(String(a.data.status)) - order.indexOf(String(b.data.status)))[0];
+}
+
+const deliveryLabel: Record<string, string> = {
+  dipesan: 'Dipesan',
+  dikirim: 'Dikirim',
+  tiba: 'Tiba',
+  diperiksa: 'Diperiksa',
+  selesai: 'Selesai',
+};
+
 export function TodayTracker({ model, timeline, dateLabel, unavailable }: Props) {
+  const delivery = unavailable ? undefined : activeDelivery(model);
+  if (delivery) {
+    const current = deliverySteps.indexOf(
+      String(delivery.data.status) as (typeof deliverySteps)[number],
+    );
+    const others = model.deliveries.filter(
+      (row) =>
+        row.id !== delivery.id &&
+        ['dipesan', 'dikirim', 'tiba', 'diperiksa'].includes(String(row.data.status)),
+    ).length;
+    return (
+      <section className="cw-tracker" aria-label="Pelacak pengiriman">
+        <div className="cw-tracker-main">
+          <div className="cw-tracker-title">
+            <span>
+              <Truck size={17} />
+              <strong>Pelacak pengiriman</strong>
+            </span>
+            <small>{others ? `+${others} lain` : dateLabel}</small>
+          </div>
+          <ol className="cw-steps">
+            {deliverySteps.map((step, index) => (
+              <li
+                key={step}
+                className={
+                  index < current ? 'is-selesai' : index === current ? 'is-berlangsung' : 'is-nanti'
+                }
+              >
+                <span className="cw-step-dot">
+                  {index < current ? <Check size={13} /> : <Truck size={13} />}
+                </span>
+                <strong>{deliveryLabel[step]}</strong>
+                <small>{index === current ? 'Sekarang' : index < current ? 'Selesai' : ''}</small>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className="cw-tracker-side">
+          <Link className="cw-next" href={recordHref('deliveries', delivery)}>
+            <small>{delivery.data.direction === 'keluar' ? 'Barang keluar' : 'Barang masuk'}</small>
+            <strong>{String(delivery.data.title)}</strong>
+            <span>
+              {delivery.data.dock && delivery.data.dock !== 'belum ditentukan'
+                ? `Dok ${delivery.data.dock}`
+                : 'Dok belum ditentukan'}
+              {delivery.data.vehicle ? ` · ${delivery.data.vehicle}` : ''}
+            </span>
+            <span className="cw-pill is-blue">{deliveryLabel[String(delivery.data.status)]}</span>
+            <ChevronRight size={16} className="cw-next-arrow" />
+          </Link>
+        </div>
+      </section>
+    );
+  }
   const steps = timeline.slice(0, 5);
   const focus =
     timeline.find((step) => step.state === 'berlangsung') ||

@@ -45,6 +45,28 @@ export function sampleWorkspace(): Workspace {
       row('task-1', { title: 'Contoh cek stok minyak', status: 'proses', due_date: date }),
       row('task-2', { title: 'Contoh susun rak B', status: 'rencana', due_date: '2026-10-01' }),
     ],
+    deliveries: [
+      row('del-1', {
+        title: 'Contoh kiriman beras',
+        direction: 'masuk',
+        status: 'tiba',
+        dock: 'D2',
+        vehicle: 'Contoh truk boks',
+        planned_date: date,
+      }),
+      row('del-2', {
+        title: 'Contoh kiriman minyak',
+        direction: 'masuk',
+        status: 'diperiksa',
+        planned_date: date,
+      }),
+      row('del-3', {
+        title: 'Contoh kiriman pupuk',
+        direction: 'masuk',
+        status: 'dikirim',
+        planned_date: date,
+      }),
+    ],
     meetings: [
       row('meet-1', { title: 'Contoh briefing pagi', date, time: '08:00', duration: 30 }),
       row('meet-2', { title: 'Contoh rapat pengurus', date, time: '15:00', duration: 60 }),

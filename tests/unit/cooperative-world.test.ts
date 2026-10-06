@@ -4,6 +4,7 @@ import {
   getWorldModel,
   meetingTimeline,
   summarizeInventory,
+  placeTrucks,
   isBelowMinimum,
   worldPreferencesSchema,
 } from '@/features/cooperative-world/world-model';
@@ -169,5 +170,28 @@ describe('inventaris gudang', () => {
     expect(inventory.low.map((item) => item.id)).toEqual(['a']);
     // Batas minimum 0 berarti tidak dipantau, bukan kekurangan.
     expect(isBelowMinimum(items[3])).toBe(false);
+  });
+});
+
+describe('truk dari pengiriman', () => {
+  const delivery = (id: string, status: string, extra: Record<string, unknown> = {}) =>
+    row(id, { title: id, direction: 'masuk', status, ...extra });
+  it('hanya pengiriman masuk aktif; dok pilihan dipakai, lainnya mengisi dok kosong', () => {
+    const spots = placeTrucks([
+      delivery('a', 'tiba', { dock: 'D3' }),
+      delivery('b', 'diperiksa'),
+      delivery('c', 'dikirim'),
+      delivery('d', 'selesai'),
+      delivery('e', 'tiba', { direction: 'keluar' }),
+    ]);
+    expect(spots.map((spot) => [spot.delivery.id, spot.place, spot.index])).toEqual([
+      ['a', 'dok', 2],
+      ['b', 'dok', 0],
+      ['c', 'antre', 0],
+    ]);
+  });
+  it('kelebihan truk tidak digambar melebihi jumlah dok dan antrean', () => {
+    const many = Array.from({ length: 6 }, (_, i) => delivery(`t${i}`, 'tiba'));
+    expect(placeTrucks(many).filter((spot) => spot.place === 'dok')).toHaveLength(4);
   });
 });

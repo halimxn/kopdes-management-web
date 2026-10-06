@@ -1,5 +1,12 @@
 # Changelog
 
+## Paket 6 — kendaraan dari data pengiriman — 6 Oktober 2026
+
+- Dunia memuat Pengiriman (setelah migrasi 8 aktif). Truk boks bergaya video ditempatkan di dok (tiba/diperiksa) atau petak antre (dikirim) dengan penanda dan kartu pengiriman.
+- Pelacak kiri bawah menjadi Pelacak pengiriman dengan tahap pengiriman aktif; kembali ke jadwal rapat bila tidak ada.
+- Dua mobil suasana di jalan utama berlabel Simulasi lingkungan; berhenti saat reduced-motion.
+- Migrasi 8 dicatat sudah dijalankan pemilik di cloud. 285 tes/45 berkas, typecheck, lint dan build lulus (satu tes kalender sempat timeout saat mesin dibebani build, lulus saat diulang). Diperiksa di browser dengan contoh: kawasan 1280 px.
+
 ## Paket 5 — data logistik web — 6 Oktober 2026
 
 - Migrasi 8 (`20261006000008_world_logistics.sql`, belum dijalankan di cloud): Pengiriman dan Mutasi stok di hub_records, fungsi atomik pencatat mutasi + stok buku, mutasi tidak dapat diubah, stok negatif ditolak. SQL instalasi bersih dan reset dibuat ulang; 5 tes PGlite baru.

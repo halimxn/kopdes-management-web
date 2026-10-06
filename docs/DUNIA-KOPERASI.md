@@ -73,7 +73,10 @@ Koordinat ada di `layout.ts` (X ke timur, Z ke selatan; kamera dari tenggara). K
 - Pemilih zona di header (Semua kawasan / Kantor / Gudang / Boulevard gerai) dan pilihan lahan/gudang dari daftar menggerakkan kamera mulus ke tujuannya; klik di scene tidak memindahkan kamera.
 - Objek statis digabung menjadi satu mesh berwarna per titik per objek (`mergeStatic`); objek yang dapat diklik digabung per objek agar raycast tetap mengenali pilihan. Ukuran pratinjau 1280 px kualitas Sedang: 129 draw call termasuk bayangan.
 
-Belum tersedia drag/editor lahan. Truk dan pengiriman muncul setelah domain Pengiriman tersedia.
+- Truk dari Pengiriman masuk: status tiba/diperiksa di depan pintu dok (kolom Pintu dok, atau dok kosong pertama; maks. 4), dikirim di petak antre dekat gerbang (maks. 3). Warna kabin dipilih dari ID, bukan merek pemasok. Klik truk membuka kartu pengiriman. Pelacak kiri bawah menampilkan tahap Dipesan → Dikirim → Tiba → Diperiksa → Selesai untuk pengiriman aktif; tanpa pengiriman aktif kembali ke jadwal rapat.
+- Dua mobil suasana melaju di jalan utama dan berlabel **Simulasi lingkungan**; berhenti saat reduced-motion.
+
+Belum tersedia drag/editor lahan.
 
 ## Interior gudang dan data Barang
 

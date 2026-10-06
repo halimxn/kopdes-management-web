@@ -48,11 +48,45 @@ export function getWorldModel(data: Workspace, now: Date) {
     activity,
     ...placeUnits(units),
     inventory: summarizeInventory(data['inventory-items'] || []),
+    deliveries: data.deliveries || [],
+    trucks: placeTrucks(data.deliveries || []),
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),
   };
 }
 export type WorldModel = ReturnType<typeof getWorldModel>;
+
+export const deliverySteps = ['dipesan', 'dikirim', 'tiba', 'diperiksa', 'selesai'] as const;
+export type TruckSpot = { delivery: Item; place: 'dok' | 'antre'; index: number };
+
+/**
+ * Truk hanya muncul dari pengiriman masuk berstatus dikirim (parkir antre) atau
+ * tiba/diperiksa (di dok). Dok mengikuti kolom Pintu dok; tanpa dok memakai dok kosong pertama.
+ * Kelebihan truk tidak digambar agar tidak menumpuk; daftar tetap menampilkannya.
+ */
+export function placeTrucks(deliveries: Item[], docks = 4, queue = 3): TruckSpot[] {
+  const incoming = deliveries
+    .filter((row) => row.data.direction !== 'keluar')
+    .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
+  const atDock = incoming.filter((row) => ['tiba', 'diperiksa'].includes(String(row.data.status)));
+  const used = new Set<number>();
+  const spots: TruckSpot[] = [];
+  for (const delivery of atDock) {
+    const wanted = Number(String(delivery.data.dock || '').replace('D', '')) - 1;
+    const index =
+      Number.isInteger(wanted) && wanted >= 0 && wanted < docks && !used.has(wanted)
+        ? wanted
+        : [...Array(docks).keys()].find((slot) => !used.has(slot));
+    if (index === undefined) continue;
+    used.add(index);
+    spots.push({ delivery, place: 'dok', index });
+  }
+  incoming
+    .filter((row) => row.data.status === 'dikirim')
+    .slice(0, queue)
+    .forEach((delivery, index) => spots.push({ delivery, place: 'antre', index }));
+  return spots;
+}
 
 export const rackIds = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
 export type RackId = (typeof rackIds)[number];
