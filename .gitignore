@@ -58,5 +58,5 @@ Thumbs.db
 *.sublime-workspace
 
 
-# Peta kode Graphify: dibuat ulang dengan "graphify update src" (hasil di src/graphify-out)
+# Peta kode Graphify: dibuat ulang dengan "graphify update ." (hanya kode, tanpa AI)
 graphify-out/
