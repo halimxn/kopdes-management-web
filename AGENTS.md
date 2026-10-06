@@ -55,6 +55,7 @@ Commit/push per paket kerja, pesan ringkas dengan judul dan isi dipisahkan baris
 - Skill proyek: `.claude/skills/` (Claude Code) dan salinannya `.agents/skills/` (Codex, Antigravity, agen lain). Ubah di `.claude/skills`, lalu jalankan `node scripts/sync-skills.mjs`; `clean-code` bersumber di `.agents/skills`. Sumber/lisensi pihak ketiga: `SUMBER.md`.
 - Skill utama: hemat-token (setiap sesi panjang), dunia-koperasi, ui-ux-kopdes, backend-kopdes, clean-code, 3d-graphics; opsional caveman, grill-me/grilling. AI tanpa dukungan skill cukup membaca SKILL.md yang relevan.
 - Aturan per AI menunjuk ke berkas ini: `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.agents/rules/`. Hook Graphify lokal (`.claude/settings.json`, `.codex/`, `.gemini/settings.json`) berisi path komputer pemilik dan tidak di-commit.
+- rtk (dipasang global oleh pemilik) meringkas keluaran perintah shell lewat hook. Bila pesan galat tes/build terpotong, jalankan perintah dengan `rtk proxy <perintah>` atau matikan dengan `rtk init -g --uninstall`.
 - Peta kode Graphify (`graphify-out/`, tidak di-commit) dibuat ulang dengan `graphify update .` (hanya kode, tanpa AI). Jangan memproses `docs/` dengan ekstraksi AI tanpa izin pemilik: boros token atau mengirim isi ke layanan luar.
 
 ## Pencatatan dan rapat

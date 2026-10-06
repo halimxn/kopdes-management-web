@@ -1,4 +1,6 @@
-Aturan utama proyek ada di AGENTS.md; skill proyek di .claude/skills. Bagian di bawah dikelola oleh graphify (graphify claude install).
+@AGENTS.md
+
+Aturan utama proyek di atas (AGENTS.md) dimuat lewat impor. Skill proyek di .claude/skills. Bagian di bawah dikelola oleh graphify (graphify claude install).
 
 ## graphify
 
