@@ -35,13 +35,19 @@ export function createWarehouse(parent: THREE.Object3D) {
   ])
     cylinder(g, 0.35, 0.35, [x, h + 1.05, z], '#f4f6fa');
   for (const [index, x] of warehouse.docks.map((value, i) => [i, value - cx])) {
-    box(g, [3.1, 3.7, 0.16], [x, 2.05, front + 0.04], palette.navy, 0.03);
-    box(g, [2.7, 3.4, 0.1], [x, 1.95, front + 0.07], '#6d7b96', 0);
-    box(g, [2.7, 1.1, 0.12], [x, 3.1, front + 0.1], '#c8d2e4', 0);
+    // Lapisan pintu diberi kedalaman berbeda; permukaan sebidang menimbulkan garis berkedip (z-fighting).
+    // Bingkai: dua tiang dan ambang atas, menonjol paling depan (wajah depan front + 0,24).
+    for (const side of [-1, 1])
+      box(g, [0.22, 3.75, 0.24], [x + side * 1.44, 1.98, front + 0.12], palette.navy, 0);
+    box(g, [3.1, 0.3, 0.24], [x, 3.7, front + 0.12], palette.navy, 0);
+    // Bukaan gelap menutup garis dinding (wajah depan front + 0,16), sedikit lebih sempit dari bingkai.
+    box(g, [2.6, 3.5, 0.14], [x, 1.85, front + 0.09], '#6d7b96', 0);
+    // Pintu gulung yang terangkat sebagian (front + 0,17 sampai 0,21).
+    box(g, [2.6, 1.05, 0.04], [x, 3.0, front + 0.19], '#c8d2e4', 0);
     box(g, [2.8, 0.18, 1.1], [x, 0.35, front + 0.6], '#9aa6bb', 0.02);
     for (const side of [-1, 1])
       box(g, [0.2, 0.5, 0.3], [x + side * 1.2, 0.6, front + 0.2], '#2b3245');
-    sign(g, `D${index + 1}`, [x, 4.25, front + 0.14], 0.9, palette.blue);
+    sign(g, `D${index + 1}`, [x, 4.25, front + 0.1], 0.9, palette.blue);
   }
   sign(g, 'GUDANG KOPERASI', [-1.5, h - 0.6, front + 0.12], 5.5, palette.navy);
   return g;
