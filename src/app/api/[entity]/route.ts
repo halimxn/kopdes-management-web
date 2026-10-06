@@ -46,6 +46,9 @@ export async function DELETE(request: Request, context: Context) {
       .parse(await readJson(request));
     if (!entity || entity === 'organization' || entity === 'workstreams')
       throw new Error('Catatan ini tidak dapat dihapus.');
+    // Jejak mutasi menjadi dasar stok buku; koreksi dicatat sebagai mutasi baru.
+    if (entity === 'stock-movements')
+      throw new Error('Mutasi stok tidak dapat dihapus. Catat mutasi koreksi baru.');
     const { error } = await db().from('hub_records').delete().eq('id', id).eq('entity', entity);
     if (error) throw new Error('Penghapusan gagal.');
     return NextResponse.json({ success: true });

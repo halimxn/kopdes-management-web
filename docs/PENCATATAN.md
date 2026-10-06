@@ -30,6 +30,13 @@ Migrasi diuji dengan PostgreSQL lokal. Konfirmasi pemasangan sebelumnya tidak me
 - Filter, pencarian, ubah catatan, dan CSV tersedia per buku. Angka ringkasan hanya ditampilkan jika modul aktif dan data berhasil dimuat.
 - Backup JSON dan pemulihan mencakup domain baru. CSV hanya ekspor; tidak ada impor CSV. Anggota dapat dinonaktifkan; tidak ada tombol hapus transaksi/anggota/opname pada halaman pencatatan.
 
+## Pengiriman dan mutasi stok (migrasi 8)
+
+- **Pengiriman** (`/pengiriman`): arah masuk/keluar, status dipesan → dikirim → tiba → diperiksa → selesai (atau dibatalkan), suplier/ekspedisi dari Mitra & kontak (kategori Suplier/Ekspedisi), gerai tujuan, tanggal rencana/tiba, pintu dok D1–D4, kendaraan/sopir dan rincian barang. Mengubah status pengiriman tidak mengubah stok.
+- **Mutasi stok**: satu baris per barang — masuk, keluar, koreksi tambah, koreksi kurang — dengan jumlah bulat positif, tautan opsional ke pengiriman, gerai, atau stok opname. Menyimpan mutasi langsung mengubah stok buku barang dalam satu transaksi dan mencatat stok sebelum/sesudah. Stok tidak boleh menjadi negatif.
+- Mutasi tidak dapat diubah atau dihapus. Kesalahan diperbaiki dengan mutasi koreksi baru agar jejak stok tetap utuh. Barang yang sudah punya mutasi tidak dapat dihapus.
+- Hasil opname tetap tidak mengubah stok otomatis; bila perlu koreksi, catat mutasi "koreksi" dan pilih opname terkait.
+
 ## Rapat online
 
 Pilih jenis tatap muka, online, atau hybrid. Isi lokasi/tautan pertemuan, waktu WIB dan durasi. Tombol Bergabung membuka layanan yang Anda pilih. **Unduh agenda (.ics)** dapat diimpor ke aplikasi kalender. Aplikasi tidak membuat ruang Zoom/Meet, mengundang peserta, merekam video, atau mengirim email otomatis.

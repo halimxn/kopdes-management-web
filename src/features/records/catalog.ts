@@ -193,12 +193,58 @@ export const catalog: Record<Entity, { title: string; description: string; field
   staff: {
     title: 'Tim gerai',
     description: 'Daftar petugas, peran, dan penempatan.',
-    fields: ['title', 'role', 'unit_id', 'status'],
+    fields: [
+      'title',
+      'role',
+      'unit_id',
+      'status',
+      'section',
+      'workplace',
+      'work_hours',
+      'outfit',
+      'hair',
+    ],
   },
   trainings: {
     title: 'Pelatihan',
     description: 'Jadwal dan status pelatihan petugas.',
     fields: ['title', 'staff_id', 'date', 'required', 'status', 'notes'],
+  },
+  deliveries: {
+    title: 'Pengiriman',
+    description:
+      'Barang masuk dari suplier dan barang keluar ke gerai. Stok berubah lewat Mutasi stok.',
+    fields: [
+      'title',
+      'direction',
+      'status',
+      'stakeholder_id',
+      'unit_id',
+      'planned_date',
+      'arrived_date',
+      'dock',
+      'vehicle',
+      'items',
+      'link',
+      'notes',
+    ],
+  },
+  'stock-movements': {
+    title: 'Mutasi stok',
+    description:
+      'Jejak perubahan stok buku. Mutasi tersimpan langsung mengubah stok barang dan tidak dapat diubah; koreksi dicatat sebagai mutasi baru.',
+    fields: [
+      'title',
+      'item_id',
+      'kind',
+      'quantity',
+      'date',
+      'delivery_id',
+      'unit_id',
+      'stock_count_id',
+      'reference_number',
+      'notes',
+    ],
   },
   journal: {
     title: 'Kegiatan',
@@ -209,6 +255,19 @@ export const catalog: Record<Entity, { title: string; description: string; field
 export const labels: Record<string, string> = {
   duration: 'Durasi (menit)',
   slot: 'Lahan di Dunia Koperasi',
+  planned_date: 'Tanggal rencana',
+  arrived_date: 'Tanggal tiba',
+  dock: 'Pintu dok',
+  vehicle: 'Kendaraan / sopir',
+  items: 'Rincian barang',
+  quantity: 'Jumlah',
+  delivery_id: 'Pengiriman',
+  stock_count_id: 'Dari stok opname',
+  section: 'Seksi',
+  workplace: 'Tempat kerja',
+  work_hours: 'Jam kerja (08:00-16:00)',
+  outfit: 'Warna baju di Dunia Koperasi',
+  hair: 'Rambut di Dunia Koperasi',
   rack: 'Rak gudang',
   member_number: 'Nomor anggota',
   address: 'Alamat',
@@ -307,6 +366,8 @@ export const references: Record<string, Entity> = {
   meeting_id: 'meetings',
   staff_id: 'staff',
   work_item_id: 'work-items',
+  delivery_id: 'deliveries',
+  stock_count_id: 'stock-counts',
 };
 export const options: Record<string, string[]> = {
   'members.status': ['aktif', 'nonaktif'],
@@ -320,6 +381,20 @@ export const options: Record<string, string[]> = {
   'units.status': ['rencana', 'persiapan', 'siap uji', 'siap buka', 'aktif'],
   'units.slot': ['otomatis', '1', '2', '3', '4', '5', '6', '7'],
   'inventory-items.rack': ['belum ditentukan', 'A', 'B', 'C', 'D', 'E', 'F'],
+  'deliveries.status': ['dipesan', 'dikirim', 'tiba', 'diperiksa', 'selesai', 'dibatalkan'],
+  'deliveries.dock': ['belum ditentukan', 'D1', 'D2', 'D3', 'D4'],
+  'stock-movements.kind': ['masuk', 'keluar', 'koreksi tambah', 'koreksi kurang'],
+  'staff.section': [
+    'belum ditentukan',
+    'layanan anggota',
+    'administrasi & keuangan',
+    'usaha & gerai',
+    'gudang & logistik',
+    'umum',
+  ],
+  'staff.workplace': ['kantor', 'gudang', 'gerai'],
+  'staff.outfit': ['biru', 'hijau', 'oranye', 'lavender', 'abu'],
+  'staff.hair': ['pendek', 'panjang', 'berkerudung', 'topi'],
   'documents.status': ['belum ada', 'diproses', 'tersedia'],
   'risks.status': ['terbuka', 'ditangani', 'ditutup'],
   'issues.status': ['terbuka', 'ditangani', 'ditutup'],
@@ -335,6 +410,8 @@ export const options: Record<string, string[]> = {
     'Pengurus dan pengawas koperasi',
     'Pemerintah desa',
     'Mitra usaha',
+    'Suplier',
+    'Ekspedisi',
     'Lainnya',
   ],
 };
@@ -406,8 +483,21 @@ export const choiceLabels: Record<string, string> = {
   sistem: 'Sistem & Peralatan',
 };
 
-export function formatChoiceLabel(value: string): string {
+/** Label yang bergantung kolom; nilai "masuk" pada mutasi stok bukan uang masuk. */
+const fieldChoiceLabels: Record<string, Record<string, string>> = {
+  'stock-movements.kind': {
+    masuk: 'Masuk (+)',
+    keluar: 'Keluar (−)',
+    'koreksi tambah': 'Koreksi tambah (+)',
+    'koreksi kurang': 'Koreksi kurang (−)',
+  },
+  'deliveries.direction': { masuk: 'Barang masuk', keluar: 'Barang keluar' },
+};
+
+export function formatChoiceLabel(value: string, field?: string): string {
   if (!value) return '';
+  const specific = field ? fieldChoiceLabels[field]?.[value] : undefined;
+  if (specific) return specific;
   if (choiceLabels[value]) return choiceLabels[value];
   return value
     .split(' ')
@@ -428,6 +518,7 @@ export const navigation = [
   ['/keuangan', 'Buku Kas', ''],
   ['/barang', 'Barang Dagangan', ''],
   ['/stok-opname', 'Stok Opname', ''],
+  ['/pengiriman', 'Pengiriman & Mutasi', ''],
   ['/anggota', 'Buku Anggota', ''],
   ['/gerai', 'Unit Gerai', ''],
   ['/kesiapan', 'Kesiapan Gerai', ''],
@@ -450,6 +541,7 @@ export const pages: Record<string, Entity[]> = {
   dokumen: ['documents'],
   risiko: ['risks', 'issues'],
   tim: ['staff', 'trainings'],
+  pengiriman: ['deliveries', 'stock-movements'],
   jurnal: ['journal'],
   pengaturan: ['organization', 'workstreams'],
 };

@@ -496,10 +496,10 @@ export function Editor({
                       else if (entity === 'work-items' && field === 'recurrence') setRecurrence(next);
                     }}
                     options={[
-                      ...(reference ? [{ value: '', label: entity === 'stock-counts' && field === 'item_id' ? 'Pilih barang (wajib)' : entity === 'work-items' && field === 'workstream_id' ? 'Tugas mandiri (tanpa proyek)' : 'Tidak terkait (opsional)' }] : []),
+                      ...(reference ? [{ value: '', label: ['stock-counts', 'stock-movements'].includes(entity) && field === 'item_id' ? 'Pilih barang (wajib)' : entity === 'work-items' && field === 'workstream_id' ? 'Tugas mandiri (tanpa proyek)' : 'Tidak terkait (opsional)' }] : []),
                       ...(reference && selectedValue && !refItems.some((row) => row.id === selectedValue)
                         ? [{ value: String(selectedValue), label: 'Catatan terkait yang belum dimuat (' + String(selectedValue).slice(0, 8) + ')' }] : []),
-                      ...(allChoices ? allChoices.map((choice) => ({ value: choice, label: formatChoiceLabel(choice) }))
+                      ...(allChoices ? allChoices.map((choice) => ({ value: choice, label: formatChoiceLabel(choice, entity + '.' + field) }))
                         : refItems.filter((row) => (entity !== 'work-items' || field !== 'milestone_id' || row.data.workstream_id === projectId) && (entity !== 'work-items' || field !== 'workstream_id' || !['selesai', 'diarsipkan'].includes(String(row.data.status)) || row.id === selectedValue))
                           .map((row) => ({ value: row.id, label: String(row.data.title) + (
                             reference === 'workstreams'
@@ -1110,9 +1110,12 @@ export function Editor({
                 </Field>
               );
             const score = ['probability', 'impact', 'interest', 'influence'].includes(field);
-            const quantity = ['book_quantity', 'minimum_quantity', 'counted_quantity'].includes(
-              field,
-            );
+            const quantity = [
+              'book_quantity',
+              'minimum_quantity',
+              'counted_quantity',
+              'quantity',
+            ].includes(field);
             const numeric = score || quantity || field === 'amount' || field === 'duration';
             return (
               <Field key={field} className="field-item" id={`${headingId}-${field}`} label={label}>
@@ -1160,7 +1163,7 @@ export function Editor({
                               ? 'number'
                               : 'text'
                   }
-                  min={field === 'duration' ? 15 : quantity ? 0 : numeric ? 1 : undefined}
+                  min={field === 'duration' ? 15 : field === 'quantity' ? 1 : quantity ? 0 : numeric ? 1 : undefined}
                   max={
                     field === 'duration'
                       ? 480
@@ -1196,6 +1199,7 @@ export function Editor({
                       'book_quantity',
                       'minimum_quantity',
                       'counted_quantity',
+                      'quantity',
                     ].includes(field) ||
                     (entity === 'work-items' &&
                       field === 'recurrence_time' &&

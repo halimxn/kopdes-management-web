@@ -4,6 +4,14 @@ export function pageEntities(slug: string): Entity[] {
   if (slug === 'riwayat-proyek') return pageEntities('proyek');
   const related: Record<string, Entity[]> = {
     'dunia-koperasi': ['units', 'work-items', 'meetings', 'journal', 'inventory-items'],
+    pengiriman: [
+      'deliveries',
+      'stock-movements',
+      'stakeholders',
+      'units',
+      'inventory-items',
+      'stock-counts',
+    ],
     beranda: [
       'work-items',
       'meetings',

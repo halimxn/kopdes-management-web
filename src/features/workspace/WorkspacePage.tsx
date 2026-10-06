@@ -53,7 +53,7 @@ export function WorkspacePage({ slug }: { slug: string }) {
     /^[a-f\d-]{36}$/i.test(requestedRecord)
       ? { entity: selectedEntity, id: requestedRecord }
       : undefined;
-  const { data, loading, error, refresh, operations, more, loadMore, fetching } = useWorkspace(
+  const { data, loading, error, refresh, operations, logistics, more, loadMore, fetching } = useWorkspace(
       slug,
       { scope: taskScope, ...(['proyek', 'riwayat-proyek'].includes(slug) && /^[a-f\d-]{36}$/i.test(query.get('id') || '') ? { project: query.get('id')! } : {}) },
       detail,
@@ -138,7 +138,12 @@ export function WorkspacePage({ slug }: { slug: string }) {
       {slug === 'laporan' && <Reports />}
       {slug === 'pengaturan' && <Settings refresh={refresh} organization={data.organization?.[0]} />}
       {slug === 'hari-ini' && <TodayView workspace={data} refresh={refresh} />}
-      {pages[slug] && (
+      {slug === 'pengiriman' && !logistics ? (
+        <p className="workspace-partial-note" role="status">
+          Pengiriman dan mutasi stok belum aktif. Pasang migrasi 8
+          (20261006000008_world_logistics.sql) setelah disetujui; data belum dapat dicatat di sini.
+        </p>
+      ) : pages[slug] && (
         <>
           {pages[slug].length > 1 && (
             <div className="tabs" role="tablist" aria-label="Bagian halaman">
@@ -149,7 +154,11 @@ export function WorkspacePage({ slug }: { slug: string }) {
                   key={entity}
                   onClick={() => setTabChoice({ section: requestedSection, index })}
                 >
-                  {entity === 'organization'
+                  {entity === 'deliveries'
+                    ? 'Pengiriman'
+                    : entity === 'stock-movements'
+                      ? 'Mutasi stok'
+                      : entity === 'organization'
                     ? 'Profil koperasi'
                     : entity === 'workstreams'
                       ? 'Bidang kerja'

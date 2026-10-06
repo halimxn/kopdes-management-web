@@ -8,7 +8,7 @@ const seed: Record<string, unknown> = {
   code: 'QA', member_number: 'QA-001', sku: 'QA-001', measurement: 'pcs',
   date: '2026-10-04', due_date: '2026-10-05', start_date: '2026-10-04',
   direction: 'masuk', amount: 10000, category: 'Contoh', account: 'Contoh',
-  book_quantity: 12, minimum_quantity: 2, counted_quantity: 10, assignee: 'Contoh QA',
+  book_quantity: 12, minimum_quantity: 2, counted_quantity: 10, quantity: 3, assignee: 'Contoh QA',
   description: 'Data contoh khusus pemeriksaan. Bukan catatan operasional.',
   notes: 'Catatan contoh khusus pemeriksaan tombol, input, dan tata letak.',
   item_id: '00000000-0000-4000-8000-000000000001',
@@ -36,6 +36,7 @@ task.data = schemas['work-items'].parse({ ...task.data,
   activities: [{ id: 'qa-comment', user: 'Contoh QA', role: '', text: 'Komentar contoh untuk pemeriksaan tata letak.', created_at: task.created_at, type: 'comment' }],
 });
 popupWorkspace['stock-counts']![0].data.item_id = popupWorkspace['inventory-items']![0].id;
+popupWorkspace['stock-movements']![0].data.item_id = popupWorkspace['inventory-items']![0].id;
 
 const readyUnit = { ...popupWorkspace.units![0], id: '00000000-0000-4000-8000-000000009001', data: schemas.units.parse({ title: 'Contoh gerai dengan penilaian sebagian', status: 'persiapan', assignee: 'Contoh QA' }) };
 const completeUnit = { ...readyUnit, id: '00000000-0000-4000-8000-000000009002', data: schemas.units.parse({ title: 'Contoh gerai dengan seluruh syarat selesai', status: 'siap uji' }) };

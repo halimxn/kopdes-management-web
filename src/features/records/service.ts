@@ -52,6 +52,43 @@ export async function list(entity: Entity): Promise<Item[]> {
   }
   throw new Error('Terlalu banyak catatan untuk laporan ini. Pilih periode lebih pendek.');
 }
+/**
+ * Mutasi stok dicatat dan stok buku barang diperbarui dalam satu transaksi database.
+ * Mutasi tidak dapat diubah; kesalahan diperbaiki dengan mutasi koreksi baru.
+ */
+async function postStockMovement(input: unknown, id?: string) {
+  if (id) throw new Error('Mutasi stok tidak dapat diubah. Catat mutasi koreksi baru.');
+  const {
+    book_before: _before,
+    book_after: _after,
+    ...movement
+  } = schemas['stock-movements'].parse(input);
+  void _before;
+  void _after;
+  const { data: movementId, error } = await db().rpc('hub_post_stock_movement', {
+    p_data: movement,
+  });
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? ''))
+      throw new Error('Fitur mutasi stok belum aktif. Pasang migrasi pengiriman terlebih dahulu.');
+    throw new Error(
+      error.message.includes('Stock would be negative')
+        ? 'Stok buku tidak cukup untuk mutasi ini.'
+        : error.message.includes('Missing related record')
+          ? 'Barang atau catatan terkait tidak ditemukan. Muat ulang sebelum menyimpan.'
+          : 'Mutasi stok gagal disimpan. Stok tidak berubah.',
+    );
+  }
+  const { data: record, error: readError } = await db()
+    .from('hub_records')
+    .select('*')
+    .eq('id', movementId)
+    .single();
+  if (readError)
+    throw new Error('Mutasi tersimpan, tetapi gagal dimuat ulang. Muat ulang halaman.');
+  return record as Item;
+}
+
 export async function save(entity: Entity, input: unknown, id?: string) {
   let data = schemas[entity].parse(input);
   let projectClosed = false;
@@ -74,7 +111,9 @@ export async function save(entity: Entity, input: unknown, id?: string) {
       if (entity === 'work-items' && field === 'workstream_id') {
         projectClosed = ['selesai', 'diarsipkan'].includes(String(found.data?.status));
         if (!id && projectClosed)
-          throw new Error('Proyek sudah masuk riwayat. Buka kembali proyek sebelum menambah tugas baru.');
+          throw new Error(
+            'Proyek sudah masuk riwayat. Buka kembali proyek sebelum menambah tugas baru.',
+          );
       }
     }
   }
@@ -137,6 +176,7 @@ export async function save(entity: Entity, input: unknown, id?: string) {
     if (error) throw new Error('Tugas gagal disimpan. Tidak ada perubahan parsial.');
     return record as Item;
   }
+  if (entity === 'stock-movements') return postStockMovement(data, id);
   if (entity === 'journal') {
     const journal = schemas['journal'].parse(data);
     if (!id && !journal.code) journal.code = makeActivityCode(journal.title, crypto.randomUUID());

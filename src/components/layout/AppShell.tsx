@@ -43,7 +43,7 @@ import {
 } from 'lucide-react';
 import { usePreference } from '@/lib/usePreference';
 import { WorkspaceSearch } from '@/features/workspace/WorkspaceSearch';
-import { Star, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Star, ChevronDown, PanelLeftClose, PanelLeftOpen, Truck } from 'lucide-react';
 import { ManagerActionModal } from './ManagerActionModal';
 import { Modal } from '@/components/ui/Modal';
 
@@ -60,6 +60,7 @@ const navIcons: Record<string, React.ComponentType<{ size?: number; className?: 
   '/keuangan': Wallet,
   '/barang': Boxes,
   '/stok-opname': ClipboardList,
+  '/pengiriman': Truck,
   '/anggota': Users,
   '/gerai': Store,
   '/kesiapan': CheckCircle2,
@@ -82,7 +83,7 @@ const sections = [
   ['Kegiatan Lapangan', ['/jurnal'], 'amber'],
   [
     'Pencatatan Buku',
-    ['/pencatatan', '/keuangan', '/barang', '/stok-opname', '/anggota'],
+    ['/pencatatan', '/keuangan', '/barang', '/stok-opname', '/pengiriman', '/anggota'],
     'emerald',
   ],
   ['Operasional Gerai', ['/gerai', '/kesiapan', '/risiko', '/laporan'], 'purple'],
@@ -103,6 +104,7 @@ function getNavSubtitle(href: string): string {
     '/keuangan': 'Kas masuk & keluar',
     '/barang': 'Katalog & stok buku',
     '/stok-opname': 'Hitung fisik barang',
+    '/pengiriman': 'Barang masuk & keluar',
     '/anggota': 'Buku anggota aktif',
     '/gerai': 'Kesiapan toko fisik',
     '/kesiapan': 'Checklist & bukti',

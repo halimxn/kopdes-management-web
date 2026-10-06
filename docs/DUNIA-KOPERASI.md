@@ -237,7 +237,7 @@ Radius 14 px, border `#e6ebf5`, bayangan lembut, Inter, angka tabular, tanpa blu
 | Slot lahan | `slot` pada Gerai | Posisi gerai tetap |
 | Ringkasan peringatan | Stok minimum, pengiriman terlambat, dokumen kedaluwarsa, tugas lewat tenggat | Pin dunia, kartu Beranda |
 
-Kolom tambahan masuk data JSON yang ada; dua entitas baru menambah daftar entitas `hub_records` dan pemeriksaan relasinya. Belum termasuk POS, akuntansi lengkap, hutang suplier dan harga beli otomatis.
+Kolom tambahan masuk data JSON yang ada; dua entitas baru menambah daftar entitas `hub_records` dan pemeriksaan relasinya. **Status 6 Oktober:** Pengiriman, Mutasi stok (migrasi 8, belum di cloud), kategori Suplier/Ekspedisi, kolom Tim (seksi, tempat kerja, jam kerja, warna baju, rambut), Rak gudang dan Slot lahan sudah ada di web. Belum termasuk POS, akuntansi lengkap, hutang suplier dan harga beli otomatis.
 
 ### Ide tambahan yang disetujui
 

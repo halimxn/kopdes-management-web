@@ -1,5 +1,13 @@
 # Changelog
 
+## Paket 5 — data logistik web — 6 Oktober 2026
+
+- Migrasi 8 (`20261006000008_world_logistics.sql`, belum dijalankan di cloud): Pengiriman dan Mutasi stok di hub_records, fungsi atomik pencatat mutasi + stok buku, mutasi tidak dapat diubah, stok negatif ditolak. SQL instalasi bersih dan reset dibuat ulang; 5 tes PGlite baru.
+- Halaman `/pengiriman` (Pengiriman & Mutasi) memakai form/daftar catatan; menu di grup Pencatatan Buku. Server menyimpan mutasi lewat fungsi atomik, menolak ubah/hapus mutasi, dan memeriksa kemampuan `logistics`; sebelum migrasi terpasang halaman menampilkan "belum aktif".
+- Mitra & kontak mendapat kategori Suplier/Ekspedisi. Tim mendapat Seksi, Tempat kerja, Jam kerja, Warna baju dan Rambut (untuk Dunia Koperasi; bukan absensi).
+- Form: label pilihan kontekstual (mutasi Masuk (+) bukan Uang masuk), barang wajib pada mutasi, jumlah berupa angka.
+- 283 tes/45 berkas, typecheck, lint dan build lulus. Form diperiksa di galeri popup development; halaman /pengiriman dengan sesi dan data cloud belum diperiksa (butuh migrasi dan login pemilik).
+
 ## Paket 4 — gudang dari data Barang — 6 Oktober 2026
 
 - Dunia memuat Barang; kolom Rak gudang (A–F) pada Barang tanpa SQL. Pencatatan belum aktif ditampilkan sebagai keadaan, bukan stok nol.

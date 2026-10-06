@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { operationEntities, type Entity, type Item } from '../records/schemas';
+import { logisticsEntities, operationEntities, type Entity, type Item } from '../records/schemas';
 import { api } from '@/lib/client';
 import { pageEntities } from './workspace-scope';
 import type { ListQuery } from '../records/query';
@@ -11,6 +11,7 @@ type WorkspaceCacheEntry = {
   data: Workspace;
   more: Partial<Record<Entity, number>>;
   operations: boolean;
+  logistics?: boolean;
 };
 
 const workspaceCache = new Map<string, WorkspaceCacheEntry>();
@@ -49,6 +50,7 @@ export function useWorkspace(
     [loading, setLoading] = useState(() => !initialCache),
     [error, setError] = useState('');
   const [operations, setOperations] = useState(() => initialCache?.operations || false);
+  const [logistics, setLogistics] = useState(() => initialCache?.logistics || false);
   const [more, setMore] = useState<Partial<Record<Entity, number>>>(() => initialCache?.more || {});
   const [fetching, setFetching] = useState<Entity | null>(null);
   const [renderedCacheKey, setRenderedCacheKey] = useState(cacheKey);
@@ -58,6 +60,7 @@ export function useWorkspace(
     setData(initialCache?.data || {});
     setMore(initialCache?.more || {});
     setOperations(initialCache?.operations || false);
+    setLogistics(initialCache?.logistics || false);
     setLoading(!initialCache);
     setError('');
     setFetching(null);
@@ -89,10 +92,12 @@ export function useWorkspace(
     const current = ++generation.current;
     setFetching(null);
     try {
-      const capabilities = await api<{ operations: boolean }>('capabilities');
+      const capabilities = await api<{ operations: boolean; logistics?: boolean }>('capabilities');
       const entries = await Promise.all(
         pageEntities(slug)
           .filter((entity) => capabilities.operations || !operationEntities.includes(entity))
+          // Migrasi 8 belum terpasang: jangan meminta domain yang belum ada.
+          .filter((entity) => capabilities.logistics || !logisticsEntities.includes(entity))
           .map(async (entity) => [entity, await api<Page>(pathFor(entity))] as const),
       );
       if (current !== generation.current) return;
@@ -118,9 +123,11 @@ export function useWorkspace(
         data: next,
         more: nextMore,
         operations: capabilities.operations,
+        logistics: Boolean(capabilities.logistics),
       });
       window.dispatchEvent(new CustomEvent('hub-workspace', { detail: next }));
       setOperations(capabilities.operations);
+      setLogistics(Boolean(capabilities.logistics));
       setError('');
     } catch (e) {
       if (current === generation.current) {
@@ -159,7 +166,7 @@ export function useWorkspace(
       else delete nextMore[entity];
       setData(next);
       setMore(nextMore);
-      cacheWorkspace(cacheKey, { data: next, more: nextMore, operations });
+      cacheWorkspace(cacheKey, { data: next, more: nextMore, operations, logistics });
       window.dispatchEvent(new CustomEvent('hub-workspace', { detail: next }));
     } catch (e) {
       if (current === generation.current) setError((e as Error).message);
@@ -188,5 +195,5 @@ export function useWorkspace(
       requestRef.current++;
     };
   }, [refresh, cacheKey]);
-  return { data, loading, error, refresh, operations, more, loadMore, fetching };
+  return { data, loading, error, refresh, operations, logistics, more, loadMore, fetching };
 }

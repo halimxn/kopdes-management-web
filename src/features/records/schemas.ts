@@ -221,6 +221,29 @@ export const schemas = {
       role: text,
       unit_id: ref,
       status: z.enum(['direncanakan', 'ditunjuk', 'aktif', 'nonaktif']).default('direncanakan'),
+      // Dipakai Dunia Koperasi untuk meja seksi, jadwal dan penampilan karakter; bukan absensi.
+      section: z
+        .enum([
+          'belum ditentukan',
+          'layanan anggota',
+          'administrasi & keuangan',
+          'usaha & gerai',
+          'gudang & logistik',
+          'umum',
+        ])
+        .default('belum ditentukan'),
+      workplace: z.enum(['kantor', 'gudang', 'gerai']).default('kantor'),
+      work_hours: z
+        .union([
+          z
+            .string()
+            .trim()
+            .regex(/^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/, 'Format jam: 08:00-16:00'),
+          z.literal(''),
+        ])
+        .default(''),
+      outfit: z.enum(['biru', 'hijau', 'oranye', 'lavender', 'abu']).default('biru'),
+      hair: z.enum(['pendek', 'panjang', 'berkerudung', 'topi']).default('pendek'),
     })
     .strict(),
   trainings: z
@@ -231,6 +254,44 @@ export const schemas = {
       required: z.boolean().default(true),
       status: z.enum(['rencana', 'selesai']).default('rencana'),
       notes: text,
+    })
+    .strict(),
+  deliveries: z
+    .object({
+      title,
+      direction: z.enum(['masuk', 'keluar']).default('masuk'),
+      status: z
+        .enum(['dipesan', 'dikirim', 'tiba', 'diperiksa', 'selesai', 'dibatalkan'])
+        .default('dipesan'),
+      stakeholder_id: ref,
+      unit_id: ref,
+      planned_date: optionalDate,
+      arrived_date: optionalDate,
+      dock: z.enum(['belum ditentukan', 'D1', 'D2', 'D3', 'D4']).default('belum ditentukan'),
+      vehicle: text,
+      items: text,
+      link,
+      notes: text,
+    })
+    .strict(),
+  'stock-movements': z
+    .object({
+      title,
+      item_id: z.string().uuid('Pilih barang'),
+      kind: z.enum(['masuk', 'keluar', 'koreksi tambah', 'koreksi kurang']).default('masuk'),
+      quantity: z.preprocess(
+        (value) => (typeof value === 'string' && value.trim() !== '' ? Number(value) : value),
+        z.number().int().min(1, 'Jumlah minimal 1').max(1_000_000_000),
+      ),
+      date,
+      delivery_id: ref,
+      unit_id: ref,
+      stock_count_id: ref,
+      reference_number: text,
+      notes: text,
+      // Diisi server saat mutasi tercatat; tidak dapat diubah lewat form.
+      book_before: z.number().int().optional(),
+      book_after: z.number().int().optional(),
     })
     .strict(),
   journal: z
@@ -317,6 +378,8 @@ export const operationEntities: Entity[] = [
   'inventory-items',
   'stock-counts',
 ];
+/** Aktif setelah migrasi 8 (pengiriman dan mutasi stok) terpasang. */
+export const logisticsEntities: Entity[] = ['deliveries', 'stock-movements'];
 export type Entity = keyof typeof schemas;
 export type Item = {
   id: string;
