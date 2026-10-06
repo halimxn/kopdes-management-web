@@ -103,6 +103,21 @@ function tiled(texture: Texture, box: Box) {
   return sprite;
 }
 
+/** Label area digambar di lapisan teratas agar tidak tertutup bangunan atau pohon. */
+function drawAreaLabels() {
+  const labels = new Graphics();
+  for (const a of areas)
+    if (a.label) {
+      const w = pixelTextWidth(a.label, 2) + 12;
+      labels
+        .rect(a.box.x + a.box.w / 2 - w / 2, a.box.y - 8, w, 18)
+        .fill(gradeHex('#f6efd8'))
+        .stroke({ width: 2, color: OL });
+      drawPixelText(labels, a.label, a.box.x + a.box.w / 2 - w / 2 + 6, a.box.y - 4, OL, 2);
+    }
+  return labels;
+}
+
 function drawGround(layer: Container) {
   const grass = noiseTexture(
     [
@@ -185,17 +200,7 @@ function drawGround(layer: Container) {
   water.circle(930, 1040, 44).fill(gradeHex('#d0c8b8')).stroke({ width: 3, color: OL });
   water.circle(930, 1040, 36).fill(gradeHex('#6fa7c0'));
   layer.addChild(water, marks);
-  const labels = new Graphics();
-  for (const a of areas)
-    if (a.label) {
-      const w = pixelTextWidth(a.label, 2) + 12;
-      labels
-        .rect(a.box.x + a.box.w / 2 - w / 2, a.box.y - 8, w, 18)
-        .fill(gradeHex('#f6efd8'))
-        .stroke({ width: 2, color: OL });
-      drawPixelText(labels, a.label, a.box.x + a.box.w / 2 - w / 2 + 6, a.box.y - 4, OL, 2);
-    }
-  layer.addChild(labels);
+  return drawAreaLabels();
 }
 
 /** Bangunan greybox bergaya pixel: atap, fasad, jendela, pintu, papan nama. Aset final di P3. */
@@ -314,7 +319,7 @@ export async function createWorld(
   const glow = new Container();
   glow.blendMode = 'add';
   app.stage.addChild(world, night, glow);
-  drawGround(ground);
+  overlay.addChild(drawGround(ground));
 
   let tapGuard = false;
   const all = [...mapBuildings, ...houses];

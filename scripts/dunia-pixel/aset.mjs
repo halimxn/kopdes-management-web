@@ -186,21 +186,20 @@ function toko(b, ox, oy) {
   castShadow(ox, oy, fw, fh, H);
   roofTiles(ox - 6, oy - 2, fw + 12, fh + 4, b.roof);
   pastelWall(ox, top, fw, H, b.wall, 0);
-  const upper = H >= 120;
-  if (upper) {
-    win(ox + 12, top + 10, 32, 24, { frame: '#f6efd8', curtain: '#c9876a' });
-    win(ox + fw - 44, top + 10, 32, 24, { frame: '#f6efd8', curtain: '#93b5a6' });
-    line(ox + 50, top + 14, ox + fw - 50, top + 14, K.olS);
-    ['#cfe4f6', '#fbe28a', '#f6c9d4', '#9fd09a'].forEach((c, i) => box(ox + 54 + i * 16, top + 15, 10, 13, c));
-    box(ox + 4, top + 40, fw - 8, 3, K.ol);
-    for (let i = ox + 6; i < ox + fw - 6; i += 5) vline(i, top + 43, 9, '#7c6a5c');
-    box(ox + 4, top + 52, fw - 8, 3, '#8a6a52');
-    flowerBox(ox + 8, top + 40, 26);
-    flowerBox(ox + fw - 34, top + 40, 26);
+  // Urutan dari bawah: rak toko, tenda, papan nama tepat di atas tenda, lalu lantai atas.
+  const signY = ground - 82;
+  if (H >= 120) {
+    win(ox + 12, top + 8, 32, 22, { frame: '#f6efd8', curtain: '#c9876a' });
+    win(ox + fw - 44, top + 8, 32, 22, { frame: '#f6efd8', curtain: '#93b5a6' });
+    line(ox + 50, top + 12, ox + fw - 50, top + 12, K.olS);
+    ['#cfe4f6', '#fbe28a', '#f6c9d4', '#9fd09a'].forEach((c, i) => box(ox + 54 + i * 16, top + 13, 10, 12, c));
+    box(ox + 4, top + 34, fw - 8, 3, K.ol);
+    for (let i = ox + 6; i < ox + fw - 6; i += 5) vline(i, top + 37, 6, '#7c6a5c');
+    flowerBox(ox + 8, top + 34, 26);
+    flowerBox(ox + fw - 34, top + 34, 26);
   } else {
-    win(ox + fw / 2 - 18, top + 10, 36, 20, { frame: '#f6efd8', curtain: '#c9876a' });
+    win(ox + fw / 2 - 16, top + 4, 32, 14, { frame: '#f6efd8', curtain: '#c9876a' });
   }
-  const signY = upper ? top + 60 : top + 36;
   signBoard(ox + fw / 2, signY, b.sign, '#f6efd8', K.redD, 2);
   const [c1, c2] = TOKO_AWNING[b.id] || [K.red, '#f1ebd6'];
   awning(ox + 2, ground - 58, fw - 4, 9, c1, c2);
@@ -225,15 +224,15 @@ function klinik(b, ox, oy) {
   castShadow(ox, oy, fw, fh, H);
   roofTiles(ox - 6, oy - 2, fw + 12, fh + 4, b.roof);
   pastelWall(ox, top, fw, H, b.wall, 10);
-  win(ox + 12, top + 10, 32, 26, { frame: '#f6efd8', curtain: '#f6c9d4' });
-  win(ox + fw - 44, top + 10, 32, 26, { frame: '#f6efd8', blinds: true });
-  box(ox + fw / 2 - 11, top + 10, 22, 22, '#ffffff');
-  fill_cross(ox + fw / 2, top + 21);
-  signBoard(ox + fw / 2, top + 44, 'KLINIK DESA', '#f6efd8', '#2c6a5a', 2);
-  canopy(ox + fw / 2 - 30, ground - 70, 60, b.roof);
-  glassDoor(ox + fw / 2 - 22, ground - 62, 44, 62, '#2c6a5a');
-  win(ox + 10, ground - 56, 30, 34, { frame: '#f6efd8', blinds: true, single: true });
-  win(ox + fw - 40, ground - 56, 30, 34, { frame: '#f6efd8', blinds: true, single: true });
+  win(ox + 12, top + 8, 32, 22, { frame: '#f6efd8', curtain: '#f6c9d4' });
+  win(ox + fw - 44, top + 8, 32, 22, { frame: '#f6efd8', blinds: true });
+  box(ox + fw / 2 - 11, top + 6, 22, 22, '#ffffff');
+  fill_cross(ox + fw / 2, top + 17);
+  signBoard(ox + fw / 2, top + 34, 'KLINIK DESA', '#f6efd8', '#2c6a5a', 2);
+  canopy(ox + fw / 2 - 30, ground - 64, 60, b.roof);
+  glassDoor(ox + fw / 2 - 22, ground - 56, 44, 56, '#2c6a5a');
+  win(ox + 10, ground - 50, 30, 30, { frame: '#f6efd8', blinds: true, single: true });
+  win(ox + fw - 40, ground - 50, 30, 30, { frame: '#f6efd8', blinds: true, single: true });
   plant(ox + fw / 2 - 34, ground, 2);
   grime(ox, top + H * 0.5, fw, H * 0.5, 0.2);
 }
@@ -261,7 +260,7 @@ function apotek(b, ox, oy) {
   }
   glowFrom(ox + 10, ground - 62, 40, 62, 1.2);
   light(ox + 30, ground + 6, 50, '#d8fff0', 0.8);
-  glassDoor(ox + fw - 56, ground - 60, 44, 60, '#2c6a5a');
+  glassDoor(ox + fw - 56, ground - 52, 44, 52, '#2c6a5a');
   grime(ox, top + H * 0.5, fw, H * 0.5, 0.2);
 }
 function loket(b, ox, oy) {

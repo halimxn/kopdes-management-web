@@ -162,6 +162,7 @@ export const areas: MapArea[] = [
   { kind: 'sawah', box: { x: 380, y: 80, w: 780, h: 440 }, label: 'SAWAH DAN KEBUN' },
   { kind: 'kebun', box: { x: 30, y: 820, w: 150, h: 540 }, label: 'KEBUN' },
   { kind: 'permukiman', box: { x: 1300, y: 60, w: 1220, h: 470 }, label: 'PERMUKIMAN WARGA' },
+  { kind: 'taman', box: { x: 1760, y: 360, w: 200, h: 110 }, label: 'LAPANGAN' },
   { kind: 'pasar', box: { x: 380, y: 820, w: 270, h: 220 }, label: 'PASAR TANI' },
   { kind: 'alun', box: { x: 700, y: 820, w: 460, h: 470 }, label: 'ALUN-ALUN' },
   { kind: 'taman', box: { x: 1290, y: 820, w: 430, h: 470 }, label: 'TAMAN DAN LAPANGAN' },
@@ -170,19 +171,28 @@ export const areas: MapArea[] = [
   { kind: 'rencana', box: { x: 2160, y: 1510, w: 340, h: 70 }, label: 'RENCANA SUPLIER' },
 ];
 
-/** Gang kampung (paving) di permukiman: tiga gang mendatar dan tiga gang tegak. */
+/** Gang kampung berkelok: titik-titik jalur disusun dari kotak kecil agar dapat diubin. */
+function meander(points: (t: number) => [number, number], steps: number, size = 26): Box[] {
+  const boxes: Box[] = [];
+  for (let k = 0; k <= steps; k++) {
+    const [x, y] = points(k / steps);
+    boxes.push({ x: Math.round(x - size / 2), y: Math.round(y - size / 2), w: size, h: size });
+  }
+  return boxes;
+}
 export const villageLanes: Box[] = [
-  { x: 1300, y: 176, w: 1220, h: 24 },
-  { x: 1300, y: 300, w: 1220, h: 24 },
-  { x: 1300, y: 430, w: 1220, h: 24 },
-  ...[1596, 1900, 2204].map((x) => ({ x, y: 60, w: 24, h: 470 })),
+  // gang utama mendatar, bergelombang lembut
+  ...meander((t) => [1300 + t * 1220, 300 + Math.sin(t * Math.PI * 3) * 28], 110),
+  // dua gang menuju Jalan Desa (di antara kavling gerai, bukan di belakangnya)
+  ...meander((t) => [1640 + Math.sin(t * Math.PI * 2) * 34, 70 + t * 632], 60),
+  ...meander((t) => [2380 + Math.sin(t * Math.PI * 2.5 + 1) * 30, 120 + t * 582], 55),
+  // gang pendek ke utara
+  ...meander((t) => [2010 + Math.sin(t * Math.PI) * 40, 80 + t * 200], 22),
 ];
+/** Lapangan kampung (tanpa rumah) dan jalur hijau di belakang kavling gerai. */
+export const villageField: Box = { x: 1760, y: 360, w: 200, h: 110 };
+const villageKeepOut: Box[] = [villageField, { x: 1300, y: 455, w: 1220, h: 245 }];
 
-/**
- * Rumah warga (hiasan, tidak dapat dipilih) berderet menghadap gang dengan lebar, tinggi,
- * jarak dan warna atap bervariasi; sebagian petak dibiarkan menjadi halaman berpohon.
- * Acak berbiji tetap agar susunan sama di setiap kunjungan.
- */
 /** Tiga jenis rumah warga (warna dinding/atap, tinggi) × tiga lebar = sembilan sprite. */
 export const HOUSE_KINDS = {
   a: { wall: '#d9c9a3', roof: '#a8563c', height: 56 },
@@ -192,47 +202,72 @@ export const HOUSE_KINDS = {
 export const HOUSE_WIDTHS = [88, 100, 112] as const;
 export const HOUSE_DEPTH = 44;
 
+const overlaps = (a: Box, b: Box) =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/**
+ * Rumah warga (hiasan, tidak dapat dipilih) ditebar berkelompok tak beraturan: titik acak
+ * berbiji tetap, ditolak bila menimpa gang, lapangan, jalur hijau belakang gerai, atau tampilan
+ * rumah lain (tapak + tinggi fasad + jarak). Sebagian titik kosong menjadi pohon pekarangan.
+ */
 function layVillage() {
+  // mulberry32: acak berbiji tetap yang merata (LCG sederhana berulang terlalu cepat)
   let seed = 20261007;
-  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const rnd = () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
   const kinds = Object.keys(HOUSE_KINDS) as (keyof typeof HOUSE_KINDS)[];
-  const fronts = [166, 290, 420, 520];
-  const segments: [number, number][] = [
-    [1312, 1590],
-    [1626, 1894],
-    [1930, 2198],
-    [2234, 2510],
-  ];
   const built: MapBuilding[] = [];
   const yards: [number, number, number][] = [];
-  fronts.forEach((front, r) =>
-    segments.forEach(([from, to], s) => {
-      let x = from + Math.round(rnd() * 16);
-      let n = 0;
-      for (;;) {
-        const w = HOUSE_WIDTHS[Math.floor(rnd() * HOUSE_WIDTHS.length)];
-        if (x + w > to) break;
-        if (rnd() < 0.18) {
-          yards.push([x + w / 2, front - 4, 14 + Math.round(rnd() * 8)]);
-        } else {
-          const kind = kinds[Math.floor(rnd() * kinds.length)];
-          const look = HOUSE_KINDS[kind];
-          built.push({
-            id: `rumah-${r}-${s}-${n++}`,
-            sprite: `rumah-${kind}-${w}`,
-            select: 'kawasan',
-            title: 'Rumah warga',
-            style: 'rumah',
-            foot: { x, y: front - HOUSE_DEPTH, w, h: HOUSE_DEPTH },
-            height: look.height,
-            wall: look.wall,
-            roof: look.roof,
-          });
-        }
-        x += w + 16 + Math.round(rnd() * 22);
-      }
-    }),
-  );
+  const taken: Box[] = [];
+  const area = { x: 1310, y: 70, w: 1200, h: 380 };
+  for (let attempt = 0; attempt < 20000 && built.length < 26; attempt++) {
+    const w = HOUSE_WIDTHS[Math.floor(rnd() * HOUSE_WIDTHS.length)];
+    const kind = kinds[Math.floor(rnd() * kinds.length)];
+    const look = HOUSE_KINDS[kind];
+    const x = Math.round(area.x + rnd() * (area.w - w));
+    const front = Math.round(
+      area.y + look.height + HOUSE_DEPTH + rnd() * (area.h - look.height - HOUSE_DEPTH),
+    );
+    const foot = { x, y: front - HOUSE_DEPTH, w, h: HOUSE_DEPTH };
+    // tampilan rumah = tapak + fasad di atasnya, diberi jarak agar papan/atap tidak bertumpuk
+    const look2d = {
+      x: x - 10,
+      y: foot.y - look.height - 6,
+      w: w + 20,
+      h: HOUSE_DEPTH + look.height + 14,
+    };
+    if (taken.some((b) => overlaps(b, look2d))) continue;
+    if (
+      villageLanes.some((l) =>
+        overlaps(l, { x: x - 4, y: foot.y - 4, w: w + 8, h: HOUSE_DEPTH + 8 }),
+      )
+    )
+      continue;
+    if (villageKeepOut.some((k) => overlaps(k, look2d))) continue;
+    taken.push(look2d);
+    if (rnd() < 0.12) {
+      yards.push([x + w / 2, front - 6, 16 + Math.round(rnd() * 8)]);
+      continue;
+    }
+    built.push({
+      id: `rumah-${built.length}`,
+      sprite: `rumah-${kind}-${w}`,
+      select: 'kawasan',
+      title: 'Rumah warga',
+      style: 'rumah',
+      foot,
+      height: look.height,
+      wall: look.wall,
+      roof: look.roof,
+    });
+  }
+  // pohon dan kebun pekarangan di jalur hijau belakang gerai
+  for (let x = 1340; x < 2500; x += 90 + Math.round(rnd() * 60))
+    yards.push([x, 520 + Math.round(rnd() * 40), 18 + Math.round(rnd() * 10)]);
   return { built, yards };
 }
 const village = layVillage();
