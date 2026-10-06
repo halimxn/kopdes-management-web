@@ -139,21 +139,6 @@ export function CooperativeWorld({
     () => planManager(plans, { tasks: model.tasks, deliveries: model.deliveries }, now, today(now)),
     [plans, model, now],
   );
-  // Bubble maskot muncul sendiri 7 detik setiap 2,5 menit; tidak saat gerak minimal atau tanpa data.
-  const [bubbleOpen, setBubbleOpen] = useState(false);
-  const quietBubble = loading || Boolean(error) || rehearsal !== 'otomatis';
-  useEffect(() => {
-    if (quietBubble || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    let hide = 0;
-    const show = window.setInterval(() => {
-      setBubbleOpen(true);
-      hide = window.setTimeout(() => setBubbleOpen(false), 7000);
-    }, 150000);
-    return () => {
-      clearInterval(show);
-      clearTimeout(hide);
-    };
-  }, [quietBubble]);
   const hour = getWorldHour(preferences.time, now);
   const night = dayPhase(hour) === 'malam';
   const activity = rehearsal === 'otomatis' ? model.activity : rehearsal;
@@ -198,7 +183,8 @@ export function CooperativeWorld({
     );
   const weatherName = { cerah: 'Cerah', berawan: 'Berawan', hujan: 'Hujan' }[preferences.weather];
   const ambienceLabel = `${weatherName} · ${preferences.time === 'otomatis' ? phase : preferences.time}`;
-  const bubble =
+  // Keterangan maskot di kartu detail (keputusan pemilik: tanpa bubble maskot di peta).
+  const mascotNote =
     rehearsal !== 'otomatis'
       ? `Pratinjau animasi: ${activityNames[activity].toLowerCase()}.`
       : managerPlan.kind !== 'ruang'
@@ -349,6 +335,7 @@ export function CooperativeWorld({
   }
   const detail = (
     <DetailCard
+      mascotNote={mascotNote}
       selected={selected}
       location={location}
       zone={zone}
@@ -467,10 +454,8 @@ export function CooperativeWorld({
           zoom={zoom}
           rotation={rotation}
           selected={selected}
-          bubble={bubble}
           plans={plans}
           managerPlan={managerPlan}
-          bubbleOpen={bubbleOpen && !quietBubble}
           onSelect={select}
         />
         <KpiCards

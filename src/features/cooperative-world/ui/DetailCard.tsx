@@ -99,6 +99,8 @@ export const activityNames: Record<CharacterActivity, string> = {
 };
 
 type Props = {
+  /** Alasan rencana maskot manajer dari data (pengganti bubble di peta). */
+  mascotNote: string;
   selected: string;
   location: WorldLocation;
   zone: WorldZone;
@@ -376,6 +378,7 @@ export function DetailCard(props: Props) {
               <span className="cw-pill is-blue">{activityNames[props.activity]}</span>
               <small>Visualisasi, bukan kehadiran</small>
             </div>
+            <Rows items={[['Sedang', props.mascotNote]]} />
             <p className="cw-note">
               Maskot ruang kerja. Gerakan mengikuti jadwal rapat, kegiatan hari ini, lalu tugas
               dalam proses.

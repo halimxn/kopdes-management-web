@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Building2, Plus, MessageCircle, MapPin, Truck, Warehouse } from 'lucide-react';
+import { Building2, Plus, MapPin, Truck, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { animateCharacter, createCharacter } from './objects/characters';
 import { cityGround, createExterior, createNightLights } from './objects/exterior';
@@ -73,12 +73,9 @@ type Props = {
   zoom: number;
   rotation: number;
   selected: string;
-  bubble: string;
   /** Rencana kegiatan karakter Tim (dihitung ulang tiap menit tanpa membangun ulang scene). */
   plans: NpcPlan[];
   managerPlan: ManagerPlan;
-  /** Bubble maskot tampil otomatis sesekali (selain saat maskot dipilih). */
-  bubbleOpen: boolean;
   onSelect: (id: string) => void;
 };
 export function WorldScene({
@@ -95,10 +92,8 @@ export function WorldScene({
   zoom,
   rotation,
   selected,
-  bubble,
   plans,
   managerPlan,
-  bubbleOpen,
   onSelect,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
@@ -265,6 +260,7 @@ export function WorldScene({
     manager.group.userData.selection = 'karakter';
     const npcs = createNpcs(world, model.staff);
     let npcSnap = true;
+    const talk = { key: '', since: 0 };
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let pointerStart = [0, 0];
@@ -422,6 +418,8 @@ export function WorldScene({
       // Manajer: rapat/gym dari aktivitas; selain itu mengikuti rencana (briefing, meja staf, dok).
       const boss = bossPlan.current;
       const [rx, rz] = officeInterior.manager;
+      // Percakapan manajer: dengan staf yang didatangi di mejanya, atau dengan sopir di dok.
+      let talkKey = '';
       let goal: [number, number, number, CharacterPose] = [
         rx + 1.4,
         rz + 1.6,
@@ -442,9 +440,11 @@ export function WorldScene({
         else if (visit) {
           const { x, z } = visit.character.base;
           goal = [x + 0.9, z + 0.7, Math.atan2(-0.9, -0.7), 'idle'];
+          talkKey = `staf-${visit.id}`;
         } else if (state.activity === 'work') goal = [rx, rz + 1, Math.PI, 'desk'];
       } else if (location === 'luar') {
         const front = warehouse.center[1] + warehouse.size[2] / 2;
+        if (boss.kind === 'dok') talkKey = 'dok';
         goal =
           boss.kind === 'dok'
             ? [warehouse.docks[0] - 2.4, front + 1.6, Math.PI / 2, 'idle']
@@ -459,6 +459,14 @@ export function WorldScene({
       if (arrived) manager.group.rotation.y = goal[2];
       manager.base.y = arrived && goal[3] === 'gym' ? 0.3 : 0.1;
       animateCharacter(manager, elapsed, arrived ? goal[3] : 'walk', reduced.matches);
+      // Bubble "…" 4 detik setiap kali manajer tiba di lawan bicara baru.
+      const talkNow = arrived && !npcSnap ? talkKey : '';
+      if (talkNow !== talk.key) {
+        talk.key = talkNow;
+        talk.since = elapsed;
+      }
+      const talking = Boolean(talk.key) && !reduced.matches && elapsed - talk.since < 4;
+      markerRefs.current.get('karakter')?.classList.toggle('is-chatting', talking);
       positions.set('karakter', manager.group.position.clone().add(new THREE.Vector3(0, 2.4, 0)));
       const chatting = updateNpcs(
         npcs,
@@ -474,7 +482,10 @@ export function WorldScene({
       for (const actor of npcs)
         markerRefs.current
           .get(`staf-${actor.id}`)
-          ?.classList.toggle('is-chatting', chatting.has(actor.id));
+          ?.classList.toggle(
+            'is-chatting',
+            chatting.has(actor.id) || (talking && talk.key === `staf-${actor.id}`),
+          );
       for (const actor of npcs)
         if (actor.character.group.visible)
           positions.set(
@@ -765,25 +776,15 @@ export function WorldScene({
             );
           })}
       {!failed && (
+        // Tanpa tombol di atas kepala (keputusan pemilik); maskot dipilih dengan klik badannya.
+        // Penanda ini hanya menampung bubble percakapan "…".
         <div
-          className="cw-marker cw-character-marker"
+          className="cw-marker cw-manager-marker"
+          aria-hidden="true"
           ref={(node) => {
             if (node) markerRefs.current.set('karakter', node);
           }}
-        >
-          {(selected === 'karakter' || bubbleOpen) && (
-            <div className="cw-speech" role="status">
-              {bubble}
-            </div>
-          )}
-          <Button
-            className="cw-character-pin"
-            aria-label="Ajak maskot berbicara"
-            onClick={() => onSelect('karakter')}
-          >
-            <MessageCircle size={16} />
-          </Button>
-        </div>
+        />
       )}
     </div>
   );
