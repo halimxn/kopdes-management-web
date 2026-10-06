@@ -165,8 +165,9 @@ export function WorldScene({
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: settings.antialias,
+        antialias: false,
         alpha: false,
+        powerPreference: 'high-performance',
         // Hanya development: tangkapan layar QA dapat membaca isi kanvas.
         preserveDrawingBuffer: process.env.NODE_ENV === 'development',
       });
@@ -174,13 +175,16 @@ export function WorldScene({
       const failureFrame = requestAnimationFrame(() => setFailed(true));
       return () => cancelAnimationFrame(failureFrame);
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, settings.pixelRatio));
+    renderer.setPixelRatio(1);
     renderer.shadowMap.enabled = settings.shadows;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.BasicShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     // Neutral menjaga rona biru-pastel video; ACES memudarkan warna ke abu-abu.
     renderer.toneMapping = THREE.NeutralToneMapping;
     renderer.toneMappingExposure = 1.25;
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.imageRendering = 'pixelated';
     renderer.domElement.setAttribute(
       'aria-label',
       location === 'luar'
@@ -200,8 +204,8 @@ export function WorldScene({
     const scene = new THREE.Scene();
     const background = new THREE.Color('#eef3fc');
     scene.background = background;
-    // Kawasan: tanah tak berujung memudar ke warna langit sehingga tepi tanah tidak terlihat saat zoom keluar.
-    const fog = location === 'luar' ? new THREE.Fog(background, 240, 340) : null;
+    // Kawasan: tanah kompak memudar lembut ke warna langit.
+    const fog = location === 'luar' ? new THREE.Fog(background, 85, 140) : null;
     scene.fog = fog;
     const camera = new THREE.OrthographicCamera(-20, 20, 14, -14, 1, 420);
     const cameraOffset = (turn: number) =>
@@ -229,15 +233,15 @@ export function WorldScene({
     controls.minPolarAngle = 0.45;
     controls.maxPolarAngle = 1.18;
     controls.enablePan = true;
-    controls.maxTargetRadius = location === 'luar' ? 80 : 10;
+    controls.maxTargetRadius = location === 'luar' ? 55 : 10;
     // Cahaya bawah biru memberi sisi bayangan berona biru seperti video (bukan abu-abu).
     const ambient = new THREE.HemisphereLight('#f5f9ff', '#8fa3d8', 2.2);
     scene.add(ambient);
     const sun = new THREE.DirectionalLight('#fff7e8', 3.8);
     sun.castShadow = settings.shadows;
     if (settings.shadows) sun.shadow.mapSize.set(settings.shadowMapSize, settings.shadowMapSize);
-    // Distrik luas: bayangan dihitung di sekitar titik fokus kamera dan ikut bergeser (lihat draw).
-    const shadowExtent = location === 'luar' ? 46 : 22;
+    // Komplek kompak: bayangan terpusat pada area kavling aktif.
+    const shadowExtent = location === 'luar' ? 36 : 22;
     Object.assign(sun.shadow.camera, {
       left: -shadowExtent,
       right: shadowExtent,
@@ -252,7 +256,7 @@ export function WorldScene({
     scene.add(sun, sun.target);
     const sunOffset = new THREE.Vector3(-14, 28, 14);
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(2000, 2000),
+      new THREE.PlaneGeometry(360, 360),
       new THREE.MeshStandardMaterial({
         color: location === 'luar' ? cityGround : '#eef3fc',
         roughness: 1,
@@ -402,8 +406,15 @@ export function WorldScene({
     const resize = () => {
       const { width, height } = node.getBoundingClientRect();
       if (!width || !height) return;
-      renderer.setSize(width, height);
-      composer?.setSize(width, height);
+      const scale = settings.downsampleScale ?? 0.5;
+      const renderW = Math.max(320, Math.floor(width * scale));
+      const renderH = Math.max(180, Math.floor(height * scale));
+      renderer.setPixelRatio(1);
+      renderer.setSize(renderW, renderH, false);
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.imageRendering = 'pixelated';
+      composer?.setSize(renderW, renderH);
       const aspect = width / height;
       const span = cameraSpan[roomKind(location)][aspect < 1 ? 'portrait' : 'landscape'];
       const cover = covered.current;

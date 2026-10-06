@@ -49,30 +49,14 @@ export type Lot = {
 export const sidewalk = 2.2;
 
 export const streets: Street[] = [
-  { id: 'raya', name: 'Jalan Raya', axis: 'x', lanes: 4, rect: { x: -72, z: -5, w: 152, d: 10 } },
+  { id: 'raya', name: 'Jalan Raya', axis: 'x', lanes: 4, rect: { x: -60, z: -5, w: 126, d: 10 } },
   {
     id: 'koperasi',
     name: 'Jalan Koperasi',
     axis: 'z',
     lanes: 2,
-    rect: { x: -4, z: -60, w: 8, d: 109 },
+    rect: { x: -4, z: -48, w: 8, d: 90 },
   },
-  {
-    id: 'utara',
-    name: 'Jalan Utara',
-    axis: 'x',
-    lanes: 2,
-    rect: { x: -72, z: -55.5, w: 152, d: 7 },
-  },
-  { id: 'lahan', name: 'Jalan Lahan', axis: 'x', lanes: 2, rect: { x: -66, z: 43, w: 140, d: 6 } },
-  {
-    id: 'barat',
-    name: 'Jalan Barat',
-    axis: 'z',
-    lanes: 2,
-    rect: { x: -65.5, z: -60, w: 7, d: 109 },
-  },
-  { id: 'timur', name: 'Jalan Timur', axis: 'z', lanes: 2, rect: { x: 66, z: -60, w: 8, d: 109 } },
 ];
 
 /** Dok gudang (pusat X) dan dok cold storage; truk mundur ke lantai dok yang ditinggikan. */
@@ -212,25 +196,10 @@ export const lots: Lot[] = [
     yards: [{ x: 11, z: 20.5, w: 50, d: 5 }],
     gardens: [],
   },
-  {
-    id: 'lahan',
-    name: 'Lahan pertanian',
-    fence: { x: -60, z: 51.2, w: 128, d: 21 },
-    gates: [{ side: 'utara', from: 2, to: 8, use: 'kendaraan' }],
-    buildings: [],
-    parking: [],
-    yards: [],
-    gardens: [],
-  },
 ];
 
-/** Enam petak lahan pertanian; kosong sampai data lahan tersedia. */
-export const farmPlots: Rect[] = [0, 1, 2, 3, 4, 5].map((i) => ({
-  x: -57.5 + i * 20.7,
-  z: 53.5,
-  w: 18.5,
-  d: 16.5,
-}));
+/** Lahan pertanian dihilangkan dari peta aktif agar komplek tetap kompak & ringan. */
+export const farmPlots: Rect[] = [];
 
 /** Area halaman logistik (pemandangan): cas forklift, staging, jalur manuver. */
 export const logisticsYard = {
@@ -241,18 +210,8 @@ export const logisticsYard = {
   rack: { x: 8.6, z: -41, w: 2.6, d: 8 } as Rect,
 };
 
-/** Blok kota di luar distrik: utara/barat tinggi (di belakang), timur rendah agar tak menutupi. */
-export const cityBlocks: (Rect & { h: number })[] = [
-  ...[-66, -46, -26, -6, 14, 34, 54].map((x, i) => ({
-    x,
-    z: -76,
-    w: 16,
-    d: 14,
-    h: 5 + ((i * 3) % 4),
-  })),
-  ...[-50, -28, -6, 16, 38].map((z, i) => ({ x: -86, z, w: 14, d: 18, h: 4 + ((i * 5) % 3) })),
-  ...[-50, -26, -2, 22].map((z, i) => ({ x: 80, z, w: 12, d: 18, h: 2 + (i % 2) })),
-];
+/** Blok kota luar dihilangkan agar diorama komplek fokus dan hemat render. */
+export const cityBlocks: (Rect & { h: number })[] = [];
 
 export const allBuildings = () => lots.flatMap((lot) => lot.buildings);
 

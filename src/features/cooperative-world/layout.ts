@@ -4,7 +4,7 @@
 import { allBuildings, docks, logisticsYard, lots, streets } from './district';
 
 /** Batas distrik (kavling + jalan); kota di luarnya hanya pemandangan. Lihat district.ts. */
-export const site = { minX: -66, maxX: 74, minZ: -56, maxZ: 74 };
+export const site = { minX: -58, maxX: 66, minZ: -48, maxZ: 42 };
 
 const building = (id: string) => allBuildings().find((b) => b.id === id)!.rect;
 const gudang = building('gudang');
@@ -76,8 +76,8 @@ export const park = {
   size: [garden.w, garden.d] as [number, number],
 };
 
-/** Zoom terjauh di kawasan: seluruh distrik dan sedikit kota (1280 px). */
-export const minWorldZoom = 0.2;
+/** Zoom terjauh di kawasan: seluruh distrik kompak (1280 px). */
+export const minWorldZoom = 0.28;
 
 export type WorldZone = 'semua' | 'gudang' | 'kantor' | 'kesehatan' | 'gerai' | 'lahan';
 /** Fokus zona: tengah lebar kavling, di antara deretan bangunan (utara) dan halaman agar bangunan
@@ -90,7 +90,7 @@ export const worldZones: Record<
   WorldZone,
   { title: string; subtitle: string; target: [number, number]; zoom: number }
 > = {
-  semua: { title: 'Semua kawasan', subtitle: 'Seluruh distrik', target: [4, 6], zoom: 0.24 },
+  semua: { title: 'Semua kawasan', subtitle: 'Seluruh distrik', target: [4, -2], zoom: 0.34 },
   gudang: {
     title: 'Logistik & cold storage',
     subtitle: 'Gudang, dok, halaman truk',
@@ -116,10 +116,10 @@ export const worldZones: Record<
     zoom: 0.62,
   },
   lahan: {
-    title: 'Lahan pertanian',
-    subtitle: 'Enam petak',
-    target: lotCenter('lahan'),
-    zoom: 0.42,
+    title: 'Area hijau',
+    subtitle: 'Taman dan ruang terbuka',
+    target: [park.center[0], park.center[1]],
+    zoom: 0.52,
   },
 };
 

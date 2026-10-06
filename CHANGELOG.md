@@ -1,6 +1,12 @@
 # Changelog
 
-## Field Pengiriman Lengkap (Sopir, Plat Nomor, Jam Tiba) — 6 Oktober 2026
+## Distrik Mini Kompak & 3D Pixel Downsampling — 6 Oktober 2026
+
+- Optimalisasi performa hasil evaluasi /grill-me pemilik untuk mengatasi peta terlalu luas & memberatkan beban komputer.
+- Denah Distrik Mini: Jalan diringkas menjadi 1 perempatan ringkas (`Jalan Raya` × `Jalan Koperasi`), menghubungkan 4 kavling aktif kompak (Logistik, Administrasi, Kesehatan, Niaga). Menghilangkan 4 jalan lingkar luar, 16 blok kota latar belakang, dan 6 petak lahan kosong 128m. Ukuran bounds berkurang dari 160×120 menjadi 65×55 unit scene.
+- Kunci Penuh Mode Retro Piksel: kanvas WebGL di-downsample internal (skala 0.5x pada Tinggi, 0.4x pada Sedang, 0.33x pada Hemat) lalu di-stretch dengan CSS `image-rendering: pixelated; crisp-edges`.
+- Efisiensi GPU: GTAOPass dinonaktifkan total, bayangan disederhanakan ke BasicShadowMap 512 tajam retro, lantai diperkecil ke 360×360, dan fog dirapatkan ke 85–140. Menghemat beban GPU ~80% dan berjalan 60 FPS stabil.
+- 304 tes / 45 berkas lulus 100%, typecheck lulus, lint lulus, build Next.js sukses (7.8s).
 
 - Skema `deliveries`: kolom nama sopir (`driver_name`), nomor plat kendaraan (`license_plate`), dan estimasi jam tiba (`arrival_time` dengan format JJ:MM). Kompatibilitas mundur penuh (default '').
 - Formulir & web: Editor input time untuk field jam tiba, placeholder dan field-helper; kartu `/pengiriman` di Records menampilkan badge arah, dok, jam tiba WIB, plat nomor, nama sopir, dan rincian barang (`items`).

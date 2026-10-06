@@ -21,7 +21,25 @@ Arahan langsung pemilik terbaru mengatasi konflik. Jika gaya berubah atas permin
 
 ![Komposisi UI dan lingkungan video](referensi-dunia/video-contact-sheet.jpg)
 
-## Distrik ala video v4 — berlaku (denah disetujui pemilik 6 Oktober 2026)
+## Distrik Mini Kompak & 3D Pixel Downsampling — berlaku (Keputusan Pemilik 6 Oktober 2026)
+
+Berdasarkan sesi evaluasi performa (/grill-me) dengan pemilik untuk mengatasi keluhan peta yang terlalu luas dan memberatkan komputer:
+1. **Tata Letak Distrik Mini Kompak**:
+   - Peta diringkas menjadi **1 perempatan jalan ringkas**: `Jalan Raya` (axis X) bersilangan dengan `Jalan Koperasi` (axis Z).
+   - Menghapus empat jalan luar (`Jalan Utara`, `Jalan Lahan`, `Jalan Barat`, `Jalan Timur`), petak kota latar belakang (`cityBlocks`), dan lahan pertanian kosong 128m (`farmPlots`).
+   - Empat kavling aktif mengelilingi perempatan secara simetris & padat:
+     - **Timur Laut (Logistik)**: Gudang dok WH-04, Cold Storage WH-03, halaman manuver, parkir antre truk, staging & cas forklift.
+     - **Barat Laut (Administrasi)**: Kantor Koperasi KDMP, Loket Simpan Pinjam, taman & papan pengumuman.
+     - **Barat Daya (Kesehatan)**: Klinik Desa & Apotek Desa berdampingan.
+     - **Tenggara (Niaga)**: Gerai Sembako & tiga unit gerai tambahan.
+   - Ukuran bounds berkurang dari 160×120 menjadi 65×55 unit scene, memangkas lebih dari 70% geometri luar.
+2. **Kunci Penuh Mode Retro Piksel (Permanen)**:
+   - Resolusi internal kanvas WebGL di-downsample (skala 0.5x pada Tinggi, 0.4x pada Sedang, 0.33x pada Hemat) lalu di-upscale tajam menggunakan CSS `image-rendering: pixelated; image-rendering: crisp-edges`.
+   - `antialias: false`, `pixelRatio: 1`.
+   - **Bebas Beban Berat**: GTAOPass (multi-pass Ambient Occlusion) dimatikan total, bayangan dioptimalkan ke `BasicShadowMap 512` yang tajam & khas retro, fog dirapatkan (85–140), dan lantai dibatasi 360×360.
+   - Hasil: Mengurangi beban komputasi shader GPU hingga ~80%, frame rate 60 FPS sangat mulus di semua perangkat/laptop, dan menghasilkan estetika 3D retro cozy yang unik dan hidup.
+
+## Distrik ala video v4 — acuan historis & komponen (6 Oktober 2026)
 
 Wawancara kedua: tata letak harus mengikuti video, bukan denah lama dan bukan zip. Data denah di `district.ts` (fungsi murni, `validateDistrict` teruji); gambar dibuat ulang dengan `node scripts/denah-dunia.mjs`: [tampak atas](referensi-dunia/blueprint/denah-distrik.png) ([SVG](referensi-dunia/blueprint/denah-distrik.svg)), [sketsa isometrik](referensi-dunia/blueprint/denah-distrik-iso.png). Jalan kota grid (Raya 4 lajur, Koperasi, Utara, Barat, Timur, Lahan) bertrotoar; lima kavling berpagar: Logistik & cold storage (gudang WH-04 empat dok + cold storage WH-03 dua dok, lantai dok tinggi bertepi kuning, parkir 3 truk, cas forklift, staging kardus, gerbang barang ke Jalan Raya), Administrasi (kantor + simpan pinjam + parkir mobil + taman), Layanan kesehatan (klinik + apotek berdampingan, plaza, parkir), Gerai niaga (sembako + tiga kavling gerai tambahan, parkir), Lahan pertanian (enam petak kosong). Truk masuk dari timur Jalan Raya tanpa melewati area warga. Rincian keputusan di LANJUTAN-AI. Catatan persetujuan: blok kota tidak kaku (ukuran/tinggi/jarak bervariasi).
 

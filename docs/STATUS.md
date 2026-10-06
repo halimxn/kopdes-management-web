@@ -8,6 +8,14 @@ Rencana Dunia Koperasi v2 disetujui pemilik 6 Oktober 2026 dan disimpan di DUNIA
 
 Dunia Koperasi mengikuti video pengguna: 3D isometrik biru-putih, kartu mengambang, kantor/interior, tujuh lahan gerai, maskot animatif/bubble, cuaca dan waktu. Panduan telah diringkas, konflik lingkup tema diperjelas, referensi video/interior disimpan di docs/referensi-dunia agar dapat dibaca AI berikutnya.
 
+## Distrik Mini Kompak & 3D Pixel Downsampling (6 Oktober, sesi /grill-me pemilik)
+
+Selesai lokal (belum di-push): menindaklanjuti keluhan pemilik bahwa peta terlalu luas dan memberatkan komputer:
+1. **Denah Distrik Mini Kompak**: Jalan diringkas menjadi 1 perempatan ringkas (`Jalan Raya` × `Jalan Koperasi`) yang menghubungkan 4 kavling aktif (Logistik, Administrasi, Kesehatan, Niaga). Empat jalan luar, 16 blok kota latar belakang, dan 6 petak lahan kosong 128m dihapus. Ukuran bounds berkurang dari 160×120 menjadi 65×55 unit scene (>70% pengurangan geometri luar).
+2. **Kunci Penuh Mode Retro Piksel (Permanen)**: WebGL internal canvas di-downsample (skala 0.5x Tinggi, 0.4x Sedang, 0.33x Hemat) lalu di-upscale tajam secara crisp dengan CSS `image-rendering: pixelated; crisp-edges`.
+3. **Optimasi Performa Ringan**: GTAOPass (ambient occlusion multi-pass berat) dinonaktifkan total, bayangan dioptimasi ke `BasicShadowMap 512` yang retro tajam, ukuran lantai dipangkas ke 360×360, dan fog dirapatkan ke 85–140.
+4. **Verifikasi**: 304 tes Vitest lulus (45 berkas, 100%), typecheck 0 error, lint 0 error, build Next.js lulus dalam 7.8s. Pengujian browser subagent mengonfirmasi tampilan retro piksel tajam, transisi kamera zona mulus, 0 console error/warning, dan frame rate stabil/ringan.
+
 ## Blueprint visual v3 (6 Oktober, arahan pemilik: semirip mungkin dengan video)
 
 Implementasi lokal, belum dinilai pemilik. Aset baru dari kode: gudang dok ala video (atap pelana biru bergaris, dinding bergelombang, kusen dok biru bernomor, palet di ambang, AC dan logo atap), truk cab-over empat skema warna, forklift detail, palet kardus berlakban/kemasan biru, rak palet luar, kontainer teal, kantor dan gerai baru (pita kaca, tenda bergaris), pagar kaca, rumput, pohon berbaris, blok kota di latar. Interaksi: klik truk menampilkan kotak seleksi bersiku, label biru, garis rute (pita dilalui + titik sisa + pin dok) dan kamera terbang; forklift suasana bergerak. Kartu: ilustrasi isometrik WorldIcon, baris inventaris ala video, kartu truk berprogres, tab bersegmen dengan tab Dok, label lahan kosong ringkas, penanda ponsel ikon saja. Panduan: bagian Blueprint visual v3 di DUNIA-KOPERASI, folder docs/referensi-dunia/blueprint (denah, lembar aset, contoh kartu, bukti implementasi), halaman dev /dev/dunia-koperasi/aset, skill dunia-koperasi dan ui-ux-kopdes diperbarui.

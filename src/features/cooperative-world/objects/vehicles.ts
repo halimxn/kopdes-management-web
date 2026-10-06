@@ -141,39 +141,29 @@ export function createAmbientCars(parent: THREE.Object3D): AmbientCar[] {
   }[] = [
     {
       points: [
-        [-60.2, -50.4],
-        [-1.8, -50.4],
-        [-1.8, -2.5],
-        [-60.2, -2.5],
+        [-52, -2.5],
+        [60, -2.5],
+        [60, 2.5],
+        [-52, 2.5],
       ],
       kind: 'mobil',
       color: '#9fb8f5',
-      speed: 5,
+      speed: 4.8,
       start: 0.1,
     },
     {
       points: [
-        [1.8, 2.5],
-        [68, 2.5],
-        [68, 44.4],
-        [1.8, 44.4],
-      ],
-      kind: 'truk',
-      color: '',
-      speed: 4,
-      start: 0.6,
-    },
-    {
-      points: [
-        [-60.2, 2.5],
-        [-1.8, 2.5],
-        [-1.8, 44.4],
-        [-60.2, 44.4],
+        [-52, 2.5],
+        [-2, 2.5],
+        [-2, 36],
+        [2, 36],
+        [2, -2.5],
+        [-52, -2.5],
       ],
       kind: 'mobil',
       color: '#c9b8f6',
-      speed: 4.6,
-      start: 0.35,
+      speed: 4.2,
+      start: 0.45,
     },
   ];
   return loops.map((loop, index) => {

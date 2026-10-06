@@ -3,42 +3,47 @@ export type QualityChoice = QualityTier | 'otomatis';
 
 export type QualitySettings = {
   pixelRatio: number;
+  /** Skala downsample resolusi internal untuk estetika piksel retro & efisiensi GPU. */
+  downsampleScale: number;
   antialias: boolean;
   shadows: boolean;
   shadowMapSize: number;
-  /** Jeda minimum antarframe (ms); membatasi fps agar baterai ponsel tidak terkuras. */
+  /** Jeda minimum antarframe (ms); membatasi fps agar baterai perangkat hemat. */
   frameInterval: number;
   rainCount: number;
-  /** Ambient occlusion layar (GTAO) untuk kedalaman seperti video; hanya kualitas Tinggi. */
+  /** Ambient occlusion layar; dinonaktifkan pada mode retro piksel agar gambar crisp & ringan. */
   ambientOcclusion: boolean;
 };
 
 export const qualitySettings: Record<QualityTier, QualitySettings> = {
   tinggi: {
-    pixelRatio: 2,
-    antialias: true,
+    pixelRatio: 1,
+    downsampleScale: 0.5,
+    antialias: false,
     shadows: true,
-    shadowMapSize: 2048,
-    frameInterval: 15,
-    rainCount: 350,
-    ambientOcclusion: true,
+    shadowMapSize: 512,
+    frameInterval: 16,
+    rainCount: 160,
+    ambientOcclusion: false,
   },
   sedang: {
-    pixelRatio: 1.5,
-    antialias: true,
+    pixelRatio: 1,
+    downsampleScale: 0.4,
+    antialias: false,
     shadows: true,
-    shadowMapSize: 1024,
-    frameInterval: 32,
-    rainCount: 220,
+    shadowMapSize: 512,
+    frameInterval: 24,
+    rainCount: 100,
     ambientOcclusion: false,
   },
   hemat: {
     pixelRatio: 1,
+    downsampleScale: 0.33,
     antialias: false,
     shadows: false,
     shadowMapSize: 0,
     frameInterval: 32,
-    rainCount: 120,
+    rainCount: 60,
     ambientOcclusion: false,
   },
 };

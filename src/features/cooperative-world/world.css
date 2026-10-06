@@ -295,6 +295,9 @@
   height: 100%;
   display: block;
   outline: none;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 .cw-loading,
 .cw-render-error {
