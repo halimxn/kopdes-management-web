@@ -7,6 +7,10 @@ import type { WorldZone } from '../layout';
  * Jalan Provinsi. Id bangunan sama dengan district.ts agar kartu dan data tetap terhubung.
  */
 export const TILE = 16;
+/** Ruang kosong di sekeliling sprite bangunan untuk bayangan jatuh dan kolam cahaya malam. */
+export const SPRITE_MARGIN = 40;
+/** Ukuran sprite pohon yang dibuat generator; pohon denah memakai ukuran terdekat. */
+export const TREE_SIZES = [16, 22, 28] as const;
 export const WORLD = { w: 2560, h: 1600 } as const;
 
 export type Box = { x: number; y: number; w: number; h: number };
@@ -14,6 +18,8 @@ export type BuildingStyle =
   'kantor' | 'toko' | 'klinik' | 'apotek' | 'loket' | 'gudang' | 'pendingin' | 'balai' | 'rumah';
 export type MapBuilding = {
   id: string;
+  /** Nama berkas sprite di public/dunia/bangunan (tanpa .png); bawaan = id. */
+  sprite?: string;
   /** Id yang dikirim ke pemilihan kartu; kantor membuka ruang dalam. */
   select: string;
   title: string;
@@ -177,17 +183,20 @@ export const villageLanes: Box[] = [
  * jarak dan warna atap bervariasi; sebagian petak dibiarkan menjadi halaman berpohon.
  * Acak berbiji tetap agar susunan sama di setiap kunjungan.
  */
+/** Tiga jenis rumah warga (warna dinding/atap, tinggi) × tiga lebar = sembilan sprite. */
+export const HOUSE_KINDS = {
+  a: { wall: '#d9c9a3', roof: '#a8563c', height: 56 },
+  b: { wall: '#9fae86', roof: '#4e7f7a', height: 62 },
+  c: { wall: '#c99a6a', roof: '#7d7468', height: 52 },
+} as const;
+export const HOUSE_WIDTHS = [88, 100, 112] as const;
+export const HOUSE_DEPTH = 44;
+
 function layVillage() {
   let seed = 20261007;
   const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
-  const walls = ['#d9c9a3', '#b5a685', '#a8b08a', '#c99a6a', '#c9b58a', '#9fae86'];
-  const roofs = ['#a8563c', '#7d7468', '#4e7f7a', '#8a5a3c', '#a8563c'];
-  const rows = [
-    { front: 166, depth: 44 },
-    { front: 290, depth: 46 },
-    { front: 420, depth: 46 },
-    { front: 520, depth: 42 },
-  ];
+  const kinds = Object.keys(HOUSE_KINDS) as (keyof typeof HOUSE_KINDS)[];
+  const fronts = [166, 290, 420, 520];
   const segments: [number, number][] = [
     [1312, 1590],
     [1626, 1894],
@@ -196,25 +205,28 @@ function layVillage() {
   ];
   const built: MapBuilding[] = [];
   const yards: [number, number, number][] = [];
-  rows.forEach((row, r) =>
+  fronts.forEach((front, r) =>
     segments.forEach(([from, to], s) => {
       let x = from + Math.round(rnd() * 16);
       let n = 0;
-      while (x + 84 <= to) {
-        const w = 84 + Math.round(rnd() * 36);
+      for (;;) {
+        const w = HOUSE_WIDTHS[Math.floor(rnd() * HOUSE_WIDTHS.length)];
         if (x + w > to) break;
         if (rnd() < 0.18) {
-          yards.push([x + w / 2, row.front - 4, 14 + Math.round(rnd() * 8)]);
+          yards.push([x + w / 2, front - 4, 14 + Math.round(rnd() * 8)]);
         } else {
+          const kind = kinds[Math.floor(rnd() * kinds.length)];
+          const look = HOUSE_KINDS[kind];
           built.push({
             id: `rumah-${r}-${s}-${n++}`,
+            sprite: `rumah-${kind}-${w}`,
             select: 'kawasan',
             title: 'Rumah warga',
             style: 'rumah',
-            foot: { x, y: row.front - row.depth, w, h: row.depth },
-            height: 50 + Math.round(rnd() * 18),
-            wall: walls[Math.floor(rnd() * walls.length)],
-            roof: roofs[Math.floor(rnd() * roofs.length)],
+            foot: { x, y: front - HOUSE_DEPTH, w, h: HOUSE_DEPTH },
+            height: look.height,
+            wall: look.wall,
+            roof: look.roof,
           });
         }
         x += w + 16 + Math.round(rnd() * 22);

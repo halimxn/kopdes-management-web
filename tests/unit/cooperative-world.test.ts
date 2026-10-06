@@ -503,3 +503,14 @@ describe('dunia pixel: denah, jalur, kamera', () => {
     expect(followStep(0, 100, 0.1, false)).toBeGreaterThan(0);
   });
 });
+
+describe('aset pixel', () => {
+  it('setiap bangunan dan rumah di denah punya sprite di public/dunia', async () => {
+    const { existsSync } = await import('node:fs');
+    const { houses } = await import('@/features/cooperative-world/pixel/map');
+    for (const b of [...mapBuildings, ...houses])
+      expect(existsSync(`public/dunia/bangunan/${b.sprite || b.id}.png`), b.sprite || b.id).toBe(
+        true,
+      );
+  });
+});

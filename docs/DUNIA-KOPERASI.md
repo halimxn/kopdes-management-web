@@ -38,7 +38,7 @@ Sawah dan kebun (utara), sungai berjembatan (barat), pusat layanan di Jalan Desa
 | [kendaraan](dunia-pixel/kendaraan.png) | Bentuk kendaraan (skala lama; digambar ulang di P3) |
 | [dok-siang](dunia-pixel/dok-siang.png) | Dok gudang komoditas: lantai dok lebar, sumur truk menurun, ramp miring forklift, cold storage terpisah |
 
-Generator: `node scripts/dunia-pixel/preview.mjs [nama]` → `artifacts/dunia-pixel/` (diabaikan Git). `VARIAN=terang|hangat|segar|teduh|stardew` hanya untuk uji warna; bawaan `eastward`.
+Aset aplikasi: `node --no-warnings scripts/dunia-pixel/aset.mjs` (ukuran dari `pixel/map.ts`; jalankan ulang setelah mengubah tapak bangunan). Generator preview: `node scripts/dunia-pixel/preview.mjs [nama]` → `artifacts/dunia-pixel/` (diabaikan Git). `VARIAN=terang|hangat|segar|teduh|stardew` hanya untuk uji warna; bawaan `eastward`.
 
 ## Paket kerja
 
@@ -47,7 +47,7 @@ Generator: `node scripts/dunia-pixel/preview.mjs [nama]` → `artifacts/dunia-pi
 | P1 Preview | Gaya, palet, orang, kendaraan, denah, contoh interaksi | Selesai, disetujui (palet Eastward) |
 | P0 Bersih | Tag arsip, hapus kode/dependensi/skill/referensi 3D, kontrak ini | Selesai |
 | P2 Mesin | PixiJS, denah pixel `pixel/map.ts`, A* `pixel/path.ts`, kamera skala bulat `pixel/camera.ts`, avatar manajer (otomatis / WASD / ketuk tanah), penanda siku + kamera ikut, berhenti saat tersembunyi | Selesai (greybox; aset final P3) |
-| P3 Eksterior | Ganti greybox dengan aset generator: bangunan per unit, dok, kendaraan skala baru, tanah/jalan (reasoning tinggi) | Berikutnya |
+| P3 Eksterior | P3a bangunan/rumah/pohon dari `scripts/dunia-pixel/aset.mjs` → `public/dunia/` (+ lapisan `-malam` aditif), grading bersama `pixel/grade.ts`; P3b kendaraan skala baru + lalu lintas + truk dok dari Pengiriman; P3c perabot jalan dan detail area | P3a selesai |
 | P4 Karakter | Animasi jalan 4 arah, staf dari data Tim, editor rupa manajer, warga simulasi (reasoning tinggi) | |
 | P5 Interior | 8 ruang dengan transisi pudar; rak dari kolom Lokasi (reasoning tinggi) | |
 | P6 Kartu | Kartu gaya baru, aksi cepat ke form operasional | |

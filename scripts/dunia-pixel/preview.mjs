@@ -10,7 +10,7 @@ let H = 270;
 const OUT = 'artifacts/dunia-pixel';
 
 // ---------- kanvas ----------
-let buf, emis, emisOn, shadowM, lights, rain;
+let buf, emis, emisOn, shadowM, lights, rain, alpha;
 let seed = 7;
 const rnd = () => {
   seed = (seed + 0x6d2b79f5) | 0;
@@ -57,6 +57,8 @@ function px(x, y, c, a = 1) {
   buf[i] += (r - buf[i]) * a;
   buf[i + 1] += (g - buf[i + 1]) * a;
   buf[i + 2] += (b - buf[i + 2]) * a;
+  // Cakupan untuk sprite transparan (warna ter-premultiply terhadap latar hitam).
+  if (alpha) alpha[y * W + x] += (1 - alpha[y * W + x]) * a;
   if (a >= 1) emisOn[y * W + x] = 0;
 }
 function mul(x, y, f) {
@@ -2024,29 +2026,116 @@ function png(img, s) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
-mkdirSync(OUT, { recursive: true });
-const RENDERS = [
-  { name: 'kendaraan', w: 584, h: 360, s: 2, scene: sceneKendaraan, modes: ['siang'] },
-  { name: 'orang', w: 640, h: 144, s: 3, scene: sceneOrang, modes: ['siang'] },
-  { name: 'dok', w: 480, h: 270, s: 3, scene: sceneDok, modes: ['siang', 'senja', 'malam'] },
-  { name: 'denah', w: 640, h: 360, s: 3, scene: sceneDenah, modes: ['siang'] },
-  { name: 'kota', w: 640, h: 360, s: 3, scene: sceneKota, modes: ['siang', 'senja', 'malam'] },
-];
-const only = process.argv[2];
-for (const r of RENDERS)
-  for (const mode of r.modes) {
-    const file = r.modes.length > 1 ? `${r.name}-${mode}` : r.name;
-    if (only && !file.startsWith(only)) continue;
-    W = r.w;
-    H = r.h;
-    seed = 7;
-    rain = mode === 'malam';
-    buf = new Float32Array(W * H * 3);
-    emis = new Float32Array(W * H * 3);
-    emisOn = new Uint8Array(W * H);
-    shadowM = new Float32Array(W * H);
-    lights = [];
-    r.scene();
-    writeFileSync(`${OUT}/${file}.png`, png(grade(mode), r.s));
-    console.log(`${OUT}/${file}.png`);
+function main() {
+  mkdirSync(OUT, { recursive: true });
+  const RENDERS = [
+    { name: 'kendaraan', w: 584, h: 360, s: 2, scene: sceneKendaraan, modes: ['siang'] },
+    { name: 'orang', w: 640, h: 144, s: 3, scene: sceneOrang, modes: ['siang'] },
+    { name: 'dok', w: 480, h: 270, s: 3, scene: sceneDok, modes: ['siang', 'senja', 'malam'] },
+    { name: 'denah', w: 640, h: 360, s: 3, scene: sceneDenah, modes: ['siang'] },
+    { name: 'kota', w: 640, h: 360, s: 3, scene: sceneKota, modes: ['siang', 'senja', 'malam'] },
+  ];
+  const only = process.argv[2];
+  for (const r of RENDERS)
+    for (const mode of r.modes) {
+      const file = r.modes.length > 1 ? `${r.name}-${mode}` : r.name;
+      if (only && !file.startsWith(only)) continue;
+      W = r.w;
+      H = r.h;
+      seed = 7;
+      rain = mode === 'malam';
+      buf = new Float32Array(W * H * 3);
+      emis = new Float32Array(W * H * 3);
+      emisOn = new Uint8Array(W * H);
+      shadowM = new Float32Array(W * H);
+      lights = [];
+      alpha = null;
+      r.scene();
+      writeFileSync(`${OUT}/${file}.png`, png(grade(mode), r.s));
+      console.log(`${OUT}/${file}.png`);
+    }
+}
+
+// ---------- ekspor sprite transparan (dipakai scripts/dunia-pixel/aset.mjs) ----------
+/** Siapkan kanvas transparan baru untuk satu sprite. */
+function beginCanvas(w, h, s = 7) {
+  W = w;
+  H = h;
+  seed = s;
+  rain = false;
+  buf = new Float32Array(W * H * 3);
+  emis = new Float32Array(W * H * 3);
+  emisOn = new Uint8Array(W * H);
+  shadowM = new Float32Array(W * H);
+  alpha = new Float32Array(W * H);
+  lights = [];
+}
+/** RGBA siang: warna di-unpremultiply, diberi grading, bayangan jatuh menjadi gelap transparan. */
+function spriteRGBA(gradeRgb) {
+  const out = Buffer.alloc(W * H * 4);
+  const shadowC = gradeRgb([27, 34, 56]);
+  for (let i = 0; i < W * H; i++) {
+    const a = Math.min(1, alpha[i]);
+    const s = shadowM[i];
+    let c = [0, 0, 0];
+    if (a > 0.004) {
+      c = [buf[i * 3] / a, buf[i * 3 + 1] / a, buf[i * 3 + 2] / a];
+      c = gradeRgb([c[0] * (1 - 0.34 * s), c[1] * (1 - 0.3 * s), c[2] * (1 - 0.18 * s)]);
+    }
+    let outA = a;
+    if (s > 0 && a < 1) {
+      const sa = 0.34 * s;
+      outA = a + sa * (1 - a);
+      c = c.map((v, k) => (v * a + shadowC[k] * sa * (1 - a)) / outA);
+    }
+    for (let k = 0; k < 3; k++) out[i * 4 + k] = Math.max(0, Math.min(255, Math.round(c[k])));
+    out[i * 4 + 3] = Math.round(outA * 255);
   }
+  return out;
+}
+/** RGBA lapisan malam (dicampur aditif): jendela/papan menyala dan kolam cahaya berpita. */
+function glowRGBA() {
+  const L = new Float32Array(W * H * 3);
+  for (const l of lights)
+    for (let y = Math.max(0, Math.floor(l.y - l.r)); y < Math.min(H, l.y + l.r); y++)
+      for (let x = Math.max(0, Math.floor(l.x - l.r)); x < Math.min(W, l.x + l.r); x++) {
+        const d = Math.hypot(x - l.x, (y - l.y) * 1.3) / l.r;
+        if (d >= 1) continue;
+        const raw = (1 - d) * (1 - d) * 6;
+        const v = (Math.floor(raw + BAYER[(y % 4) * 4 + (x % 4)] / 16) / 6) * l.s * 0.5;
+        for (let c = 0; c < 3; c++) L[(y * W + x) * 3 + c] += (l.c[c] / 255) * v;
+      }
+  const out = Buffer.alloc(W * H * 4);
+  for (let i = 0; i < W * H; i++) {
+    if (emisOn[i]) {
+      for (let k = 0; k < 3; k++) out[i * 4 + k] = Math.min(255, Math.round(emis[i * 3 + k]));
+      out[i * 4 + 3] = 255;
+      continue;
+    }
+    const m = Math.max(L[i * 3], L[i * 3 + 1], L[i * 3 + 2]);
+    if (m <= 0) continue;
+    for (let k = 0; k < 3; k++) out[i * 4 + k] = Math.min(255, Math.round((L[i * 3 + k] / m) * 255));
+    out[i * 4 + 3] = Math.min(255, Math.round(m * 255));
+  }
+  return out;
+}
+function pngRGBA(rgba, w, h) {
+  const raw = Buffer.alloc((w * 4 + 1) * h);
+  for (let y = 0; y < h; y++) rgba.copy(raw, y * (w * 4 + 1) + 1, y * w * 4, (y + 1) * w * 4);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
+}
+
+export {
+  K, rgb, shade, mix, rnd, pick, noise, px, mul, rect, hline, vline, box, line, ellipse, noiseFill, grime,
+  glowRect, glowFrom, light, shadowRect, shadowEllipse, text, textW, signBoard, win, acUnit, pipe, poster, plant,
+  awning, tree, pastelTree, bush, tuft, flowerBox, pastelWall, roofTiles, crate, lpg, sackStack, sengWall, rollDoor,
+  fill_cross, wire, lamp, beginCanvas, spriteRGBA, glowRGBA, pngRGBA,
+};
+
+// Dijalankan langsung (bukan diimpor oleh aset.mjs).
+if (process.argv[1]?.endsWith('preview.mjs')) main();

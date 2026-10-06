@@ -1,8 +1,10 @@
 import {
   Application,
+  Assets,
   Container,
   Graphics,
   Rectangle,
+  Sprite,
   Texture,
   TextureStyle,
   TilingSprite,
@@ -28,11 +30,14 @@ import {
   roads,
   trees,
   villageLanes,
+  SPRITE_MARGIN,
+  TREE_SIZES,
   type Box,
   type MapBuilding,
 } from './map';
 import { findPath, type Cell } from './path';
 import { drawPixelText, pixelTextWidth } from './pixel-font';
+import { gradeCss, gradeHex } from './grade';
 
 export type StageState = {
   selected: string;
@@ -52,6 +57,22 @@ export type StageCallbacks = {
 export type WorldHandle = { update: (state: StageState) => void; destroy: () => void };
 
 const OL = 0x3a2f36;
+
+const spriteUrl = (dir: string, name: string) => `/dunia/${dir}/${name}.png`;
+/** Muat tekstur; berkas yang tidak ada (mis. pohon tanpa lapisan malam) menjadi null. */
+async function loadTextures(urls: string[]) {
+  const results = await Promise.allSettled(urls.map((url) => Assets.load<Texture>(url)));
+  const map = new Map<string, Texture>();
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') map.set(urls[i], r.value);
+  });
+  return map;
+}
+const treeSize = (r: number) =>
+  TREE_SIZES.reduce(
+    (best, size) => (Math.abs(size - r) < Math.abs(best - r) ? size : best),
+    TREE_SIZES[0],
+  );
 const hex = (c: string) => parseInt(c.slice(1), 16);
 function shadeHex(c: string, f: number) {
   const n = hex(c);
@@ -83,37 +104,55 @@ function tiled(texture: Texture, box: Box) {
 }
 
 function drawGround(layer: Container) {
-  const grass = noiseTexture(['#7f9550', '#879c58', '#76894a', '#8fa35e', '#7f9550'], 7);
-  const asphalt = noiseTexture(['#6a6560', '#6f6a64', '#65605b', '#74706a'], 11);
-  const pave = noiseTexture(['#b5a685', '#ad9f80', '#bcae8c'], 13);
-  const concrete = noiseTexture(['#a3a08f', '#a9a694', '#9c9988'], 17);
+  const grass = noiseTexture(
+    [
+      gradeCss('#7f9550'),
+      gradeCss('#879c58'),
+      gradeCss('#76894a'),
+      gradeCss('#8fa35e'),
+      gradeCss('#7f9550'),
+    ],
+    7,
+  );
+  const asphalt = noiseTexture(
+    [gradeCss('#6a6560'), gradeCss('#6f6a64'), gradeCss('#65605b'), gradeCss('#74706a')],
+    11,
+  );
+  const pave = noiseTexture([gradeCss('#b5a685'), gradeCss('#ad9f80'), gradeCss('#bcae8c')], 13);
+  const concrete = noiseTexture(
+    [gradeCss('#a3a08f'), gradeCss('#a9a694'), gradeCss('#9c9988')],
+    17,
+  );
   layer.addChild(tiled(grass, { x: 0, y: 0, w: WORLD.w, h: WORLD.h }));
   const g = new Graphics();
   for (const a of areas) {
     const { x, y, w, h } = a.box;
     if (a.kind === 'sawah') {
-      g.rect(x, y, w, h).fill(0x6f8a4a);
-      for (let r = y + 6; r < y + h; r += 10) g.rect(x + 4, r, w - 8, 3).fill(0x8fae5e);
-      for (let c = x + 120; c < x + w; c += 130) g.rect(c, y, 6, h).fill(0x8a7a56);
+      g.rect(x, y, w, h).fill(gradeHex('#6f8a4a'));
+      for (let r = y + 6; r < y + h; r += 10) g.rect(x + 4, r, w - 8, 3).fill(gradeHex('#8fae5e'));
+      for (let c = x + 120; c < x + w; c += 130) g.rect(c, y, 6, h).fill(gradeHex('#8a7a56'));
     } else if (a.kind === 'kebun') {
-      g.rect(x, y, w, h).fill(0x6a8044);
+      g.rect(x, y, w, h).fill(gradeHex('#6a8044'));
       for (let r = y + 12; r < y + h; r += 24)
-        for (let c = x + 12; c < x + w; c += 24) g.circle(c, r, 7).fill(0x557540);
+        for (let c = x + 12; c < x + w; c += 24) g.circle(c, r, 7).fill(gradeHex('#557540'));
     } else if (a.kind === 'alun' || a.kind === 'taman') {
       layer.addChild(tiled(pave, a.box));
-      g.rect(x + 20, y + 20, w - 40, h - 40).fill(a.kind === 'alun' ? 0x7a9550 : 0x86a05a);
-      g.rect(x + w / 2 - 20, y, 40, h).fill(0xb5a685);
-      g.rect(x, y + h / 2 - 20, w, 40).fill(0xb5a685);
+      g.rect(x + 20, y + 20, w - 40, h - 40).fill(
+        a.kind === 'alun' ? gradeHex('#7a9550') : gradeHex('#86a05a'),
+      );
+      g.rect(x + w / 2 - 20, y, 40, h).fill(gradeHex('#b5a685'));
+      g.rect(x, y + h / 2 - 20, w, 40).fill(gradeHex('#b5a685'));
     } else if (a.kind === 'pasar') {
       layer.addChild(tiled(pave, a.box));
     } else if (a.kind === 'pool' || a.kind === 'dok') {
       layer.addChild(tiled(concrete, a.box));
       if (a.kind === 'pool')
-        for (let c = x + 20; c < x + w; c += 70) g.rect(c, y + 20, 3, h - 40).fill(0xe3bd57);
+        for (let c = x + 20; c < x + w; c += 70)
+          g.rect(c, y + 20, 3, h - 40).fill(gradeHex('#e3bd57'));
     } else if (a.kind === 'rencana') {
       for (let i = 0; i < w; i += 12) {
-        g.rect(x + i, y, 6, 2).fill(0xece2c2);
-        g.rect(x + i, y + h - 2, 6, 2).fill(0xece2c2);
+        g.rect(x + i, y, 6, 2).fill(gradeHex('#ece2c2'));
+        g.rect(x + i, y + h - 2, 6, 2).fill(gradeHex('#ece2c2'));
       }
     }
   }
@@ -124,24 +163,27 @@ function drawGround(layer: Container) {
   for (const road of roads) {
     if (road.w > road.h)
       for (let x = road.x + 10; x < road.x + road.w; x += 48)
-        marks.rect(x, road.y + road.h / 2 - 1, 24, 3).fill(0xece2c2);
+        marks.rect(x, road.y + road.h / 2 - 1, 24, 3).fill(gradeHex('#ece2c2'));
     else
       for (let y = road.y + 10; y < road.y + road.h; y += 48)
-        marks.rect(road.x + road.w / 2 - 1, y, 3, 24).fill(0xece2c2);
+        marks.rect(road.x + road.w / 2 - 1, y, 3, 24).fill(gradeHex('#ece2c2'));
   }
-  for (let i = 0; i < 7; i++) marks.rect(960 + i * 12, 704, 6, 56).fill(0xece2c2);
+  for (let i = 0; i < 7; i++) marks.rect(960 + i * 12, 704, 6, 56).fill(gradeHex('#ece2c2'));
   const water = new Graphics();
   for (let y = 0; y < WORLD.h; y += 4) {
     const cx = riverCenter(y);
-    water.rect(cx - river.width / 2 - 6, y, river.width + 12, 4).fill(0x6f8a4a);
-    water.rect(cx - river.width / 2, y, river.width, 4).fill(y % 24 < 4 ? 0x8fb4c0 : 0x5f8fa0);
+    water.rect(cx - river.width / 2 - 6, y, river.width + 12, 4).fill(gradeHex('#6f8a4a'));
+    water
+      .rect(cx - river.width / 2, y, river.width, 4)
+      .fill(y % 24 < 4 ? gradeHex('#8fb4c0') : gradeHex('#5f8fa0'));
   }
   for (const b of bridges) {
-    water.rect(b.x, b.y, b.w, b.h).fill(0x956847).stroke({ width: 2, color: OL });
-    for (let x = b.x + 6; x < b.x + b.w; x += 10) water.rect(x, b.y + 2, 2, b.h - 4).fill(0x6b4a34);
+    water.rect(b.x, b.y, b.w, b.h).fill(gradeHex('#956847')).stroke({ width: 2, color: OL });
+    for (let x = b.x + 6; x < b.x + b.w; x += 10)
+      water.rect(x, b.y + 2, 2, b.h - 4).fill(gradeHex('#6b4a34'));
   }
-  water.circle(930, 1040, 44).fill(0xd0c8b8).stroke({ width: 3, color: OL });
-  water.circle(930, 1040, 36).fill(0x6fa7c0);
+  water.circle(930, 1040, 44).fill(gradeHex('#d0c8b8')).stroke({ width: 3, color: OL });
+  water.circle(930, 1040, 36).fill(gradeHex('#6fa7c0'));
   layer.addChild(water, marks);
   const labels = new Graphics();
   for (const a of areas)
@@ -149,7 +191,7 @@ function drawGround(layer: Container) {
       const w = pixelTextWidth(a.label, 2) + 12;
       labels
         .rect(a.box.x + a.box.w / 2 - w / 2, a.box.y - 8, w, 18)
-        .fill(0xf6efd8)
+        .fill(gradeHex('#f6efd8'))
         .stroke({ width: 2, color: OL });
       drawPixelText(labels, a.label, a.box.x + a.box.w / 2 - w / 2 + 6, a.box.y - 4, OL, 2);
     }
@@ -268,18 +310,49 @@ export async function createWorld(
   const overlay = new Container();
   world.addChild(ground, actors, overlay);
   const night = new Graphics();
-  app.stage.addChild(world, night);
+  // Lapisan cahaya malam (jendela, papan, kolam lampu) dicampur aditif di atas penggelapan.
+  const glow = new Container();
+  glow.blendMode = 'add';
+  app.stage.addChild(world, night, glow);
   drawGround(ground);
 
   let tapGuard = false;
-  for (const b of [...mapBuildings, ...houses]) {
-    const g = drawBuilding(b);
+  const all = [...mapBuildings, ...houses];
+  const treeName = (x: number, y: number, r: number) =>
+    `pohon-${treeSize(r)}${(x + y) % 5 === 0 ? '-bunga' : ''}`;
+  const urls = [
+    ...new Set([
+      ...all.flatMap((b) => [
+        spriteUrl('bangunan', b.sprite || b.id),
+        spriteUrl('bangunan', `${b.sprite || b.id}-malam`),
+      ]),
+      ...trees.map(([x, y, r]) => spriteUrl('pohon', treeName(x, y, r))),
+    ]),
+  ];
+  const textures = await loadTextures(urls);
+  const M = SPRITE_MARGIN;
+  for (const b of all) {
+    const name = b.sprite || b.id;
+    const tex = textures.get(spriteUrl('bangunan', name));
+    let g: Container;
+    if (tex) {
+      g = new Sprite(tex);
+      g.position.set(b.foot.x - M, b.foot.y - b.height - M);
+      const lit = textures.get(spriteUrl('bangunan', `${name}-malam`));
+      if (lit) {
+        const s = new Sprite(lit);
+        s.position.copyFrom(g.position);
+        glow.addChild(s);
+      }
+    } else g = drawBuilding(b);
     g.zIndex = b.foot.y + b.foot.h;
     if (b.style !== 'rumah') {
       const bounds = buildingBounds(b);
       g.eventMode = 'static';
       g.cursor = 'pointer';
-      g.hitArea = new Rectangle(bounds.x, bounds.y, bounds.w, bounds.h);
+      g.hitArea = tex
+        ? new Rectangle(bounds.x - g.x, bounds.y - g.y, bounds.w, bounds.h)
+        : new Rectangle(bounds.x, bounds.y, bounds.w, bounds.h);
       g.on('pointertap', () => {
         if (tapGuard) return;
         tapGuard = true;
@@ -289,7 +362,12 @@ export async function createWorld(
     actors.addChild(g);
   }
   for (const [x, y, r] of trees) {
-    const t = drawTree(x, y, r);
+    const tex = textures.get(spriteUrl('pohon', treeName(x, y, r)));
+    let t: Container;
+    if (tex) {
+      t = new Sprite(tex);
+      t.position.set(Math.round(x - tex.width / 2), Math.round(y - tex.height + 12));
+    } else t = drawTree(x, y, r);
     t.zIndex = y;
     actors.addChild(t);
   }
@@ -543,7 +621,10 @@ export async function createWorld(
     }
     night.clear();
     if (state.night)
-      night.rect(0, 0, app.screen.width, app.screen.height).fill({ color: 0x1c2550, alpha: 0.42 });
+      night.rect(0, 0, app.screen.width, app.screen.height).fill({ color: 0x1c2550, alpha: 0.5 });
+    glow.visible = state.night;
+    glow.scale.copyFrom(world.scale);
+    glow.position.copyFrom(world.position);
   });
 
   return {

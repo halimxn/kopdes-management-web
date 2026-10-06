@@ -1,5 +1,11 @@
 # Changelog
 
+## Dunia Koperasi pixel: P3a sprite bangunan — 7 Oktober 2026
+
+- `scripts/dunia-pixel/aset.mjs` menggambar sprite bangunan (kantor, klinik, sembako, apotek, simpan pinjam, balai joglo, gerai 1–3, gudang komoditas, cold storage), 9 rumah warga (3 jenis × 3 lebar) dan 6 pohon ke `public/dunia/` (255 KB) beserta lapisan cahaya malam.
+- `pixel/grade.ts` grading Eastward bersama untuk sprite dan tanah; mesin memuat sprite dengan cadangan greybox dan menambahkan lapisan malam secara aditif.
+- Denah: rumah memakai varian tetap; tes memastikan setiap tapak punya sprite.
+
 ## Dunia Koperasi pixel: P2 mesin PixiJS — 7 Oktober 2026
 
 - `pixel/map.ts` denah dunia (id bangunan sama dengan data), `pixel/path.ts` A* delapan arah, `pixel/camera.ts` skala bulat menurut sisi layar tersempit, `pixel/engine.ts` PixiJS (tanah bertekstur, sungai dan jembatan, bangunan greybox berpapan nama, avatar manajer, penanda siku berdenyut, kamera mengikuti, geser/cubit/gulir, WASD/ketuk tanah, jeda saat tersembunyi, reduced-motion).

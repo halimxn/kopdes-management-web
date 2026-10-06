@@ -8,7 +8,7 @@ description: Membangun dan mengubah Dunia Koperasi 2D pixel (PixiJS) ala Eastwar
 Kontrak gaya dan rencana: `docs/DUNIA-KOPERASI.md` (satu-satunya). Acuan gambar: `docs/dunia-pixel/`.
 
 ## Peta berkas
-- `scripts/dunia-pixel/preview.mjs` generator aset/adegan (Node murni, tanpa dependensi): palet `K`, `person()` (pose, hijab/peci/caping/helm), kendaraan serong, bangunan (`win`, `roofTiles`, `pastelWall`, `awning`), `grade()` per suasana (bawaan `eastward`).
+- `scripts/dunia-pixel/aset.mjs` sprite aplikasi → `public/dunia/` (ukuran dari `pixel/map.ts`); `scripts/dunia-pixel/preview.mjs` generator adegan dan pustaka gambar (Node murni, tanpa dependensi): palet `K`, `person()` (pose, hijab/peci/caping/helm), kendaraan serong, bangunan (`win`, `roofTiles`, `pastelWall`, `awning`), `grade()` per suasana (bawaan `eastward`).
 - `world-model.ts` adapter data (unit, barang, pengiriman, tim, rapat); `npc/schedule.ts` jadwal murni; `lighting.ts` fase hari; `district.ts`/`layout.ts`/`truck-routes.ts` lama dipakai sampai denah tile P3.
 - `CooperativeWorld.tsx` state + tata letak; `ui/` kartu; mesin PixiJS menyusul (P2).
 
