@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { box, cylinder, palette, sign, sphere } from './primitives';
 import { bench, chair, tree } from './props';
-import { officeSize } from '../layout';
+import { officeInterior, officeSize } from '../layout';
 
 /** Gedung kawasan: kantor koperasi (main) atau gerai dari catatan unit. */
 export function building(
@@ -45,62 +45,94 @@ export function building(
   return g;
 }
 
-/** Interior kantor cutaway: rapat, meja tugas, arsip dan area kegiatan. */
+/** Meja seksi: dua workstation berlayar, kursi menghadap layar, papan nama seksi. */
+function sectionDesk(parent: THREE.Object3D, title: string, x: number, z: number) {
+  box(parent, [5, 0.03, 3.4], [x, 0.02, z + 0.3], '#eef2fb', 0);
+  box(parent, [4.4, 0.12, 1.1], [x, 1, z], '#ffffff');
+  for (const side of [-1, 1]) {
+    box(parent, [0.1, 1, 0.9], [x + side * 2.1, 0.5, z], '#d1dbe9');
+    const dx = x + side * 1.1;
+    box(parent, [0.8, 0.53, 0.08], [dx, 1.5, z - 0.3], '#344761');
+    box(parent, [0.71, 0.42, 0.02], [dx, 1.51, z - 0.25], '#8ebcfa');
+    box(parent, [0.07, 0.26, 0.09], [dx, 1.15, z - 0.3], '#6f8198');
+    box(parent, [0.55, 0.04, 0.21], [dx, 1.085, z + 0.1], '#bdc9d9');
+    chair(parent, dx, z + 1, Math.PI);
+  }
+  box(parent, [4.4, 1.1, 0.08], [x, 1.6, z - 0.6], '#dfe7f5', 0);
+  sign(parent, title.toUpperCase(), [x, 2.45, z - 0.55], 3.6, palette.navy);
+}
+
+/**
+ * Interior kantor cutaway 22 × 15: rapat, ruang manajer, lima meja seksi, pantry, arsip dan gym.
+ * Papan nama seksi membantu manajer membaca tempat kerja tim di Dunia Koperasi.
+ */
 export function createInterior(parent: THREE.Group) {
-  box(parent, [15, 0.3, 12], [0, -0.2, 0], '#d8e0eb', 0.1);
-  box(parent, [14.6, 0.05, 11.6], [0, -0.02, 0], '#f4f3ef');
-  for (let x = -7; x <= 7; x++) box(parent, [0.012, 0.01, 11.5], [x, 0.015, 0], '#e4e5e7', 0);
-  for (let z = -5; z <= 5; z++) box(parent, [14.5, 0.01, 0.012], [0, 0.015, z], '#e4e5e7', 0);
-  box(parent, [15, 3.5, 0.2], [0, 1.6, -6], '#f8fbff');
-  box(parent, [0.2, 3.5, 12], [-7.4, 1.6, 0], '#e9eff8');
-  for (let x = -6; x <= 6; x += 2) {
-    box(parent, [1.65, 1.55, 0.06], [x, 2.05, -5.86], '#b8d4ec');
-    box(parent, [0.05, 1.65, 0.1], [x, 2.05, -5.8], '#839bb9');
-    box(parent, [1.85, 0.15, 0.16], [x, 2.85, -5.75], '#f9fcff');
+  const [w, d] = officeInterior.size;
+  box(parent, [w + 0.6, 0.3, d + 0.6], [0, -0.2, 0], '#d8e0eb', 0.1);
+  box(parent, [w, 0.05, d], [0, -0.02, 0], '#f4f3ef', 0);
+  for (let x = -w / 2 + 1; x < w / 2; x++)
+    box(parent, [0.012, 0.01, d - 0.2], [x, 0.015, 0], '#e4e5e7', 0);
+  box(parent, [w, 3.5, 0.2], [0, 1.6, -d / 2], '#f8fbff', 0);
+  box(parent, [0.2, 3.5, d], [-w / 2, 1.6, 0], '#e9eff8', 0);
+  for (let x = -w / 2 + 2; x < w / 2 - 1; x += 2.4) {
+    box(parent, [1.8, 1.55, 0.06], [x, 2.05, -d / 2 + 0.14], '#b8d4ec', 0);
+    box(parent, [1.95, 0.15, 0.16], [x, 2.85, -d / 2 + 0.25], '#f9fcff', 0);
   }
-  box(parent, [0.08, 2.3, 4.2], [-0.5, 1.15, -3.7], '#c9e0ec');
-  for (const z of [-5.8, -1.6]) box(parent, [0.1, 2.4, 0.1], [-0.5, 1.2, z], '#f9fcff');
-  box(parent, [4.2, 0.18, 1.7], [-4, 1, -2.6], palette.wood, 0.15);
-  for (const x of [-5.5, -2.5])
-    for (const z of [-3.1, -2.1]) box(parent, [0.1, 0.9, 0.1], [x, 0.45, z], '#edf2f9');
-  for (const x of [-5.2, -4, -2.8]) {
-    chair(parent, x, -4);
-    chair(parent, x, -1.2, Math.PI);
+  // Ruang rapat berdinding kaca.
+  const [mx, mz] = officeInterior.meeting;
+  box(parent, [5.4, 0.03, 5], [mx, 0.02, mz], '#e9e4f6', 0);
+  box(parent, [0.08, 2.3, 5], [mx + 2.9, 1.15, mz], '#c9e0ec', 0);
+  box(parent, [4.2, 0.18, 1.7], [mx, 1, mz], palette.wood, 0.15);
+  for (const dx of [-1.5, 1.5])
+    for (const dz of [-0.5, 0.5])
+      box(parent, [0.1, 0.9, 0.1], [mx + dx, 0.45, mz + dz], '#edf2f9', 0);
+  for (const dx of [-1.2, 0, 1.2]) {
+    chair(parent, mx + dx, mz - 1.4);
+    chair(parent, mx + dx, mz + 1.4, Math.PI);
   }
-  box(parent, [0.55, 0.025, 0.4], [-4.3, 1.11, -2.5], '#f9fcff');
-  cylinder(parent, 0.12, 0.15, [-3, 1.15, -2.5], palette.blue);
-  for (const z of [-3.7, -1.2]) {
-    box(parent, [4.7, 0.13, 1.15], [3.2, 1, z], '#ffffff');
-    for (const x of [1.15, 5.25]) box(parent, [0.12, 1, 0.85], [x, 0.5, z], '#d1dbe9');
-    for (const x of [2, 4.5]) {
-      box(parent, [0.8, 0.53, 0.08], [x, 1.5, z - 0.16], '#344761');
-      box(parent, [0.71, 0.42, 0.02], [x, 1.51, z - 0.108], '#8ebcfa');
-      box(parent, [0.07, 0.26, 0.09], [x, 1.15, z - 0.16], '#6f8198');
-      box(parent, [0.55, 0.04, 0.21], [x, 1.085, z + 0.2], '#bdc9d9');
-      chair(parent, x, z + 1, Math.PI);
-    }
-  }
-  for (const x of [-5.7, -4.3, -2.9]) {
-    box(parent, [1.3, 1.5, 0.7], [x, 0.75, 4.5], palette.wood);
-    box(parent, [1.32, 0.12, 0.75], [x, 1.55, 4.5], '#ffffff');
+  sign(parent, 'RUANG RAPAT', [mx, 2.6, mz - 2.4], 3, palette.navy);
+  // Ruang manajer.
+  const [rx, rz] = officeInterior.manager;
+  box(parent, [5.4, 0.03, 5], [rx, 0.02, rz], '#e7f1ea', 0);
+  box(parent, [0.08, 2.3, 5], [rx + 2.9, 1.15, rz], '#c9e0ec', 0);
+  box(parent, [2.6, 0.12, 1.2], [rx, 1, rz], palette.wood);
+  box(parent, [0.8, 0.53, 0.08], [rx, 1.5, rz - 0.35], '#344761');
+  box(parent, [0.71, 0.42, 0.02], [rx, 1.51, rz - 0.3], '#8ebcfa');
+  chair(parent, rx, rz + 1, Math.PI);
+  tree(parent, rx - 2, rz - 1.6, 0.6);
+  sign(parent, 'RUANG MANAJER', [rx, 2.6, rz - 2.4], 3, palette.navy);
+  for (const [title, [x, z]] of Object.entries(officeInterior.sections))
+    sectionDesk(parent, title, x, z);
+  // Pantry.
+  const [px, pz] = officeInterior.pantry;
+  box(parent, [4, 0.03, 2.6], [px, 0.02, pz], '#f6ecdf', 0);
+  box(parent, [3, 1, 0.8], [px, 0.5, pz - 0.6], palette.wood);
+  box(parent, [3.02, 0.08, 0.82], [px, 1.04, pz - 0.6], '#ffffff', 0);
+  cylinder(parent, 0.5, 0.1, [px, 0.75, pz + 0.7], '#ffffff');
+  cylinder(parent, 0.06, 0.7, [px, 0.35, pz + 0.7], palette.ink);
+  sign(parent, 'PANTRY', [px, 2.3, pz - 1.05], 2, palette.navy);
+  // Arsip.
+  const [ax, az] = officeInterior.archive;
+  for (const dx of [-1.4, 0, 1.4]) {
+    box(parent, [1.3, 1.5, 0.7], [ax + dx, 0.75, az], palette.wood);
     for (let i = 0; i < 5; i++)
       box(
         parent,
         [0.13, 0.4, 0.29],
-        [x - 0.4 + i * 0.19, 1.79, 4.5],
+        [ax + dx - 0.4 + i * 0.19, 1.79, az],
         ['#6d91dd', '#b7b6e0', '#88b9a4'][i % 3],
       );
   }
-  box(parent, [4.2, 0.03, 2.8], [3.8, 0.02, 3.5], '#d5d8f2', 0.12);
-  for (const x of [2.3, 5.3]) {
-    box(parent, [1, 0.22, 1.9], [x, 0.18, 3.5], '#63748c');
-    box(parent, [0.76, 0.05, 1.55], [x, 0.32, 3.5], '#334257');
+  // Area kegiatan (gym).
+  const [gx, gz] = officeInterior.gym;
+  box(parent, [4.4, 0.03, 2.8], [gx, 0.02, gz], '#d5d8f2', 0.12);
+  for (const dx of [-1.2, 1.2]) {
+    box(parent, [1, 0.22, 1.9], [gx + dx, 0.18, gz], '#63748c');
+    box(parent, [0.76, 0.05, 1.55], [gx + dx, 0.32, gz], '#334257');
     for (const side of [-1, 1])
-      box(parent, [0.07, 1.3, 0.07], [x + side * 0.46, 0.85, 2.8], '#aebed1');
-    box(parent, [1.05, 0.12, 0.32], [x, 1.5, 2.8], '#385172');
+      box(parent, [0.07, 1.3, 0.07], [gx + dx + side * 0.46, 0.85, gz - 0.7], '#aebed1');
+    box(parent, [1.05, 0.12, 0.32], [gx + dx, 1.5, gz - 0.7], '#385172');
   }
-  tree(parent, -6.5, -5.1, 0.8);
-  tree(parent, 6.4, -5.1, 0.8);
-  tree(parent, -0.6, 4.7, 0.8);
-  bench(parent, -0.5, 2.4);
+  tree(parent, w / 2 - 1, -d / 2 + 1, 0.8);
+  bench(parent, 8.6, 5);
 }

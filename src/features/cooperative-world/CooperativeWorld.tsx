@@ -38,6 +38,7 @@ import {
 import { warehouseInterior, worldStations, worldZones, type WorldZone } from './layout';
 import { dayPhase } from './lighting';
 import { WorldHeader } from './ui/WorldHeader';
+import { planStaff } from './npc/schedule';
 import { KpiCards } from './ui/KpiCards';
 import { DetailCard, activityNames, type StockState } from './ui/DetailCard';
 import { ListCard } from './ui/ListCard';
@@ -116,6 +117,15 @@ export function CooperativeWorld({
   // Geometri tidak bergantung jam: tick menit tidak boleh mengatur ulang kamera.
   const sceneModel = useMemo(() => getWorldModel(data, new Date()), [data]);
   const timeline = useMemo(() => meetingTimeline(model.meetings, now), [model.meetings, now]);
+  const plans = useMemo(
+    () =>
+      planStaff(
+        model.staff,
+        { currentMeeting: model.currentMeeting, tasks: model.tasks, deliveries: model.deliveries },
+        now,
+      ),
+    [model, now],
+  );
   const hour = getWorldHour(preferences.time, now);
   const night = dayPhase(hour) === 'malam';
   const activity = rehearsal === 'otomatis' ? model.activity : rehearsal;
@@ -185,7 +195,7 @@ export function CooperativeWorld({
     if (next === 'gudang') setZone('gudang');
     setSpot(null);
     // Interior gudang lebih lebar dari kantor; zoom awal lebih jauh agar enam rak terlihat.
-    setZoom(next === 'luar' ? worldZones[zone].zoom : next === 'gudang' ? 0.8 : 1);
+    setZoom(next === 'luar' ? worldZones[zone].zoom : 0.8);
     setRotation(0);
     setRecenter((value) => value + 1);
     setPanelOpen(true);
@@ -228,6 +238,7 @@ export function CooperativeWorld({
       zone={zone}
       model={model}
       timeline={timeline}
+      plans={plans}
       preferences={preferences}
       onPreference={preference}
       rehearsal={rehearsal}
@@ -251,6 +262,7 @@ export function CooperativeWorld({
       timeline={timeline}
       query={query}
       unavailable={unavailable}
+      plans={plans}
       location={location}
       stockState={stockState}
       onSelect={(id) => select(id, true)}
@@ -270,27 +282,33 @@ export function CooperativeWorld({
       ? location === 'dalam'
         ? 'Kantor koperasi'
         : worldZones[zone].title
-      : selected.startsWith('kirim-')
+      : selected.startsWith('staf-')
         ? String(
-            model.deliveries.find((row) => row.id === selected.slice(6))?.data.title ||
-              'Pengiriman',
+            plans.find((plan) => `staf-${plan.staff.id}` === selected)?.staff.data.title || 'Tim',
           )
-        : selected === 'kendaraan-suasana'
-          ? 'Mobil di jalan utama'
-          : selected.startsWith('rak-')
-            ? `Rak ${selected.slice(4)}`
-            : selected === 'staging'
-              ? 'Area staging'
-              : selectedPlot
-                ? String(selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`)
-                : selected === 'gudang'
-                  ? worldZones.gudang.title
-                  : selected === 'lingkungan'
-                    ? 'Suasana'
-                    : selected === 'karakter'
-                      ? 'Maskot koperasi'
-                      : worldStations.find((item) => item.id === selected)?.title ||
-                        'Kantor koperasi';
+        : selected.startsWith('kirim-')
+          ? String(
+              model.deliveries.find((row) => row.id === selected.slice(6))?.data.title ||
+                'Pengiriman',
+            )
+          : selected === 'kendaraan-suasana'
+            ? 'Mobil di jalan utama'
+            : selected.startsWith('rak-')
+              ? `Rak ${selected.slice(4)}`
+              : selected === 'staging'
+                ? 'Area staging'
+                : selectedPlot
+                  ? String(
+                      selectedPlot.unit?.data.title || `Lahan ${selectedPlot.id.split('-')[1]}`,
+                    )
+                  : selected === 'gudang'
+                    ? worldZones.gudang.title
+                    : selected === 'lingkungan'
+                      ? 'Suasana'
+                      : selected === 'karakter'
+                        ? 'Maskot koperasi'
+                        : worldStations.find((item) => item.id === selected)?.title ||
+                          'Kantor koperasi';
   // Kartu kanan desktop (320 px + jarak) atau lembar bawah ponsel menutupi sebagian scene.
   const occlusion = useMemo(
     () =>
@@ -333,6 +351,7 @@ export function CooperativeWorld({
           rotation={rotation}
           selected={selected}
           bubble={bubble}
+          plans={plans}
           onSelect={select}
         />
         <KpiCards
@@ -393,9 +412,7 @@ export function CooperativeWorld({
             aria-label="Atur ulang kamera"
             onClick={() => {
               setSpot(null);
-              setZoom(
-                location === 'luar' ? worldZones[zone].zoom : location === 'gudang' ? 0.8 : 1,
-              );
+              setZoom(location === 'luar' ? worldZones[zone].zoom : 0.8);
               setRotation(0);
               setRecenter((value) => value + 1);
             }}

@@ -12,13 +12,15 @@ import {
   type WorldModel,
 } from '../world-model';
 import type { StockState } from './DetailCard';
+import { npcActivityNames, type NpcPlan } from '../npc/schedule';
 
-export type ListTab = 'lokasi' | 'stok' | 'tugas' | 'rapat';
+export type ListTab = 'lokasi' | 'tim' | 'stok' | 'tugas' | 'rapat';
 type Props = {
   model: WorldModel;
   timeline: MeetingStep[];
   query: string;
   unavailable: boolean;
+  plans: NpcPlan[];
   location: WorldLocation;
   stockState: StockState;
   onSelect: (id: string) => void;
@@ -34,10 +36,14 @@ export function ListCard({
   timeline,
   query,
   unavailable,
+  plans,
   location,
   stockState,
   onSelect,
 }: Props) {
+  const team = plans.filter(
+    (plan) => !query || matches(`${plan.staff.data.title} ${plan.staff.data.section}`, query),
+  );
   const [tab, setTab] = useState<ListTab>('lokasi');
   const inventory = model.inventory;
   const stockReady = stockState === 'aktif';
@@ -109,6 +115,7 @@ export function ListCard({
   const meetings = timeline.filter((step) => !query || matches(String(step.row.data.title), query));
   const tabs: { id: ListTab; label: string; count: number }[] = [
     { id: 'lokasi', label: location === 'gudang' ? 'Rak' : 'Lokasi', count: places.length },
+    { id: 'tim', label: 'Tim', count: team.length },
     { id: 'stok', label: 'Stok', count: stock.length },
     { id: 'tugas', label: 'Tugas', count: tasks.length },
     { id: 'rapat', label: 'Rapat', count: meetings.length },
@@ -145,6 +152,29 @@ export function ListCard({
               <ChevronRight size={15} />
             </Button>
           ))}
+        {tab === 'tim' &&
+          team.map((plan) => (
+            <Button
+              key={plan.staff.id}
+              className="cw-row"
+              onClick={() => onSelect(`staf-${plan.staff.id}`)}
+            >
+              <span className="cw-row-text">
+                <strong>{String(plan.staff.data.title)}</strong>
+                <small>{String(plan.staff.data.section || 'seksi belum ditentukan')}</small>
+              </span>
+              <span className={`cw-pill ${plan.activity === 'pulang' ? 'is-muted' : 'is-blue'}`}>
+                {npcActivityNames[plan.activity]}
+              </span>
+              <ChevronRight size={15} />
+            </Button>
+          ))}
+        {tab === 'tim' && !team.length && (
+          <p className="cw-empty">
+            {unavailable ? 'Data tim belum tersedia.' : 'Belum ada anggota tim aktif.'}{' '}
+            <Link href="/tim">Buka Tim</Link>
+          </p>
+        )}
         {tab === 'stok' &&
           stock.slice(0, 10).map((row) => {
             const short = isBelowMinimum(row);

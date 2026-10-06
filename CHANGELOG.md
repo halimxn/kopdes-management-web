@@ -1,5 +1,12 @@
 # Changelog
 
+## Paket 7 — kantor bersekat dan karakter Tim — 6 Oktober 2026
+
+- Interior kantor 22 × 15 dengan ruang rapat, ruang manajer, lima meja seksi berpapan nama, pantry, arsip dan area kegiatan.
+- Karakter dari catatan Tim (warna baju, rambut termasuk berkerudung) dengan jadwal teruji: rapat, bongkar muat, kerja, istirahat, keliling, pulang; berjalan ke tujuan lalu duduk/bekerja. Maskot dekoratif lama dihapus; maskot manajer menempati tempat sesuai aktivitas.
+- Penanda nama karakter, kartu karakter dan tab Tim di kartu Daftar. Contoh development mendapat lima anggota Tim.
+- 288 tes/45 berkas, typecheck, lint dan build lulus. Diperiksa di browser dengan contoh: interior kantor 1280 px. Belum: ponsel dan data cloud.
+
 ## Paket 6 — kendaraan dari data pengiriman — 6 Oktober 2026
 
 - Dunia memuat Pengiriman (setelah migrasi 8 aktif). Truk boks bergaya video ditempatkan di dok (tiba/diperiksa) atau petak antre (dikirim) dengan penanda dan kartu pengiriman.

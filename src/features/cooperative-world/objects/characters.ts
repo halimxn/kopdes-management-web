@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import type { CharacterActivity } from '../world-model';
 import { box, sphere, type Vec3 } from './primitives';
 
+/** Pose gerak: aktivitas maskot ditambah duduk-mengetik (meja seksi) dan berjalan. */
+export type CharacterPose = CharacterActivity | 'desk' | 'walk';
+
 export type WorldCharacter = {
   group: THREE.Group;
   leftArm: THREE.Group;
@@ -34,6 +37,11 @@ export function createCharacter(
   }
   box(head, [0.085, 0.023, 0.025], [0, -0.14, 0.291], '#864d44');
   if (variant === 1) sphere(head, 0.2, [0, 0.33, -0.2], '#34364b');
+  // Varian 3: kerudung menutupi rambut dan leher, warna mengikuti baju.
+  if (variant === 3) {
+    sphere(head, 0.37, [0, 0.06, -0.1], color, [1.04, 1.08, 0.85]);
+    sphere(head, 0.3, [0, -0.28, -0.02], color, [1.15, 0.6, 1]);
+  }
   if (variant === 2) {
     box(head, [0.7, 0.07, 0.52], [0, 0.27, 0.03], color, 0.04);
     sphere(head, 0.3, [0, 0.24, -0.03], color, [1, 0.45, 1]);
@@ -61,20 +69,23 @@ export function createCharacter(
 export function animateCharacter(
   character: WorldCharacter,
   time: number,
-  activity: CharacterActivity,
+  activity: CharacterPose,
   reduced: boolean,
 ) {
   const t = reduced ? 0 : time;
+  const sitting = activity === 'meeting' || activity === 'desk';
+  const typing = activity === 'work' || activity === 'desk';
   character.group.position.copy(character.base);
   character.group.position.y +=
     activity === 'gym' ? Math.abs(Math.sin(t * 5)) * 0.12 : Math.sin(t * 2) * 0.025;
-  const stride = activity === 'gym' ? Math.sin(t * 5) * 0.75 : 0;
-  character.leftLeg.rotation.x = activity === 'meeting' ? -1.35 : stride;
-  character.rightLeg.rotation.x = activity === 'meeting' ? -1.35 : -stride;
+  const stride =
+    activity === 'gym' ? Math.sin(t * 5) * 0.75 : activity === 'walk' ? Math.sin(t * 7) * 0.6 : 0;
+  character.leftLeg.rotation.x = sitting ? -1.35 : stride;
+  character.rightLeg.rotation.x = sitting ? -1.35 : -stride;
   character.leftArm.rotation.x =
-    activity === 'work' || activity === 'meeting' ? -0.7 + Math.sin(t * 4) * 0.08 : -stride;
-  character.rightArm.rotation.x = activity === 'work' ? -0.8 + Math.cos(t * 4) * 0.08 : stride;
+    typing || activity === 'meeting' ? -0.7 + Math.sin(t * 4) * 0.08 : -stride;
+  character.rightArm.rotation.x = typing ? -0.8 + Math.cos(t * 4) * 0.08 : stride;
   character.rightArm.rotation.z = activity === 'idle' ? -0.25 + Math.sin(t * 2.5) * 0.15 : 0.05;
-  character.head.rotation.y = Math.sin(t * 0.7) * 0.12;
-  if (activity === 'meeting') character.group.position.y -= 0.12;
+  character.head.rotation.y = activity === 'walk' ? 0 : Math.sin(t * 0.7) * 0.12;
+  if (sitting) character.group.position.y -= 0.12;
 }

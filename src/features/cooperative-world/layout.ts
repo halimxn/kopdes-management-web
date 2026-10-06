@@ -69,34 +69,71 @@ export const worldZones: Record<
   },
 };
 
+/** Interior kantor 22 × 15 (koordinat lokal): ruang per seksi, rapat, manajer, pantry, arsip, gym. */
+export const officeInterior = {
+  size: [22, 15] as [number, number],
+  sections: {
+    'layanan anggota': [-2, -4.6],
+    'administrasi & keuangan': [3.4, -4.6],
+    umum: [8.6, -4.6],
+    'usaha & gerai': [-2, -0.2],
+    'gudang & logistik': [3.4, -0.2],
+  } as Record<string, [number, number]>,
+  meeting: [-7.6, -3.4] as [number, number],
+  manager: [-7.6, 3.8] as [number, number],
+  pantry: [8.6, 1.4] as [number, number],
+  archive: [-2, 4.9] as [number, number],
+  gym: [4.6, 4.9] as [number, number],
+  /** Lorong keliling searah jarum jam, bebas meja. */
+  walkLoop: [
+    [-5, -2.4],
+    [6.4, -2.4],
+    [6.4, 2.4],
+    [-5, 2.4],
+  ] as [number, number][],
+};
+
+/** Kursi rapat [x, z, arah hadap]; karakter menghadap meja. */
+export const meetingSeats: [number, number, number][] = [-1.2, 0, 1.2].flatMap((dx) => [
+  [officeInterior.meeting[0] + dx, officeInterior.meeting[1] - 1.35, 0],
+  [officeInterior.meeting[0] + dx, officeInterior.meeting[1] + 1.35, Math.PI],
+]) as [number, number, number][];
+
+/** Dua kursi per meja seksi; staf berikutnya berdiri di samping meja. */
+export function sectionSeat(section: string, index: number): [number, number, number] {
+  const [x, z] = officeInterior.sections[section] || officeInterior.sections['umum'];
+  if (index < 2) return [x + (index ? 1.1 : -1.1), z + 0.95, Math.PI];
+  return [x + 2.4, z + 0.4 + (index - 2) * 0.8, -Math.PI / 2];
+}
+
 export const worldStations = [
   {
     id: 'rapat',
     title: 'Meja rapat',
     href: '/rapat',
     description: 'Agenda, notulen, dan keputusan.',
-    position: [-4, 0, -2],
+    position: [officeInterior.meeting[0], 0, officeInterior.meeting[1]],
   },
   {
     id: 'tugas',
     title: 'Meja tugas',
     href: '/tugas',
     description: 'Pekerjaan dan tenggat yang perlu ditindaklanjuti.',
-    position: [3, 0, -2],
+    position: [0.7, 0, -2.4],
   },
   {
     id: 'kegiatan',
     title: 'Area kegiatan',
     href: '/jurnal',
     description: 'Karakter berolahraga sebagai visualisasi kegiatan hari ini.',
-    position: [4, 0, 3],
+    position: [officeInterior.gym[0], 0, officeInterior.gym[1]],
   },
   {
     id: 'dokumen',
     title: 'Arsip & buku',
     href: '/dokumen',
     description: 'Dokumen koperasi dan pintasan pencatatan.',
-    position: [-4, 0, 3],
+    position: [officeInterior.archive[0], 0, officeInterior.archive[1]],
   },
 ] as const;
 
@@ -124,9 +161,9 @@ export const characterSpots = {
     [warehouse.docks[1] + 1.5, 0.1, warehouse.center[1] + 7.5],
   ],
   dalam: [
-    [-4, 0.1, -0.95],
-    [2, 0.1, -0.15],
-    [5.3, 0.3, 3.5],
+    [officeInterior.manager[0], 0.1, officeInterior.manager[1] + 1.4],
+    [0, 0.1, 0],
+    [0, 0.1, 0],
   ],
   gudang: [
     [-2.6, 0.1, 2.2],
@@ -138,6 +175,6 @@ export const characterSpots = {
 /** Setengah tinggi bidang pandang kamera ortografis pada zoom 1. */
 export const cameraSpan = {
   luar: { portrait: 20, landscape: 13.2 },
-  dalam: { portrait: 11.5, landscape: 8.5 },
+  dalam: { portrait: 13, landscape: 9.5 },
   gudang: { portrait: 13, landscape: 9.5 },
 };

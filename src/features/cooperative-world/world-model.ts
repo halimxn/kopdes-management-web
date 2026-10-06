@@ -49,6 +49,7 @@ export function getWorldModel(data: Workspace, now: Date) {
     ...placeUnits(units),
     inventory: summarizeInventory(data['inventory-items'] || []),
     deliveries: data.deliveries || [],
+    staff: data.staff || [],
     trucks: placeTrucks(data.deliveries || []),
     title: String(data.organization?.[0]?.data.title || 'Koperasi'),
     manager: String(data.organization?.[0]?.data.manager || 'Manajer'),

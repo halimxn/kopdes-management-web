@@ -10,6 +10,7 @@ import {
 } from '@/features/cooperative-world/world-model';
 import type { Item } from '@/features/records/schemas';
 import { dayPhase, getLighting } from '@/features/cooperative-world/lighting';
+import { planStaff } from '@/features/cooperative-world/npc/schedule';
 import {
   detectQualityTier,
   qualitySettings,
@@ -193,5 +194,43 @@ describe('truk dari pengiriman', () => {
   it('kelebihan truk tidak digambar melebihi jumlah dok dan antrean', () => {
     const many = Array.from({ length: 6 }, (_, i) => delivery(`t${i}`, 'tiba'));
     expect(placeTrucks(many).filter((spot) => spot.place === 'dok')).toHaveLength(4);
+  });
+});
+
+describe('jadwal karakter tim', () => {
+  const staff = (id: string, extra: Record<string, unknown> = {}) =>
+    row(id, { title: id, status: 'aktif', work_hours: '08:00-16:00', ...extra });
+  // 10:00 WIB
+  const at10 = new Date('2026-10-06T03:00:00Z');
+  const empty = { tasks: [], deliveries: [] };
+  it('rapat mengalahkan kegiatan lain; peserta dicocokkan dengan nama', () => {
+    const meeting = row('m', { title: 'Rapat', participants: 'Ani, Budi' });
+    const plans = planStaff(
+      [staff('Ani'), staff('Citra')],
+      { ...empty, currentMeeting: meeting },
+      at10,
+    );
+    expect(plans.map((plan) => plan.activity)).toEqual(['rapat', 'kerja']);
+  });
+  it('bongkar untuk seksi gudang saat truk di dok, tugas proses, istirahat dan pulang', () => {
+    const deliveries = [row('d', { title: 'Kiriman', direction: 'masuk', status: 'tiba' })];
+    const tasks = [row('t', { title: 'Cek kas', status: 'proses', assignee: 'Budi' })];
+    const plans = planStaff(
+      [staff('Dodi', { section: 'gudang & logistik', workplace: 'gudang' }), staff('Budi')],
+      { tasks, deliveries },
+      at10,
+    );
+    expect(plans.map((plan) => [plan.activity, plan.location])).toEqual([
+      ['bongkar', 'gudang'],
+      ['kerja', 'dalam'],
+    ]);
+    expect(planStaff([staff('Eka')], empty, new Date('2026-10-06T05:30:00Z'))[0].activity).toBe(
+      'istirahat',
+    );
+    const night = planStaff([staff('Eka')], empty, new Date('2026-10-06T13:00:00Z'))[0];
+    expect([night.activity, night.location]).toEqual(['pulang', null]);
+  });
+  it('staf nonaktif tidak digambar', () => {
+    expect(planStaff([staff('Fajar', { status: 'nonaktif' })], empty, at10)).toHaveLength(0);
   });
 });

@@ -88,6 +88,15 @@ Belum tersedia drag/editor lahan.
 - Zona/interior gudang mengganti KPI menjadi Barang tercatat, Di bawah minimum, Rak terisi. Kartu Daftar mendapat tab **Stok**; di dalam gudang tab Lokasi menjadi **Rak**.
 - Halaman development `/dev/dunia-koperasi?contoh=1` memuat contoh berjudul "Contoh …" untuk memeriksa tampilan berisi data; tidak tersedia di build produksi.
 
+## Kantor bersekat dan karakter Tim
+
+- Interior kantor 22 × 15 (`officeInterior` di layout.ts): ruang rapat kaca, ruang manajer, lima meja seksi berpapan nama (layanan anggota, administrasi & keuangan, umum, usaha & gerai, gudang & logistik), pantry, arsip, area kegiatan.
+- Karakter Tim berasal dari catatan Tim berstatus aktif/ditunjuk (maks. 12 digambar); warna baju dan rambut (termasuk berkerudung) dari kolom Tim. Tanpa catatan Tim, meja tetap kosong.
+- `npc/schedule.ts` (teruji): rapat berlangsung (nama di peserta; peserta kosong → staf kantor) → bongkar muat untuk seksi gudang & logistik saat truk di dok → tugas berstatus proses yang menyebut nama → istirahat 12:00–13:00 → di jam kerja kerja di meja atau keliling bergiliran 15 menit → di luar jam kerja tidak digambar. Lokasi: kantor, gudang (tempat kerja gudang/bongkar), atau depan lahan gerainya.
+- `npc/movement.ts`: karakter berjalan ke kursi rapat, kursi meja seksi (dua kursi, berikutnya berdiri), pantry, staging gudang atau lahan gerai, lalu duduk/bekerja; keliling memakai lorong kantor. Rencana dihitung ulang tiap menit tanpa membangun ulang scene; gerak minimal menaruh karakter langsung di tujuan.
+- Maskot manajer di kantor: kepala meja rapat saat rapat, meja manajer saat tugas proses, gym saat kegiatan hari ini, selain itu di ruang manajer. Maskot dekoratif lama dihapus.
+- Penanda nama karakter (area sentuh 44 px) dan tab **Tim** di kartu Daftar; kartu karakter menampilkan kegiatan, alasan dari catatan, tempat dan jam kerja, dengan keterangan "Visualisasi jadwal/tugas, bukan kehadiran".
+
 ## Interior dan karakter
 
 Kantor cutaway tanpa atap/dinding depan. Empat area: meja rapat kayu muda dengan enam kursi, workstation komputer, arsip/buku, treadmill kegiatan. Penanda/detail membuka /rapat, /tugas, /dokumen, /pencatatan atau /jurnal.

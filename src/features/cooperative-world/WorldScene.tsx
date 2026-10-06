@@ -12,6 +12,7 @@ import {
   cameraSpan,
   characterSpots,
   officePosition,
+  officeInterior,
   officeSize,
   warehouse,
   warehouseInterior,
@@ -33,6 +34,8 @@ import {
   type WorldPreferences,
 } from './world-model';
 import { createWarehouseInterior } from './objects/warehouse-interior';
+import { createNpcs, updateNpcs } from './npc/movement';
+import { npcActivityNames, type NpcPlan } from './npc/schedule';
 import { createAmbientCars, createTrucks, truckPose, type AmbientCar } from './objects/vehicles';
 
 type Props = {
@@ -56,6 +59,8 @@ type Props = {
   rotation: number;
   selected: string;
   bubble: string;
+  /** Rencana kegiatan karakter Tim (dihitung ulang tiap menit tanpa membangun ulang scene). */
+  plans: NpcPlan[];
   onSelect: (id: string) => void;
 };
 export function WorldScene({
@@ -73,6 +78,7 @@ export function WorldScene({
   rotation,
   selected,
   bubble,
+  plans,
   onSelect,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
@@ -87,6 +93,10 @@ export function WorldScene({
     resize: () => void;
   } | null>(null);
   const motion = useRef({ activity, weather, hour });
+  const npcPlans = useRef(plans);
+  useEffect(() => {
+    npcPlans.current = plans;
+  }, [plans]);
   const selectAction = useRef(onSelect);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -199,19 +209,11 @@ export function WorldScene({
     }
     const color = { biru: palette.blue, lavender: '#a18ae0', hijau: '#51aa8a' }[outfit];
     const spots = characterSpots[location];
-    const characters = [
-      createCharacter(world, spots[0], color),
-      createCharacter(world, spots[1], '#a18ae0', 1),
-      createCharacter(world, spots[2], '#50ab90', 2),
-    ];
-    characters.forEach((character) => {
-      character.group.userData.selection = 'karakter';
-    });
-    if (location === 'dalam') {
-      characters[0].group.rotation.y = Math.PI;
-      characters[1].group.rotation.y = Math.PI;
-      characters[2].group.rotation.y = Math.PI;
-    }
+    // Maskot manajer; karakter Tim berasal dari catatan Tim (tidak ada karakter karangan).
+    const manager = createCharacter(world, spots[0], color);
+    manager.group.userData.selection = 'karakter';
+    const npcs = createNpcs(world, model.staff);
+    let npcSnap = true;
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let pointerStart = [0, 0];
@@ -349,27 +351,42 @@ export function WorldScene({
       sun.intensity = light.sun;
       sun.color.set(light.sunColor);
       renderer.toneMappingExposure = light.exposure;
-      characters.forEach((character, index) => {
-        const mode =
-          location !== 'dalam'
-            ? 'idle'
-            : index === 0
-              ? state.activity === 'meeting'
-                ? 'meeting'
-                : 'idle'
-              : index === 1
-                ? state.activity === 'work'
-                  ? 'work'
-                  : 'idle'
-                : state.activity === 'gym'
-                  ? 'gym'
-                  : 'idle';
-        animateCharacter(character, elapsed + index * 2, mode, reduced.matches);
-      });
-      positions.set(
-        'karakter',
-        characters[0].group.position.clone().add(new THREE.Vector3(0, 2.4, 0)),
+      // Manajer di kantor menempati tempat sesuai aktivitas: kepala meja rapat, meja manajer, gym.
+      if (location === 'dalam') {
+        const [mx, mz] = officeInterior.meeting;
+        const [rx, rz] = officeInterior.manager;
+        const [gx, gz] = officeInterior.gym;
+        const place =
+          state.activity === 'meeting'
+            ? ([mx - 2.5, mz, Math.PI / 2, 'meeting'] as const)
+            : state.activity === 'work'
+              ? ([rx, rz + 1, Math.PI, 'desk'] as const)
+              : state.activity === 'gym'
+                ? ([gx - 1.2, gz + 0.1, Math.PI, 'gym'] as const)
+                : ([rx + 1.4, rz + 1.6, Math.PI * 0.85, 'idle'] as const);
+        manager.base.set(place[0], 0.1 + (place[3] === 'gym' ? 0.2 : 0), place[1]);
+        manager.group.rotation.y = place[2];
+        animateCharacter(manager, elapsed, place[3], reduced.matches);
+      } else animateCharacter(manager, elapsed, 'idle', reduced.matches);
+      positions.set('karakter', manager.group.position.clone().add(new THREE.Vector3(0, 2.4, 0)));
+      updateNpcs(
+        npcs,
+        npcPlans.current,
+        location,
+        model,
+        Math.min(delta, 0.25),
+        elapsed,
+        reduced.matches,
+        npcSnap,
       );
+      npcSnap = false;
+      for (const actor of npcs)
+        if (actor.character.group.visible)
+          positions.set(
+            `staf-${actor.id}`,
+            actor.character.group.position.clone().add(new THREE.Vector3(0, 2.3, 0)),
+          );
+        else positions.delete(`staf-${actor.id}`);
       for (const [id, position] of positions) {
         const marker = markerRefs.current.get(id);
         if (!marker) continue;
@@ -577,6 +594,34 @@ export function WorldScene({
             </Button>
           </div>
         ))}
+      {!failed &&
+        plans
+          .filter((plan) => plan.location === location)
+          .slice(0, 12)
+          .map((plan) => {
+            const id = `staf-${plan.staff.id}`;
+            return (
+              <div
+                className="cw-marker"
+                key={id}
+                ref={(node) => {
+                  if (node) markerRefs.current.set(id, node);
+                  else markerRefs.current.delete(id);
+                }}
+              >
+                <Button
+                  className={`cw-map-pin cw-person-pin ${selected === id ? 'is-selected' : ''}`}
+                  onClick={() => onSelect(id)}
+                  aria-label={`${plan.staff.data.title}: ${npcActivityNames[plan.activity]}`}
+                >
+                  <span>{String(plan.staff.data.title)}</span>
+                  {selected === id && (
+                    <em className="cw-pin-status">{npcActivityNames[plan.activity]}</em>
+                  )}
+                </Button>
+              </div>
+            );
+          })}
       {!failed && (
         <div
           className="cw-marker cw-character-marker"
