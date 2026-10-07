@@ -49,10 +49,31 @@ Aset aplikasi: `node --no-warnings scripts/dunia-pixel/aset.mjs` (ukuran dari `p
 | P2 Mesin | PixiJS, denah pixel `pixel/map.ts`, A* `pixel/path.ts`, kamera skala bulat `pixel/camera.ts`, avatar manajer (otomatis / WASD / ketuk tanah), penanda siku + kamera ikut, berhenti saat tersembunyi | Selesai (greybox; aset final P3) |
 | P3 Eksterior | P3a bangunan/rumah/pohon dari `scripts/dunia-pixel/aset.mjs` → `public/dunia/` (+ lapisan `-malam` aditif), grading bersama `pixel/grade.ts`; P3b kendaraan skala baru + lalu lintas + truk dok dari Pengiriman; P3c perabot jalan dan detail area | P3a, P3b selesai |
 | P4 Karakter | Animasi jalan 4 arah, staf dari data Tim, editor rupa manajer, warga simulasi (reasoning tinggi) | |
-| P5 Interior | 8 ruang dengan transisi pudar; rak dari kolom Lokasi (reasoning tinggi) | |
+| P5 Interior | 9 ruang dengan transisi pudar; rak dari kolom Lokasi (reasoning tinggi) | |
 | P6 Kartu | Kartu gaya baru, aksi cepat ke form operasional | |
 | P7 Suasana | Waktu WIB, musim, cuaca, hari besar | |
 | P8 QA | 360/768/1024/1440, fps, ukuran aset, tes/lint/build, dokumen | |
+
+Urutan P3c → P4 → P5 → P6 → P7 → P8. Push ke `codex/dunia-koperasi` setiap paket selesai; PR ke main setelah P8 dan persetujuan pemilik. Uji perangkat fisik dilakukan pemilik.
+
+## Keputusan P3c–P8 (sesi `/grill-me` 7 Oktober 2026)
+
+**P3c perabot dan detail area.** Lampu jalan, tiang dan kabel listrik, bangku, tempat sampah, pot; air mancur, tiang bendera dan umbul-umbul alun-alun; 6 tenda pasar tani; pagar dan gerbang kawasan logistik; saung sawah; jemuran kampung. Hanya **papan pengumuman** di depan kantor yang dapat diklik (isi `noticeBoard`: keputusan terbaru dan dokumen akan kedaluwarsa); sisanya hiasan.
+
+**P4 karakter dan tim.**
+- Form Tim mendapat bagian opsional "Tampilan di Dunia Koperasi" (gaya halaman operasional, tanpa migrasi SQL karena `hub_records`):
+  - **Rupa**: penutup kepala (tidak ada/hijab/peci/topi KDMP), rambut (pendek/panjang/ikal; diabaikan bila hijab), kulit (terang/sawo matang/gelap), kacamata (ya/tidak). Warna hijab dan baju mengikuti kolom Warna seragam. Semua kosong = sosok netral bertopi KDMP. Rupa tidak ditebak dari nama atau ID.
+  - **Kedudukan**: karyawan (bawaan) / pengurus / pengawas; pengurus dan pengawas berbatik.
+- Rupa avatar manajer diatur di kartu Karakter, disimpan di preferensi perangkat.
+- Klik staf: manajer berjalan menghampiri, bubble "…" 3–4 detik, staf membalas ikon status tugas (✓ selesai, ⏳ proses, ! terlambat) dari data. Kartu staf: jadwal hari ini, tugas yang penanggung jawabnya sama persis dengan nama (abaikan huruf besar/kecil dan spasi tepi), tombol **Beri tugas** (form tugas dengan nama terisi). Mengubah penanggung jawab menjadi pilihan dari Tim = pekerjaan terpisah nanti.
+- Warga simulasi mengikuti anggota aktif: 1 sosok per 25 anggota, minimal 4, maksimal 14; kartu "Simulasi lingkungan · N anggota aktif tercatat"; pencatatan belum aktif = jumlah minimal tanpa angka.
+- Teknis: jalan 4 arah × 4 bingkai, pose diam/kerja/angkat/bicara, sprite dari generator.
+
+**P5 interior.** Kantor (ruang rapat, meja tugas, area kegiatan, arsip, meja staf), balai desa, sembako, apotek, klinik, simpan pinjam, gudang komoditas (rak A–F), cold storage (C1–C3), toko umum untuk Gerai 1–3 (rak berisi barang ber-Gerai itu). Masuk lewat tombol Masuk (avatar berjalan ke pintu lalu pudar) atau menginjak pintu di mode kendali. Rapat: di balai desa bila Lokasi memuat "balai", selain itu ruang rapat kantor; yang hadir hanya Tim yang namanya tertulis di Peserta, Peserta kosong = hanya manajer.
+
+**P6 kartu.** Seluruh UI dunia (header, dock, KPI, pelacak, daftar, detail, lembar bawah) krem bergaris gelap; judul dan label pendek memakai Pixelify Sans lewat `next/font`, isi data memakai font biasa.
+
+**P7 suasana.** Peralihan halus pagi–siang–senja–malam menurut WIB. Cuaca bawaan otomatis menurut musim (Okt–Mar berawan/hujan sore, Apr–Sep cerah/berawan), tetap dapat dipilih manual, berlabel simulasi. Hari besar: Agustusan (1–31 Agustus), Ramadan sebulan dan Lebaran H-1 sampai H+7 menurut kalender Hijriah browser (tanpa klaim tanggal resmi), Hari Koperasi 12 Juli. Tanpa suara.
 
 ## Aturan yang tetap
 
