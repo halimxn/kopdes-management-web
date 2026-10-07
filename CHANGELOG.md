@@ -1,5 +1,12 @@
 # Changelog
 
+## Dunia Koperasi pixel: P3c perabot dan detail area — 7 Oktober 2026
+
+- `scripts/dunia-pixel/perabot.mjs`: lampu jalan, tiang listrik (dengan trafo), bangku, tempat sampah, pot, air mancur, tiang bendera, umbul-umbul, tenda pasar (3 warna), pagar BRC, gerbang LOGISTIK, saung, jemuran, papan pengumuman; manifest jangkar, batas isi dan titik kabel.
+- `pixel/props.ts`: penempatan di Jalan Desa, alun-alun, pasar tani, taman, kawasan logistik berpagar (masuk lewat gerbang barat), sawah dan kampung; perabot penghalang ikut peta jalan kaki.
+- Mesin: kabel listrik melengkung antar tiang, lampu dan air mancur menyala malam, papan pengumuman dapat dipilih (kartu keputusan dan dokumen dari data).
+- Perbaikan: menggeser peta yang dimulai di atas bangunan, kendaraan atau papan tidak lagi memilihnya saat dilepas; kendaraan menghadap kiri memakai sprite sendiri sehingga tulisan KDMP terbaca; papan INFO ganda di sprite kantor dihapus.
+
 ## Dunia Koperasi pixel: P3b kendaraan dan lalu lintas — 7 Oktober 2026
 
 - `scripts/dunia-pixel/kendaraan.mjs`: truk boks KDMP, truk pendingin, truk bak kayu bercat (samping, depan, belakang), angkot, pikap sayur, motor, motor roda tiga; manifest jangkar `public/dunia/kendaraan/manifest.json`.

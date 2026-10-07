@@ -2057,6 +2057,23 @@ function main() {
 }
 
 // ---------- ekspor sprite transparan (dipakai scripts/dunia-pixel/aset.mjs) ----------
+/** Cerminkan kanvas kiri-kanan; dipakai untuk sprite kendaraan menghadap kiri. */
+function flipCanvas() {
+  const swap = (arr, stride) => {
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W / 2; x++) {
+        const a = (y * W + x) * stride;
+        const b = (y * W + (W - 1 - x)) * stride;
+        for (let k = 0; k < stride; k++) [arr[a + k], arr[b + k]] = [arr[b + k], arr[a + k]];
+      }
+  };
+  swap(buf, 3);
+  swap(emis, 3);
+  swap(emisOn, 1);
+  swap(shadowM, 1);
+  if (alpha) swap(alpha, 1);
+  for (const l of lights) l.x = W - 1 - l.x;
+}
 /** Siapkan kanvas transparan baru untuk satu sprite. */
 function beginCanvas(w, h, s = 7) {
   W = w;
@@ -2134,7 +2151,7 @@ export {
   K, rgb, shade, mix, rnd, pick, noise, px, mul, rect, hline, vline, box, line, ellipse, noiseFill, grime,
   glowRect, glowFrom, light, shadowRect, shadowEllipse, text, textW, signBoard, win, acUnit, pipe, poster, plant,
   awning, tree, pastelTree, bush, tuft, flowerBox, pastelWall, roofTiles, crate, lpg, sackStack, sengWall, rollDoor,
-  fill_cross, wire, lamp, beginCanvas, spriteRGBA, glowRGBA, pngRGBA,
+  fill_cross, wire, lamp, beginCanvas, spriteRGBA, glowRGBA, pngRGBA, flipCanvas,
 };
 
 // Dijalankan langsung (bukan diimpor oleh aset.mjs).

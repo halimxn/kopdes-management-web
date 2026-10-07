@@ -338,8 +338,8 @@ const COLS = Math.ceil(WORLD.w / TILE);
 const ROWS = Math.ceil(WORLD.h / TILE);
 export const grid = { cols: COLS, rows: ROWS } as const;
 
-/** Peta jalan kaki: 1 = terhalang (tapak bangunan, sungai kecuali jembatan, kolam). */
-export function blockedGrid(): Uint8Array {
+/** Peta jalan kaki: 1 = terhalang (tapak bangunan, sungai kecuali jembatan, perabot). */
+export function blockedGrid(extra: Box[] = []): Uint8Array {
   const cells = new Uint8Array(COLS * ROWS);
   const mark = (b: Box) => {
     for (let r = Math.floor(b.y / TILE); r < Math.ceil((b.y + b.h) / TILE); r++)
@@ -356,7 +356,7 @@ export function blockedGrid(): Uint8Array {
     }
   }
   for (const b of [...mapBuildings, ...houses]) mark(b.foot);
-  mark({ x: 880, y: 1010, w: 100, h: 60 });
+  for (const b of extra) mark(b);
   return cells;
 }
 

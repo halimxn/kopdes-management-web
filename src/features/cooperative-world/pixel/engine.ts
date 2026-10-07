@@ -35,6 +35,7 @@ import {
   type Box,
   type MapBuilding,
 } from './map';
+import { POLES, mapProps, propBlocks } from './props';
 import { findPath, type Cell } from './path';
 import { drawPixelText, pixelTextWidth } from './pixel-font';
 import { gradeCss, gradeHex } from './grade';
@@ -219,8 +220,6 @@ function drawGround(layer: Container) {
     for (let x = b.x + 6; x < b.x + b.w; x += 10)
       water.rect(x, b.y + 2, 2, b.h - 4).fill(gradeHex('#6b4a34'));
   }
-  water.circle(930, 1040, 44).fill(gradeHex('#d0c8b8')).stroke({ width: 3, color: OL });
-  water.circle(930, 1040, 36).fill(gradeHex('#6fa7c0'));
   layer.addChild(water, marks);
   return drawAreaLabels();
 }
@@ -344,6 +343,9 @@ export async function createWorld(
   overlay.addChild(drawGround(ground));
 
   let tapGuard = false;
+  // Menggeser peta yang dimulai di atas objek tidak boleh memilih objek itu saat dilepas.
+  let moved = false;
+  const tapAllowed = () => !moved && !tapGuard;
   const all = [...mapBuildings, ...houses];
   const treeName = (x: number, y: number, r: number) =>
     `pohon-${treeSize(r)}${(x + y) % 5 === 0 ? '-bunga' : ''}`;
@@ -381,7 +383,7 @@ export async function createWorld(
         ? new Rectangle(bounds.x - g.x, bounds.y - g.y, bounds.w, bounds.h)
         : new Rectangle(bounds.x, bounds.y, bounds.w, bounds.h);
       g.on('pointertap', () => {
-        if (tapGuard) return;
+        if (!tapAllowed()) return;
         tapGuard = true;
         callbacks.onSelect(b.select === 'kawasan' ? 'kawasan' : b.select);
       });
@@ -398,6 +400,81 @@ export async function createWorld(
     t.zIndex = y;
     actors.addChild(t);
   }
+
+  // perabot: jangkar di titik tapak; papan pengumuman dapat dipilih (isi dari data)
+  type PropAnchor = {
+    w: number;
+    h: number;
+    ax: number;
+    ay: number;
+    box: [number, number, number, number];
+    wire?: [number, number][];
+  };
+  let propManifest: Record<string, PropAnchor> = {};
+  try {
+    propManifest = await Assets.load<Record<string, PropAnchor>>('/dunia/perabot/manifest.json');
+  } catch {
+    // Tanpa manifest, perabot tidak digambar; dunia lain tetap berjalan.
+  }
+  const propTex = await loadTextures(
+    Object.keys(propManifest).flatMap((n) => [
+      spriteUrl('perabot', n),
+      spriteUrl('perabot', `${n}-malam`),
+    ]),
+  );
+  const propBounds = new Map<string, Box>();
+  for (const p of mapProps) {
+    const a = propManifest[p.sprite];
+    const tex = propTex.get(spriteUrl('perabot', p.sprite));
+    if (!a || !tex) continue;
+    const sprite = new Sprite(tex);
+    sprite.position.set(p.x - a.ax, p.y - a.ay);
+    sprite.zIndex = p.y;
+    const lit = propTex.get(spriteUrl('perabot', `${p.sprite}-malam`));
+    if (lit) {
+      const l = new Sprite(lit);
+      l.position.copyFrom(sprite.position);
+      glow.addChild(l);
+    }
+    if (p.select) {
+      const [dx, dy, w, h] = a.box;
+      const select = p.select;
+      propBounds.set(select, { x: p.x + dx, y: p.y + dy, w, h });
+      sprite.eventMode = 'static';
+      sprite.cursor = 'pointer';
+      sprite.hitArea = new Rectangle(a.ax + dx, a.ay + dy, w, h);
+      sprite.on('pointertap', () => {
+        if (!tapAllowed()) return;
+
+        tapGuard = true;
+        callbacks.onSelect(select);
+      });
+    }
+    actors.addChild(sprite);
+  }
+  // kabel listrik melengkung antar tiang (di atas bangunan, di bawah label area)
+  const wires = new Graphics();
+  const poleWire = (x: number, trafo: boolean) =>
+    (propManifest[trafo ? 'tiang-trafo' : 'tiang']?.wire || []).map(
+      ([dx, dy]) => [x + dx, 696 + dy] as [number, number],
+    );
+  for (let i = 0; i + 1 < POLES.length; i++) {
+    const a = poleWire(...POLES[i]);
+    const b = poleWire(...POLES[i + 1]);
+    a.forEach(([x0, y0], k) => {
+      const end = b[k];
+      if (!end) return;
+      const [x1, y1] = end;
+      const sag = Math.min(22, Math.abs(x1 - x0) / 16);
+      wires.moveTo(x0, y0);
+      for (let t = 1; t <= 24; t++) {
+        const f = t / 24;
+        wires.lineTo(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f + Math.sin(f * Math.PI) * sag);
+      }
+    });
+  }
+  wires.stroke({ width: 1, color: 0x2a2631, alpha: 0.85 });
+  overlay.addChildAt(wires, 0);
 
   // kendaraan: sprite per tampak; jangkar dari manifest generator (garis tanah sisi terdekat)
   type Anchor = { w: number; h: number; ax: number; ay: number; length: number; margin: number };
@@ -449,7 +526,6 @@ export async function createWorld(
       if (!texture) continue;
       if (sprite.texture !== texture) sprite.texture = texture;
       sprite.anchor.set(anchor.ax / anchor.w, anchor.ay / anchor.h);
-      sprite.scale.x = pose.view === 'kiri' ? -1 : 1;
       sprite.position.set(Math.round(pose.x), Math.round(pose.y));
     }
     m.body.zIndex = pose.y;
@@ -459,6 +535,8 @@ export async function createWorld(
     body.eventMode = 'static';
     body.cursor = 'pointer';
     body.on('pointertap', () => {
+      if (!tapAllowed()) return;
+
       tapGuard = true;
       callbacks.onSelect(id);
     });
@@ -508,7 +586,7 @@ export async function createWorld(
   syncTrucks(initial.trucks);
 
   // avatar manajer dan jalurnya
-  const blocked = blockedGrid();
+  const blocked = blockedGrid(propBlocks());
   const avatar = new Graphics();
   const pos = { x: 790, y: 740 };
   let path: [number, number][] = [];
@@ -527,6 +605,8 @@ export async function createWorld(
   avatar.cursor = 'pointer';
   avatar.hitArea = new Rectangle(-14, -60, 28, 62);
   avatar.on('pointertap', () => {
+    if (!tapAllowed()) return;
+
     tapGuard = true;
     callbacks.onSelect('karakter');
   });
@@ -561,6 +641,8 @@ export async function createWorld(
     const mover = movers.get(state.selected);
     const mb = mover && moverBounds(mover);
     if (mb) return boxCenter(mb);
+    const pb = propBounds.get(state.selected);
+    if (pb) return boxCenter(pb);
     const b = buildingFor(state.selected, state.location);
     if (b) return boxCenter(buildingBounds(b));
     return pixelZones[state.zone].center;
@@ -569,7 +651,6 @@ export async function createWorld(
   // masukan: geser, cubit, gulir, ketuk tanah, WASD
   const pointers = new Map<number, { x: number; y: number }>();
   let dragStart: { x: number; y: number } | null = null;
-  let moved = false;
   let pinchStart = 0;
   let pinchZoom = state.zoom;
   app.stage.eventMode = 'static';
@@ -611,7 +692,7 @@ export async function createWorld(
   });
   const release = (e: FederatedPointerEvent) => {
     pointers.delete(e.pointerId);
-    if (!moved && !tapGuard && e.target === app.stage) {
+    if (tapAllowed() && e.target === app.stage) {
       const local = world.toLocal(e.global);
       walkTo(local.x, local.y);
       if (!state.control) callbacks.onControl(true);
@@ -747,9 +828,7 @@ export async function createWorld(
         ? { x: pos.x - 18, y: pos.y - 64, w: 36, h: 68 }
         : selectedMover
           ? moverBounds(selectedMover)
-          : b
-            ? buildingBounds(b)
-            : null;
+          : propBounds.get(state.selected) || (b ? buildingBounds(b) : null);
     if (box) {
       const grow = reduced ? 0 : Math.round((Math.sin(pulse * 4) + 1) * 2);
       const x0 = box.x - 6 - grow;

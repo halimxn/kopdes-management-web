@@ -257,7 +257,7 @@ export function DetailCard(props: Props) {
                   }
                 : selected === 'papan'
                   ? {
-                      eyebrow: 'Taman · papan',
+                      eyebrow: 'Depan kantor · papan',
                       title: 'Papan pengumuman',
                       subtitle: 'Keputusan rapat dan masa berlaku dokumen',
                       icon: <WorldIcon kind="papan" size={40} />,

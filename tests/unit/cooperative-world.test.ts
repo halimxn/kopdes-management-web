@@ -517,7 +517,8 @@ describe('aset pixel', () => {
 
 describe('kendaraan pixel', () => {
   it('lalu lintas suasana berlajur kiri dan berputar di luar layar', async () => {
-    const { ambientTraffic, ambientPose } = await import('@/features/cooperative-world/pixel/vehicles');
+    const { ambientTraffic, ambientPose } =
+      await import('@/features/cooperative-world/pixel/vehicles');
     const east = ambientTraffic.find((v) => v.dir === 1 && v.road === 'desa')!;
     const west = ambientTraffic.find((v) => v.dir === -1 && v.road === 'desa')!;
     expect(ambientPose(east, 0).y).toBeLessThan(ambientPose(west, 0).y);
@@ -533,7 +534,8 @@ describe('kendaraan pixel', () => {
     for (const speeds of lanes.values()) expect(speeds.size).toBe(1);
   });
   it('rute kedatangan berakhir dengan ekor truk di muka dok', async () => {
-    const { arrivalRoute, poseAlong, dockPose } = await import('@/features/cooperative-world/pixel/vehicles');
+    const { arrivalRoute, poseAlong, dockPose } =
+      await import('@/features/cooperative-world/pixel/vehicles');
     const route = arrivalRoute(1);
     expect(poseAlong(route, 0).view).toBe('kiri');
     const end = poseAlong(route, 999);
@@ -542,12 +544,60 @@ describe('kendaraan pixel', () => {
     expect(end.view).toBe('depan');
   });
   it('jenis truk dari teks kendaraan, D4 tanpa keterangan = pendingin', async () => {
-    const { truckKind, recentArrival } = await import('@/features/cooperative-world/pixel/vehicles');
+    const { truckKind, recentArrival } =
+      await import('@/features/cooperative-world/pixel/vehicles');
     expect(truckKind('Colt diesel bak', 'dok', 0)).toBe('bakkayu');
     expect(truckKind('Truk reefer', 'antre', 0)).toBe('pendingin');
     expect(truckKind('', 'dok', 3)).toBe('pendingin');
     expect(truckKind('', 'dok', 0)).toBe('boks');
     expect(recentArrival('2026-10-07T01:00:00Z', new Date('2026-10-07T01:10:00Z'))).toBe(true);
     expect(recentArrival('2026-10-07T01:00:00Z', new Date('2026-10-07T01:20:00Z'))).toBe(false);
+  });
+});
+
+describe('perabot pixel', () => {
+  it('perabot di dalam dunia, tidak menimpa bangunan, dan punya sprite', async () => {
+    const { existsSync, readFileSync } = await import('node:fs');
+    const { mapProps } = await import('@/features/cooperative-world/pixel/props');
+    const { houses } = await import('@/features/cooperative-world/pixel/map');
+    const manifest = JSON.parse(readFileSync('public/dunia/perabot/manifest.json', 'utf8'));
+    const hit = (a: { x: number; y: number; w: number; h: number }, b: typeof a) =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    for (const p of mapProps) {
+      expect(manifest[p.sprite], p.sprite).toBeTruthy();
+      expect(existsSync(`public/dunia/perabot/${p.sprite}.png`)).toBe(true);
+      expect(p.x >= 0 && p.x <= WORLD.w && p.y >= 0 && p.y <= WORLD.h, p.id).toBe(true);
+      if (p.block)
+        for (const b of [...mapBuildings, ...houses])
+          expect(hit(p.block, b.foot), `${p.id} ${b.id}`).toBe(false);
+    }
+    expect(mapProps.filter((p) => p.select)).toEqual([
+      expect.objectContaining({ sprite: 'papan', select: 'papan' }),
+    ]);
+  });
+  it('pagar logistik berpintu: avatar dapat berjalan dari Jalan Desa ke depan dok', async () => {
+    const { propBlocks } = await import('@/features/cooperative-world/pixel/props');
+    const blocked = blockedGrid(propBlocks());
+    const path = findPath(blocked, grid.cols, grid.rows, [100, 46], [130, 66]);
+    expect(path).not.toBeNull();
+    const gateCells = path!.filter(
+      ([c, r]) => c === Math.floor(1834 / 16) && r * 16 > 1150 && r * 16 < 1250,
+    );
+    expect(gateCells.length).toBeGreaterThan(0);
+  });
+});
+
+describe('sprite kendaraan per tampak', () => {
+  it('setiap jenis dan tampak yang dipakai punya sprite, termasuk tampak kiri', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { spriteFor, ambientTraffic } =
+      await import('@/features/cooperative-world/pixel/vehicles');
+    const manifest = JSON.parse(readFileSync('public/dunia/kendaraan/manifest.json', 'utf8'));
+    for (const kind of ['boks', 'pendingin', 'bakkayu'] as const)
+      for (const view of ['kanan', 'kiri', 'depan', 'belakang'] as const)
+        expect(manifest[spriteFor(kind, view)], `${kind} ${view}`).toBeTruthy();
+    for (const v of ambientTraffic)
+      for (const view of ['kanan', 'kiri'] as const)
+        expect(manifest[spriteFor(v.kind, view)]).toBeTruthy();
   });
 });

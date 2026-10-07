@@ -10,9 +10,9 @@ export type VehicleKind = TruckKind | 'angkot' | 'pikap' | 'motor' | 'viar';
 export type VehicleView = 'kanan' | 'kiri' | 'depan' | 'belakang';
 export type Pose = { x: number; y: number; view: VehicleView };
 
-/** Nama sprite di public/dunia/kendaraan; tampak kiri = sprite samping yang dicerminkan. */
+/** Nama sprite di public/dunia/kendaraan; tampak kiri punya sprite sendiri agar tulisan terbaca. */
 export const spriteFor = (kind: VehicleKind, view: VehicleView) =>
-  `${kind}-${view === 'kanan' || view === 'kiri' ? 'samping' : view}`;
+  `${kind}-${view === 'kanan' ? 'samping' : view === 'kiri' ? 'samping-kiri' : view}`;
 
 const LANE = {
   desa: { 1: 728, [-1]: 760 },

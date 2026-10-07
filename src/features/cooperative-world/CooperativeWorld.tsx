@@ -415,22 +415,24 @@ export function CooperativeWorld({
               model.deliveries.find((row) => row.id === selected.slice(6))?.data.title ||
                 'Pengiriman',
             )
-          : selected.startsWith('kendaraan-suasana')
-            ? 'Mobil di jalan utama'
-            : selected.startsWith('rak-')
-              ? `Rak ${selected.slice(4)}`
-              : selected === 'staging'
-                ? 'Area staging'
-                : selectedPlot
-                  ? String(selectedPlot.unit?.data.title || selectedPlot.name)
-                  : selected === 'gudang'
-                    ? worldZones.gudang.title
-                    : selected === 'lingkungan'
-                      ? 'Suasana'
-                      : selected === 'karakter'
-                        ? 'Maskot koperasi'
-                        : worldStations.find((item) => item.id === selected)?.title ||
-                          'Kantor koperasi';
+          : selected === 'papan'
+            ? 'Papan pengumuman'
+            : selected.startsWith('kendaraan-suasana')
+              ? 'Mobil di jalan utama'
+              : selected.startsWith('rak-')
+                ? `Rak ${selected.slice(4)}`
+                : selected === 'staging'
+                  ? 'Area staging'
+                  : selectedPlot
+                    ? String(selectedPlot.unit?.data.title || selectedPlot.name)
+                    : selected === 'gudang'
+                      ? worldZones.gudang.title
+                      : selected === 'lingkungan'
+                        ? 'Suasana'
+                        : selected === 'karakter'
+                          ? 'Maskot koperasi'
+                          : worldStations.find((item) => item.id === selected)?.title ||
+                            'Kantor koperasi';
   // Kartu kanan desktop (320 px + jarak) atau lembar bawah ponsel menutupi sebagian scene.
   const occlusion = useMemo(
     () =>

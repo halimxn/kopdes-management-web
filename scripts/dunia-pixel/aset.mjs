@@ -13,6 +13,7 @@ import {
 } from '../../src/features/cooperative-world/pixel/map.ts';
 import { gradeRgb } from '../../src/features/cooperative-world/pixel/grade.ts';
 import { MARGIN as VM, VEHICLES } from './kendaraan.mjs';
+import { PERABOT } from './perabot.mjs';
 import {
   K,
   acUnit,
@@ -112,12 +113,6 @@ function canopy(x, y, w, c) {
   hline(x + 1, y + 1, w - 2, mix(c, '#ffffff', 0.3));
   for (let i = 0; i < w; i++) for (let j = 0; j < 5; j++) shadowRect(x + i, y + 7 + j, 1, 1, 0.9 - j * 0.15);
 }
-function noticeBoard(x, y) {
-  box(x, y, 22, 26, K.woodD);
-  rect(x + 1, y + 1, 20, 22, '#b98a5a');
-  for (const [nx, ny, c] of [[x + 2, y + 2, K.white], [x + 11, y + 3, '#f4e3a1'], [x + 3, y + 12, '#cfe3e0'], [x + 12, y + 13, K.white]]) box(nx, ny, 8, 9, c);
-  text('INFO', x + 4, y + 27, K.ol);
-}
 function vertSign(x, y, words, bg) {
   const h = words.reduce((n, w) => n + w.length * 6 + 4, 4);
   box(x, y, 14, h, bg);
@@ -171,7 +166,6 @@ function kantor(b, ox, oy) {
   canopy(ox + fw / 2 - 40, ground - 72, 80, '#405d84');
   text('KANTOR', ox + fw / 2 - textW('KANTOR') / 2, ground - 70, '#fffaf2');
   glassDoor(ox + fw / 2 - 26, ground - 62, 52, 62);
-  noticeBoard(ox + fw / 2 + 34, ground - 52);
   plant(ox + fw / 2 - 40, ground, 2);
   plant(ox + fw / 2 + 64, ground, 1);
   pipe(ox + fw - 4, top, H, K.sengD);
@@ -447,6 +441,13 @@ for (const v of VEHICLES) {
   manifest[v.name] = { w, h, ax: VM + v.w / 2, ay: VM + v.ground, length: v.w, margin: VM };
 }
 writeFileSync(`${OUT}/kendaraan/manifest.json`, JSON.stringify(manifest, null, 2));
-for (const dir of ['bangunan', 'pohon', 'kendaraan'])
+// Perabot: jangkar di titik tapak, batas isi dan titik kabel relatif jangkar.
+const perabot = {};
+for (const p of PERABOT) {
+  writeSprite('perabot', p.name, p.w, p.h, () => p.draw(p.ax, p.ay), p.name);
+  perabot[p.name] = { w: p.w, h: p.h, ax: p.ax, ay: p.ay, box: p.box, ...(p.wire ? { wire: p.wire } : {}) };
+}
+writeFileSync(`${OUT}/perabot/manifest.json`, JSON.stringify(perabot, null, 2));
+for (const dir of ['bangunan', 'pohon', 'kendaraan', 'perabot'])
   for (const f of (await import('node:fs')).readdirSync(`${OUT}/${dir}`)) bytes += (await import('node:fs')).statSync(`${OUT}/${dir}/${f}`).size;
 console.log(`aset ditulis ke ${OUT} (${(bytes / 1024).toFixed(0)} KB)`);

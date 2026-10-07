@@ -16,7 +16,22 @@ import {
   shadowRect,
   text,
   vline,
+  flipCanvas,
+  textW,
 } from './preview.mjs';
+
+// Tulisan di sisi kendaraan ditampung dulu; sprite menghadap kiri = gambar dicerminkan lalu
+// tulisan digambar ulang di posisi cermin agar tetap terbaca.
+let labels = [];
+const label = (s, x, y, c, sc = 1) => labels.push([s, x, y, c, sc]);
+function withLabels(draw, mirror, canvasW) {
+  return (ox, oy) => {
+    labels = [];
+    draw(ox, oy);
+    if (mirror) flipCanvas();
+    for (const [s, x, y, c, sc] of labels) text(s, mirror ? canvasW - x - textW(s, sc) : x, y, c, sc);
+  };
+}
 
 export const MARGIN = 40;
 const TIRE = '#26232a';
@@ -103,8 +118,8 @@ function truckSide(kind, ox, gy) {
     const band = kind === 'pendingin' ? '#3f6f9a' : K.red;
     rect(ox + 1, gy - 38, boxL - 2, 5, band);
     rect(ox + 1, gy - 33, boxL - 2, 4, '#ffffff');
-    text('KDMP', ox + boxL / 2 - 15, gy - H + 8, kind === 'pendingin' ? '#2f5577' : K.redD, 2);
-    text(kind === 'pendingin' ? 'PENDINGIN' : 'MERAH PUTIH', ox + boxL / 2 - (kind === 'pendingin' ? 18 : 22), gy - H + 22, K.olS);
+    label('KDMP', ox + boxL / 2 - 15, gy - H + 8, kind === 'pendingin' ? '#2f5577' : K.redD, 2);
+    label(kind === 'pendingin' ? 'PENDINGIN' : 'MERAH PUTIH', ox + boxL / 2 - (kind === 'pendingin' ? 18 : 22), gy - H + 22, K.olS);
     vline(ox + 3, gy - H + 3, H - 20, '#c5c1b5');
     if (kind === 'pendingin') {
       box(ox + boxL - 24, gy - H - D - 12, 22, 16, '#cfd3d5');
@@ -324,12 +339,18 @@ function viar(ox, gy) {
  */
 export const VEHICLES = [
   ...['boks', 'pendingin', 'bakkayu'].flatMap((kind) => [
-    { name: `${kind}-samping`, w: TRUCK.L + 8, h: TRUCK.D + 82, ground: TRUCK.D + 80, draw: (ox, oy) => truckSide(kind, ox, oy + TRUCK.D + 80) },
+    { name: `${kind}-samping`, w: TRUCK.L + 8, h: TRUCK.D + 82, ground: TRUCK.D + 80, draw: (ox, oy) => truckSide(kind, ox, oy + TRUCK.D + 80), mirror: true },
     { name: `${kind}-depan`, w: TRUCK.W, h: TRUCK.H + TRUCK.Ly + 4, ground: TRUCK.H + TRUCK.Ly, draw: (ox, oy) => truckFront(kind, ox, oy + TRUCK.H) },
     { name: `${kind}-belakang`, w: TRUCK.W, h: TRUCK.cabH + TRUCK.Ly + 4, ground: TRUCK.cabH + TRUCK.Ly, draw: (ox, oy) => truckBack(kind, ox, oy + TRUCK.cabH) },
   ]),
-  { name: 'angkot-samping', w: 104, h: 74, ground: 70, draw: (ox, oy) => angkot(ox, oy + 70) },
-  { name: 'pikap-samping', w: 110, h: 72, ground: 68, draw: (ox, oy) => pikap(ox, oy + 68) },
-  { name: 'motor-samping', w: 50, h: 52, ground: 48, draw: (ox, oy) => motor(ox, oy + 48) },
-  { name: 'viar-samping', w: 76, h: 60, ground: 56, draw: (ox, oy) => viar(ox, oy + 56) },
-];
+  { name: 'angkot-samping', w: 104, h: 74, ground: 70, draw: (ox, oy) => angkot(ox, oy + 70), mirror: true },
+  { name: 'pikap-samping', w: 110, h: 72, ground: 68, draw: (ox, oy) => pikap(ox, oy + 68), mirror: true },
+  { name: 'motor-samping', w: 50, h: 52, ground: 48, draw: (ox, oy) => motor(ox, oy + 48), mirror: true },
+  { name: 'viar-samping', w: 76, h: 60, ground: 56, draw: (ox, oy) => viar(ox, oy + 56), mirror: true },
+].flatMap((v) => {
+  const right = { ...v, draw: withLabels(v.draw, false, 0) };
+  if (!v.mirror) return [right];
+  // Kanvas sprite = isi + margin di kedua sisi; jangkar tetap di tengah panjang.
+  const canvasW = v.w + MARGIN * 2;
+  return [right, { ...v, name: `${v.name}-kiri`, draw: withLabels(v.draw, true, canvasW) }];
+});
