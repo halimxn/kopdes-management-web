@@ -42,6 +42,7 @@ import { dayPhase } from './lighting';
 import { pixelZones } from './pixel/map';
 import { zoomForStep } from './pixel/camera';
 import { recentArrival, truckKind } from './pixel/vehicles';
+import { managerLook } from './pixel/look';
 import { WorldHeader } from './ui/WorldHeader';
 import { planManager, planStaff } from './npc/schedule';
 import { today } from '@/lib/date';
@@ -145,6 +146,15 @@ export function CooperativeWorld({
         arriving: spot.place === 'dok' && (preview || recentArrival(spot.delivery.updated_at, now)),
       })),
     [model.trucks, preview, now],
+  );
+  const avatarLook = useMemo(
+    () =>
+      managerLook({
+        ...preferences,
+        // Warna baju manajer: biru/lavender/hijau dari preferensi lama.
+        outfit: preferences.outfit,
+      }),
+    [preferences],
   );
   const hour = getWorldHour(preferences.time, now);
   const night = dayPhase(hour) === 'malam';
@@ -466,6 +476,7 @@ export function CooperativeWorld({
       <section className="cw-viewport" aria-label="Dunia koperasi interaktif">
         <PixelStage
           trucks={stageTrucks}
+          managerLook={avatarLook}
           selected={selected}
           location={location}
           zone={zone}

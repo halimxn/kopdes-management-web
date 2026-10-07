@@ -36,6 +36,8 @@ import {
   type MapBuilding,
 } from './map';
 import { POLES, mapProps, propBlocks } from './props';
+import { lookKey, type Look } from './look';
+import { Walker } from './walker';
 import { findPath, type Cell } from './path';
 import { drawPixelText, pixelTextWidth } from './pixel-font';
 import { gradeCss, gradeHex } from './grade';
@@ -63,6 +65,7 @@ export type StageTruck = {
 };
 export type StageState = {
   trucks: StageTruck[];
+  managerLook: Look;
   selected: string;
   location: string;
   zone: WorldZone;
@@ -289,25 +292,6 @@ function drawTree(x: number, y: number, r: number) {
   g.circle(x - r * 0.2, cy - r * 0.2, r * 0.75).fill(0x557540);
   g.circle(x - r * 0.35, cy - r * 0.4, r * 0.35).fill(0x8fae5e);
   return g;
-}
-
-/** Avatar manajer greybox (±28×56). Sprite final berpose dari generator di P4. */
-function drawManager(g: Graphics, step: number, facing: 1 | -1) {
-  g.clear();
-  const leg = Math.round(Math.sin(step) * 3);
-  g.ellipse(2, 0, 14, 4).fill({ color: 0x1b2238, alpha: 0.3 });
-  g.rect(-8, -18 + Math.max(0, leg), 7, 18 - Math.max(0, leg))
-    .fill(0x2e3442)
-    .stroke({ width: 2, color: OL });
-  g.rect(1, -18 + Math.max(0, -leg), 7, 18 - Math.max(0, -leg))
-    .fill(0x2e3442)
-    .stroke({ width: 2, color: OL });
-  g.rect(-11, -40, 22, 24).fill(0x405d84).stroke({ width: 2, color: OL });
-  g.rect(-2, -40, 4, 6).fill(0xf1ebd6);
-  g.rect(-12, -56, 24, 18).fill(0xf0c39a).stroke({ width: 2, color: OL });
-  g.rect(-12, -58, 24, 8).fill(0x2b2220);
-  g.rect(facing > 0 ? 2 : -6, -49, 3, 4).fill(OL);
-  g.rect(facing > 0 ? -5 : 3, -49, 3, 4).fill(OL);
 }
 
 export async function createWorld(
@@ -587,11 +571,10 @@ export async function createWorld(
 
   // avatar manajer dan jalurnya
   const blocked = blockedGrid(propBlocks());
-  const avatar = new Graphics();
+  const manager = new Walker(initial.managerLook);
+  const avatar = manager.sprite;
   const pos = { x: 790, y: 740 };
   let path: [number, number][] = [];
-  let walkPhase = 0;
-  let facing: 1 | -1 = 1;
   let idleTimer = 2;
   const wander: [number, number][] = [
     [700, 742],
@@ -758,15 +741,13 @@ export async function createWorld(
     if (keys.has('w') || keys.has('arrowup')) vy -= 1;
     if (keys.has('s') || keys.has('arrowdown')) vy += 1;
     const speed = 110;
-    let walking = false;
+    const before = { x: pos.x, y: pos.y };
     if (vx || vy) {
       const len = Math.hypot(vx, vy);
       const nx = pos.x + (vx / len) * speed * dt;
       const ny = pos.y + (vy / len) * speed * dt;
       if (walkable(nx, pos.y)) pos.x = nx;
       if (walkable(pos.x, ny)) pos.y = ny;
-      if (vx) facing = vx > 0 ? 1 : -1;
-      walking = true;
     } else if (path.length) {
       const [tx, ty] = path[0];
       const d = Math.hypot(tx - pos.x, ty - pos.y);
@@ -774,8 +755,6 @@ export async function createWorld(
       else {
         pos.x += ((tx - pos.x) / d) * Math.min(d, speed * dt);
         pos.y += ((ty - pos.y) / d) * Math.min(d, speed * dt);
-        if (Math.abs(tx - pos.x) > 0.5) facing = tx > pos.x ? 1 : -1;
-        walking = true;
       }
     } else if (!state.control && !reduced) {
       idleTimer -= dt;
@@ -785,8 +764,7 @@ export async function createWorld(
         idleTimer = 4;
       }
     }
-    if (walking && !reduced) walkPhase += dt * 12;
-    drawManager(avatar, walking ? walkPhase : 0, facing);
+    manager.step(pos.x - before.x, pos.y - before.y, dt, reduced);
     avatar.position.set(Math.round(pos.x), Math.round(pos.y));
     avatar.zIndex = pos.y;
 
@@ -868,6 +846,8 @@ export async function createWorld(
       lastSelected = next.selected;
       if (state.control && !next.control) path = [];
       if (next.trucks !== state.trucks) syncTrucks(next.trucks);
+      if (lookKey(next.managerLook) !== lookKey(state.managerLook))
+        manager.setLook(next.managerLook);
       state = next;
     },
     destroy() {

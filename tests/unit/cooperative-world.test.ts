@@ -638,3 +638,23 @@ describe('rupa karakter', () => {
     expect(schemas.staff.safeParse({ title: 'X', look_head: 'helm' }).success).toBe(false);
   });
 });
+
+describe('penggambar karakter', () => {
+  it('bingkai berukuran tetap, berisi sosok, dan rupa berbeda menghasilkan gambar berbeda', async () => {
+    const { drawCharacter, CHAR_W, CHAR_H, frameIndex, SHEET_POSES } =
+      await import('@/features/cooperative-world/pixel/character');
+    const { staffLook } = await import('@/features/cooperative-world/pixel/look');
+    const netral = drawCharacter(staffLook({}), 'depan', 'diam');
+    expect(netral.length).toBe(CHAR_W * CHAR_H * 4);
+    let opaque = 0;
+    for (let i = 3; i < netral.length; i += 4) if (netral[i] === 255) opaque++;
+    expect(opaque).toBeGreaterThan(500);
+    const hijab = drawCharacter(staffLook({ look_head: 'hijab' }), 'depan', 'diam');
+    expect(Buffer.from(hijab).equals(Buffer.from(netral))).toBe(false);
+    const step0 = drawCharacter(staffLook({}), 'samping', 'jalan', 0);
+    const step2 = drawCharacter(staffLook({}), 'samping', 'jalan', 2);
+    expect(Buffer.from(step0).equals(Buffer.from(step2))).toBe(false);
+    expect(frameIndex('belakang', 'jalan', 5)).toBe(SHEET_POSES.length + 2);
+    expect(frameIndex('samping', 'bicara')).toBe(SHEET_POSES.length * 3 - 1);
+  });
+});

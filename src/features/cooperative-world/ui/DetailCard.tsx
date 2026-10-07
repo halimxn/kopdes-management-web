@@ -524,17 +524,6 @@ export function DetailCard(props: Props) {
               />
             </label>
             <label className="cw-field">
-              Pakaian maskot
-              <Select
-                ariaLabel="Warna pakaian maskot"
-                value={props.preferences.outfit}
-                onChange={(value) =>
-                  props.onPreference('outfit', value as WorldPreferences['outfit'])
-                }
-                options={['biru', 'lavender', 'hijau']}
-              />
-            </label>
-            <label className="cw-field">
               Kualitas grafis
               <Select
                 ariaLabel="Kualitas grafis"
@@ -578,6 +567,74 @@ export function DetailCard(props: Props) {
             {props.rehearsal !== 'otomatis' && (
               <p className="cw-note">Mode pratinjau; tidak mengubah data rapat atau kegiatan.</p>
             )}
+            <h3 className="cw-subhead">Rupa avatar</h3>
+            <p className="cw-note">
+              Disimpan di perangkat ini. Bila belum diisi, avatar tampil netral bertopi KDMP.
+            </p>
+            {(
+              [
+                [
+                  'look_head',
+                  'Penutup kepala',
+                  [
+                    { value: 'belum diisi', label: 'Belum diisi' },
+                    { value: 'tidak ada', label: 'Tidak ada' },
+                    { value: 'hijab', label: 'Hijab' },
+                    { value: 'peci', label: 'Peci' },
+                    { value: 'topi KDMP', label: 'Topi KDMP' },
+                  ],
+                ],
+                [
+                  'look_hair',
+                  'Rambut',
+                  [
+                    { value: 'belum diisi', label: 'Belum diisi' },
+                    { value: 'pendek', label: 'Pendek' },
+                    { value: 'panjang', label: 'Panjang' },
+                    { value: 'ikal', label: 'Ikal' },
+                  ],
+                ],
+                [
+                  'look_skin',
+                  'Warna kulit',
+                  [
+                    { value: 'belum diisi', label: 'Belum diisi' },
+                    { value: 'terang', label: 'Terang' },
+                    { value: 'sawo matang', label: 'Sawo matang' },
+                    { value: 'gelap', label: 'Gelap' },
+                  ],
+                ],
+                [
+                  'look_glasses',
+                  'Kacamata',
+                  [
+                    { value: 'tidak', label: 'Tidak' },
+                    { value: 'ya', label: 'Ya' },
+                  ],
+                ],
+                [
+                  'outfit',
+                  'Warna baju',
+                  [
+                    { value: 'biru', label: 'Biru' },
+                    { value: 'lavender', label: 'Lavender' },
+                    { value: 'hijau', label: 'Hijau' },
+                  ],
+                ],
+              ] as const
+            ).map(([key, label, options]) => (
+              <label key={key} className="cw-field">
+                {label}
+                <Select
+                  ariaLabel={`${label} avatar`}
+                  value={String(props.preferences[key])}
+                  onChange={(value) =>
+                    props.onPreference(key, value as WorldPreferences[typeof key])
+                  }
+                  options={[...options]}
+                />
+              </label>
+            ))}
           </>
         ) : selected === 'gudang' ? (
           <>
