@@ -10,6 +10,13 @@ export const worldPreferencesSchema = z.object({
   // Bawaan siang seperti video; waktu otomatis WIB tetap dapat dipilih di Suasana.
   time: z.enum(['otomatis', 'pagi', 'siang', 'senja', 'malam']).default('siang'),
   outfit: z.enum(['biru', 'lavender', 'hijau']).default('biru'),
+  // Rupa avatar manajer (preferensi perangkat); belum diisi = sosok netral bertopi KDMP.
+  look_head: z
+    .enum(['belum diisi', 'tidak ada', 'hijab', 'peci', 'topi KDMP'])
+    .default('belum diisi'),
+  look_hair: z.enum(['belum diisi', 'pendek', 'panjang', 'ikal']).default('belum diisi'),
+  look_skin: z.enum(['belum diisi', 'terang', 'sawo matang', 'gelap']).default('belum diisi'),
+  look_glasses: z.enum(['tidak', 'ya']).default('tidak'),
   quality: z.enum(['otomatis', 'tinggi', 'sedang', 'hemat']).default('otomatis'),
 });
 export type WorldPreferences = z.infer<typeof worldPreferencesSchema>;

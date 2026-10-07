@@ -250,7 +250,16 @@ export const schemas = {
         ])
         .default(''),
       outfit: z.enum(['biru', 'hijau', 'oranye', 'lavender', 'abu']).default('biru'),
-      hair: z.enum(['pendek', 'panjang', 'berkerudung', 'topi']).default('pendek'),
+      // Kolom lama dunia 3D; tidak lagi di form, tetap dibaca agar rupa lama tidak hilang.
+      hair: z.enum(['pendek', 'panjang', 'berkerudung', 'topi']).optional(),
+      // Tampilan di Dunia Koperasi (opsional). Rupa diisi pengguna, tidak ditebak dari nama.
+      position: z.enum(['karyawan', 'pengurus', 'pengawas']).default('karyawan'),
+      look_head: z
+        .enum(['belum diisi', 'tidak ada', 'hijab', 'peci', 'topi KDMP'])
+        .default('belum diisi'),
+      look_hair: z.enum(['belum diisi', 'pendek', 'panjang', 'ikal']).default('belum diisi'),
+      look_skin: z.enum(['belum diisi', 'terang', 'sawo matang', 'gelap']).default('belum diisi'),
+      look_glasses: z.enum(['tidak', 'ya']).default('tidak'),
     })
     .strict(),
   trainings: z

@@ -601,3 +601,40 @@ describe('sprite kendaraan per tampak', () => {
         expect(manifest[spriteFor(v.kind, view)]).toBeTruthy();
   });
 });
+
+describe('rupa karakter', () => {
+  it('tanpa isian rupa = sosok netral bertopi KDMP; tidak ditebak dari nama', async () => {
+    const { staffLook } = await import('@/features/cooperative-world/pixel/look');
+    const look = staffLook({ title: 'Siti Aminah', outfit: 'hijau' });
+    expect(look.neutral).toBe(true);
+    expect(look.head).toBe('cap');
+    expect(look.outfit).toBe('#6a9a5a');
+  });
+  it('isian rupa dan kedudukan dipakai; kolom lama hair dihormati bila rupa kosong', async () => {
+    const { staffLook } = await import('@/features/cooperative-world/pixel/look');
+    expect(
+      staffLook({ look_head: 'hijab', look_skin: 'gelap', position: 'pengurus' }),
+    ).toMatchObject({
+      head: 'hijab',
+      skin: 'dark',
+      batik: true,
+      neutral: false,
+    });
+    expect(staffLook({ hair: 'berkerudung' }).head).toBe('hijab');
+    expect(staffLook({ hair: 'panjang' })).toMatchObject({
+      head: 'none',
+      hair: 'long',
+      neutral: false,
+    });
+    expect(staffLook({ hair: 'panjang', look_head: 'peci' }).head).toBe('peci');
+  });
+  it('skema Tim menerima kolom rupa baru dan data lama tanpa kolom itu', async () => {
+    const { schemas } = await import('@/features/records/schemas');
+    const old = schemas.staff.parse({ title: 'Petugas', hair: 'topi' });
+    expect(old.look_head).toBe('belum diisi');
+    expect(old.position).toBe('karyawan');
+    const fresh = schemas.staff.parse({ title: 'Petugas' });
+    expect(fresh.hair).toBeUndefined();
+    expect(schemas.staff.safeParse({ title: 'X', look_head: 'helm' }).success).toBe(false);
+  });
+});

@@ -202,7 +202,14 @@ export function Editor({
       title: '',
     };
   const optionalFields = fields.filter((field) => ['members', 'cash-entries', 'inventory-items'].includes(entity) && ['member_id','item_id','unit_id','reference_number','link','notes','contact','address','price'].includes(field));
-  const primaryFields = fields.filter((field) => !optionalFields.includes(field));
+  // Tim: rupa dan kedudukan hanya dipakai karakter Dunia Koperasi, dikelompokkan terpisah.
+  const worldFields =
+    entity === 'staff'
+      ? fields.filter((field) => field === 'position' || field === 'outfit' || field.startsWith('look_'))
+      : [];
+  const primaryFields = fields.filter(
+    (field) => !optionalFields.includes(field) && !worldFields.includes(field),
+  );
   const renderField = (field: string) => {
             if (entity === 'meetings' && field === 'meeting_url' && meetingMode === 'tatap muka') {
               return null;
@@ -1498,6 +1505,16 @@ export function Editor({
         <div className="form-grid">
 {primaryFields.map(renderField)}
           {optionalFields.length > 0 && <details className="entry-related-fields field-wide" open={optionalFields.some((field) => Boolean(defaults[field as keyof typeof defaults]))}><summary>Hubungan dan rincian opsional</summary><p className="field-helper">Isi hanya bila terkait. Tidak perlu membuat anggota, barang atau gerai untuk setiap transaksi.</p><div className="form-grid">{optionalFields.map(renderField)}</div></details>}
+          {worldFields.length > 0 && (
+            <details className="entry-related-fields field-wide">
+              <summary>Tampilan di Dunia Koperasi</summary>
+              <p className="field-helper">
+                Opsional. Dipakai untuk karakter di Dunia Koperasi dan tidak memengaruhi data lain.
+                Bila rupa belum diisi, karakter tampil sebagai sosok netral bertopi KDMP.
+              </p>
+              <div className="form-grid">{worldFields.map(renderField)}</div>
+            </details>
+          )}
           </div>
         </div>
         {error && (
